@@ -74,17 +74,77 @@ const CONFIG = {
     },
   },
 
-  // Apartment floor plans. Each entry is matched by EXACT area (no
-  // nearest-match) and, if `block` is set, only for that block; entries
-  // with no `block` apply to every block. Add new layouts here as they
-  // become available — nothing else in the code needs to change.
+  // Apartment floor plans. Matched by EXACT area (no nearest-match) plus
+  // block: `block` can be a single number, a list of blocks that share a
+  // layout, or omitted for a plan that's the same in literally every
+  // block. A block-scoped plan always wins over a `block`-less one for
+  // the same area, so a block with its own dedicated layout never
+  // accidentally shows a different block's plan.
   //
-  // Example entries once real files exist:
-  // floorPlans: [
-  //   { area: 37.96, rooms: 1, block: "14", image: "assets/floorplans/14-37.96.jpg" },
-  //   { area: 40.22, rooms: 1, block: null, image: "assets/floorplans/1-room-40.22.jpg" },
-  // ],
-  floorPlans: [],
+  // rooms follows the local "N-комнатная" convention (living room counts
+  // as one of the N; a studio with no separate bedroom is rooms: 0) —
+  // it's purely descriptive for the client PDF, not used for matching,
+  // so feel free to correct any of these numbers without touching
+  // anything else.
+  floorPlans: [
+    // Blocks 1, 6, 9, 10 have their own apartment catalogue.
+    {
+      area: 38.34,
+      rooms: 1,
+      block: ["1", "6", "9", "10"],
+      image: "assets/floorplans/38.34-studio.jpg",
+    },
+    {
+      area: 40.22,
+      rooms: 2,
+      block: ["1", "6", "9", "10"],
+      image: "assets/floorplans/40.22-euro.jpg",
+    },
+    {
+      area: 58.37,
+      rooms: 2,
+      block: ["1", "6", "9", "10"],
+      image: "assets/floorplans/58.37.jpg",
+    },
+    {
+      area: 59.03,
+      rooms: 2,
+      block: ["1", "6", "9", "10"],
+      image: "assets/floorplans/59.03.jpg",
+    },
+    {
+      area: 80.39,
+      rooms: 3,
+      block: ["1", "6", "9", "10"],
+      image: "assets/floorplans/80.39.jpg",
+    },
+
+    // The other 10 (typical) blocks share this set instead.
+    {
+      area: 38.34,
+      rooms: 2,
+      block: ["2", "3", "4", "5", "7", "8", "11", "12", "13", "14"],
+      image: "assets/floorplans/38.34-euro.jpg",
+    },
+    {
+      area: 63,
+      rooms: 2,
+      block: ["2", "3", "4", "5", "7", "8", "11", "12", "13", "14"],
+      image: "assets/floorplans/63.jpg",
+    },
+    {
+      area: 63.74,
+      rooms: 3,
+      block: ["2", "3", "4", "5", "7", "8", "11", "12", "13", "14"],
+      image: "assets/floorplans/63.74-euro.jpg",
+    },
+    {
+      area: 90.01,
+      rooms: 4,
+      block: ["2", "3", "4", "5", "7", "8", "11", "12", "13", "14"],
+      image: "assets/floorplans/90.01.jpg",
+    },
+  ],
 };
 
 if (typeof module !== "undefined" && module.exports) {

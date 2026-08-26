@@ -8,9 +8,21 @@
 const FLOOR_PLAN_AREA_EPSILON = 1e-6;
 
 /**
+ * A plan's `block` can be a single block number, a list of block numbers
+ * (when the same layout is shared by a handful of blocks), or omitted
+ * entirely for a layout that's genuinely the same in every block.
+ */
+function planAppliesToBlock(planBlock, block) {
+  if (planBlock === null || planBlock === undefined) return true;
+  if (!block) return false;
+  const list = Array.isArray(planBlock) ? planBlock : [planBlock];
+  return list.map(String).includes(block);
+}
+
+/**
  * @param {string} blockNumber
  * @param {number} area
- * @returns {{area:number, rooms:number, block:?string, image:string}|null}
+ * @returns {{area:number, rooms:number, block:?(string|string[]), image:string}|null}
  */
 function findFloorPlan(blockNumber, area) {
   if (!Number.isFinite(area)) return null;
@@ -19,12 +31,15 @@ function findFloorPlan(blockNumber, area) {
 
   const sameArea = (plan) => Math.abs(plan.area - area) < FLOOR_PLAN_AREA_EPSILON;
 
-  if (block) {
-    const blockSpecific = plans.find((plan) => plan.block && String(plan.block) === block && sameArea(plan));
-    if (blockSpecific) return blockSpecific;
-  }
+  // A plan scoped to specific block(s) always wins over a universal one,
+  // so a block that has its own dedicated layout for an area never falls
+  // through to a generic plan for that same area.
+  const scoped = plans.find(
+    (plan) => plan.block !== null && plan.block !== undefined && planAppliesToBlock(plan.block, block) && sameArea(plan)
+  );
+  if (scoped) return scoped;
 
-  const universal = plans.find((plan) => !plan.block && sameArea(plan));
+  const universal = plans.find((plan) => (plan.block === null || plan.block === undefined) && sameArea(plan));
   return universal || null;
 }
 
