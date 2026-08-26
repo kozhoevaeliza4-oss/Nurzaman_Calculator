@@ -34,6 +34,61 @@ const CONFIG = {
   project: {
     name: "Европейский квартал",
     render: "assets/render.jpg",
+    // Location/infrastructure context map (distances to nearby streets
+    // and landmarks). Set to null to hide that block everywhere.
+    locationMap: "assets/location-map.jpg",
+    // Short PDF copy — plain strings on purpose, so wording can be
+    // tuned any time without touching pdf.js.
+    whyThisApartment: {
+      ky: "Аянттын, кабаттын жана баанын ыңгайлуу айкалышы",
+      ru: "Продуманное сочетание площади, этажа и цены",
+    },
+    closingMessage: {
+      ky: "Ишенимиңиз үчүн рахмат",
+      ru: "Спасибо за доверие",
+    },
+
+    // Factual, contract-only apartment fit-out. Edit freely, but only
+    // list what's actually in the contract.
+    komplectation: [
+      { ky: "Дубалдардын толук шыбалышы", ru: "Чистовая штукатурка стен" },
+      { ky: "Терезелер жана балкондор", ru: "Окна и балконы" },
+      { ky: "Кире турган эшик", ru: "Входная дверь" },
+      { ky: "Электр эсептегичтер", ru: "Электросчётчики" },
+      { ky: "Газдаштыруу", ru: "Газификация" },
+      { ky: "Электр менен камсыздоо", ru: "Электроснабжение" },
+      { ky: "Жылытуу, суу менен камсыздоо жана канализация", ru: "Отопление, водоснабжение и канализация" },
+      { ky: "Газосиликат блоктон дубалдар", ru: "Стены и перегородки из газосиликатного блока" },
+      { ky: "Полдун ара стяжкасы", ru: "Черновая стяжка пола" },
+      { ky: "Интернет жана ТВ кабели", ru: "Интернет- и TV-кабель" },
+      { ky: "Жүргүнчү лифттери", ru: "Пассажирские лифты" },
+    ],
+
+    // Nearby infrastructure, grouped for the "Расположение" page. Each
+    // entry is shown as-is (proper names + travel time), no translation
+    // attempted for place names.
+    infrastructure: {
+      parks: {
+        ky: "Парктар",
+        ru: "Парки",
+        items: ["Сквер Каныкей — 3 минуты езды", "Сквер им. Исхака Раззакова — 3 минуты езды"],
+      },
+      schools: {
+        ky: "Мектептер",
+        ru: "Школы и учебные заведения",
+        items: [
+          "Ансар-Тайп — 2 минуты пешком",
+          "Школа-гимназия №22 им. С. Шарипова — 17 мин пешком / 8 мин езды",
+          "Школа-гимназия №7 им. Наримана — 18 мин пешком / 6 мин езды",
+          "Школа №79 — 19 мин пешком / 3 минуты езды",
+        ],
+      },
+      markets: {
+        ky: "Супермаркеттер",
+        ru: "Супермаркеты",
+        items: ["Globus — 7 минут езды", "Bimar — 10 минут пешком", "Азия гипермаркет — 5 минут езды"],
+      },
+    },
   },
 
   // Placeholder for future per-project data (projects -> blocks -> rooms -> price).

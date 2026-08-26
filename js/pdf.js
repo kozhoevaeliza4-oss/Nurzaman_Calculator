@@ -1,25 +1,26 @@
 /**
  * Builds the client-facing PDF: a personal "your future home" calculation
- * rather than a generic commercial offer. Pure PDF-drawing logic — no DOM
- * reads happen here, the caller passes in already-validated input and a
- * computed result (see calculator.js). Kept separate from app.js so the
- * layout can evolve without touching the calculator or the DOM binding
- * layer.
+ * laid out as a single premium document across exactly 2 pages:
  *
- * Layout is deliberately fixed at exactly two pages:
- *  - Page 1: brand header, a small render, apartment data, the financial
- *    breakdown, and the monthly payment anchored large at the bottom.
- *  - Page 2: genplan (with the block highlighted), the matched floor
- *    plan, then client and manager contacts.
- * Nothing here changes the calculator's math or the genplan/floor-plan
- * matching logic — both are read as-is from calculator.js / genplan.js /
- * floorplans.js.
+ *   1. The apartment and the money — a navy cover band with the title,
+ *      project name, apartment data, financial breakdown, and the
+ *      monthly payment as the big closing accent.
+ *   2. The apartment and its place — genplan (block highlighted) next
+ *      to the location/infrastructure map, the 3D floor plan large and
+ *      full-width, then client + manager contacts and the calc date.
+ *
+ * Pure PDF-drawing logic — no DOM reads happen here, the caller passes in
+ * already-validated input and a computed result (see calculator.js).
+ * Kept separate from app.js so the layout can evolve without touching
+ * the calculator or the genplan/floor-plan matching logic — none of
+ * that math lives here or is changed by this file.
  */
 
 const PDF_COLORS = {
   navy: [11, 31, 58],
   gray: [139, 147, 161],
   grayLight: [225, 228, 233],
+  cardBg: [247, 248, 250],
   white: [255, 255, 255],
   gold: [242, 182, 50],
   leopardBase: [244, 227, 200],
@@ -71,29 +72,36 @@ function drawLeopardBadge(doc, x, yCenter, label) {
   const height = 6;
   doc.setFillColor(...PDF_COLORS.leopardBase);
   doc.roundedRect(x, yCenter - height / 2, width, height, height / 2, height / 2, "F");
-
   doc.setFillColor(...PDF_COLORS.leopardSpot);
-  const spots = [
+  [
     [x + 5, yCenter - 1, 0.5],
     [x + 10.5, yCenter + 0.9, 0.4],
     [x + 16, yCenter - 1.4, 0.55],
     [x + 22, yCenter + 0.7, 0.38],
     [x + 27.5, yCenter - 0.9, 0.45],
-  ];
-  spots.forEach(([sx, sy, r]) => doc.circle(sx, sy, r, "F"));
-
+  ].forEach(([sx, sy, r]) => doc.circle(sx, sy, r, "F"));
   doc.setFont("Roboto", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...PDF_COLORS.leopardSpot);
   doc.text(label, x + width / 2, yCenter + 1, { align: "center" });
 }
 
-function drawSectionHeading(doc, y, ky, ru) {
+/** A thin gold frame around a placed image — a small "framed photo" touch. */
+function frameImage(doc, x, y, w, h) {
+  doc.setDrawColor(...PDF_COLORS.gold);
+  doc.setLineWidth(0.35);
+  doc.rect(x, y, w, h, "S");
+}
+
+function drawSectionHeading(doc, y, ky, ru, pageWidth) {
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(...PDF_COLORS.gray);
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PDF_COLORS.navy);
   doc.text(`${ky} / ${ru}`.toUpperCase(), PDF_MARGIN, y);
-  return y + 6;
+  doc.setDrawColor(...PDF_COLORS.gold);
+  doc.setLineWidth(0.5);
+  doc.line(PDF_MARGIN, y + 1.8, PDF_MARGIN + 16, y + 1.8);
+  return y + 7;
 }
 
 function drawRow(doc, y, pageWidth, label, value, rowHeight) {
@@ -111,9 +119,92 @@ function drawRow(doc, y, pageWidth, label, value, rowHeight) {
   return y;
 }
 
-/** Auto-generated PDF file name. */
+/** Contact card (name + phone) at a given x/width, for side-by-side layout. */
+function drawContactCard(doc, x, y, width, ky, ru, rows) {
+  const rowHeight = 6.5;
+  const cardHeight = 10 + rows.length * rowHeight;
+  doc.setFillColor(...PDF_COLORS.cardBg);
+  doc.roundedRect(x, y, width, cardHeight, 3, 3, "F");
+
+  let innerY = y + 8.5;
+  doc.setFont("Roboto", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.navy);
+  doc.text(`${ky} / ${ru}`.toUpperCase(), x + 6, innerY);
+  innerY += 6.5;
+
+  rows.forEach(([label, value]) => {
+    doc.setFont("Roboto", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...PDF_COLORS.gray);
+    doc.text(label, x + 6, innerY);
+    doc.setFont("Roboto", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...PDF_COLORS.navy);
+    doc.text(value, x + width - 6, innerY, { align: "right" });
+    innerY += rowHeight;
+  });
+
+  return cardHeight;
+}
+
+/** Draws one infrastructure category (bilingual label + wrapped item list) in a column. Returns the bottom y. */
+function drawInfraColumn(doc, x, y, width, category) {
+  doc.setFont("Roboto", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.navy);
+  const headerLines = doc.splitTextToSize(`${category.ru} / ${category.ky}`, width);
+  headerLines.forEach((line, i) => doc.text(line, x, y + i * 4));
+  let cy = y + headerLines.length * 4 + 2.5;
+
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(7.3);
+  doc.setTextColor(...PDF_COLORS.gray);
+  category.items.forEach((item) => {
+    const lines = doc.splitTextToSize(`•  ${item}`, width);
+    lines.forEach((line, i) => doc.text(line, x, cy + i * 3.6));
+    cy += lines.length * 3.6 + 1.2;
+  });
+
+  return cy;
+}
+
+/** Draws the fit-out checklist in N columns. Returns the bottom y. */
+function drawKomplectationColumns(doc, x, y, totalWidth, items, columns) {
+  const gap = 8;
+  const colWidth = (totalWidth - gap * (columns - 1)) / columns;
+  const perColumn = Math.ceil(items.length / columns);
+  let maxBottom = y;
+
+  for (let c = 0; c < columns; c++) {
+    const colItems = items.slice(c * perColumn, (c + 1) * perColumn);
+    let cy = y;
+    const colX = x + c * (colWidth + gap);
+    colItems.forEach((item) => {
+      doc.setFont("Roboto", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...PDF_COLORS.gold);
+      doc.text("✓", colX, cy);
+      doc.setFont("Roboto", "normal");
+      doc.setFontSize(8.3);
+      doc.setTextColor(...PDF_COLORS.navy);
+      const lines = doc.splitTextToSize(item.ru, colWidth - 6);
+      lines.forEach((line, i) => doc.text(line, colX + 5.5, cy + i * 3.9));
+      cy += lines.length * 3.9 + 3;
+    });
+    maxBottom = Math.max(maxBottom, cy);
+  }
+  return maxBottom;
+}
+
 function buildOfferPdfFileName() {
   return "Nurzaman_EK_Расчет.pdf";
+}
+
+function formatCalculationDate() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
 /**
@@ -121,7 +212,7 @@ function buildOfferPdfFileName() {
  * @param {import('./calculator').InstallmentInput} state.input
  * @param {import('./calculator').InstallmentResult} state.result
  * @param {string} state.currency
- * @param {Object} [state.extras] apartment identity + client/manager contacts
+ * @param {Object} [state.extras]
  * @returns {Promise<import('jspdf').jsPDF>}
  */
 async function buildOfferPdf({ input, result, currency, extras }) {
@@ -136,66 +227,74 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   const contentWidth = pageWidth - PDF_MARGIN * 2;
   const margin = PDF_MARGIN;
 
-  const [logo, render] = await Promise.all([
-    loadImage(CONFIG.brand.logo),
-    loadImage(CONFIG.project.render),
-  ]);
+  const logo = await loadImage(CONFIG.brand.logo);
 
-  // ---------- PAGE 1: the personal calculation ----------
-  let y = margin;
+  // ================= PAGE 1 — Квартира и деньги =================
+  const bannerHeight = 55;
+  doc.setFillColor(...PDF_COLORS.navy);
+  doc.rect(0, 0, pageWidth, bannerHeight, "F");
 
-  const logoWidth = 26;
-  const logoHeight = (logo.height / logo.width) * logoWidth;
-  doc.addImage(logo.dataUrl, "PNG", margin, y, logoWidth, logoHeight, undefined, "FAST");
-  y += Math.max(logoHeight, 6) + 7;
+  const logoHeight1 = 9;
+  const logoWidth1 = (logo.width / logo.height) * logoHeight1;
+  doc.addImage(logo.dataUrl, "PNG", margin, 11, logoWidth1, logoHeight1, undefined, "FAST");
 
   doc.setFont("Roboto", "bold");
   doc.setFontSize(19);
-  doc.setTextColor(...PDF_COLORS.navy);
-  doc.text("БОЛОЧОК ҮЙҮҢҮЗДҮН ЭСЕБИ", pageWidth / 2, y, { align: "center" });
-  y += 8.5;
+  doc.setTextColor(...PDF_COLORS.white);
+  doc.text("БОЛОЧОК ҮЙҮҢҮЗДҮН ЭСЕБИ", pageWidth / 2, 32, { align: "center" });
+  doc.setFontSize(12.5);
+  doc.text("РАСЧЁТ ВАШЕГО БУДУЩЕГО ДОМА", pageWidth / 2, 40, { align: "center" });
 
-  doc.setFontSize(13);
-  doc.text("РАСЧЁТ ВАШЕГО БУДУЩЕГО ДОМА", pageWidth / 2, y, { align: "center" });
-  y += 8;
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(190, 200, 218);
+  doc.text("Сиздин болочок үйүңүз ушул эсептен башталат", pageWidth / 2, 46.5, { align: "center" });
+  doc.text("Ваш будущий дом начинается с этого расчёта", pageWidth / 2, 51, { align: "center" });
+
+  let y = bannerHeight + 11;
 
   doc.setFont("Roboto", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(...PDF_COLORS.gray);
-  doc.text("Сиздин болочок үйүңүз ушул эсептен башталат", pageWidth / 2, y, { align: "center" });
-  y += 4.6;
-  doc.text("Ваш будущий дом начинается с этого расчёта", pageWidth / 2, y, { align: "center" });
-  y += 6;
-
-  doc.setDrawColor(...PDF_COLORS.grayLight);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 7;
-
-  // A small render — this page is about the client's numbers, not the
-  // building, so the image stays modest and centered.
-  const renderWidth = 92;
-  const renderHeight = (render.height / render.width) * renderWidth;
-  doc.addImage(render.dataUrl, "JPEG", (pageWidth - renderWidth) / 2, y, renderWidth, renderHeight, undefined, "MEDIUM");
-  y += renderHeight + 7;
-
+  doc.text("Долбоор / Проект", pageWidth / 2, y, { align: "center" });
+  y += 6.5;
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(10.5);
+  doc.setFontSize(15);
   doc.setTextColor(...PDF_COLORS.navy);
   doc.text(CONFIG.project.name, pageWidth / 2, y, { align: "center" });
   y += 8;
 
-  // Apartment data — area always shown (it's always known by this point);
-  // block/floor/rooms only when the manager filled them in.
+  const why = CONFIG.project.whyThisApartment;
+  if (why && (why.ky || why.ru)) {
+    doc.setFont("Roboto", "normal");
+    doc.setFontSize(9);
+    if (why.ky) {
+      doc.setTextColor(...PDF_COLORS.navy);
+      doc.text(why.ky, pageWidth / 2, y, { align: "center" });
+      y += 5;
+    }
+    if (why.ru) {
+      doc.setTextColor(...PDF_COLORS.gray);
+      doc.text(why.ru, pageWidth / 2, y, { align: "center" });
+      y += 5;
+    }
+  }
+  y += 5;
+
+  doc.setDrawColor(...PDF_COLORS.grayLight);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 9;
+
   const apartmentRows = [[`Батирдин аянты, м² / Площадь, м²`, `${formatNumber(input.area)} м²`]];
   if (extras.block) apartmentRows.push(["Блок / Блок", extras.block]);
   if (extras.floor) apartmentRows.push(["Кабат / Этаж", extras.floor]);
   if (extras.rooms) apartmentRows.push(["Бөлмө саны / Комнат", extras.rooms]);
 
-  y = drawSectionHeading(doc, y, "Батирдин маалыматы", "Данные квартиры");
+  y = drawSectionHeading(doc, y, "Батирдин маалыматы", "Данные квартиры", pageWidth);
   apartmentRows.forEach(([label, value]) => {
     y = drawRow(doc, y, pageWidth, label, value, 7);
   });
-  y += 4;
+  y += 6;
 
   const financeRows = [
     ["1 м² баасы / Цена за м²", formatCurrency(input.pricePerM2, currency)],
@@ -205,23 +304,18 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     ["Бөлүп төлөө мөөнөтү / Срок рассрочки", `${input.termMonths} ай / ${input.termMonths} мес.`],
   ];
 
-  y = drawSectionHeading(doc, y, "Каржылык эсеп", "Финансовый расчёт");
+  y = drawSectionHeading(doc, y, "Каржылык эсеп", "Финансовый расчёт", pageWidth);
   financeRows.forEach(([label, value]) => {
     y = drawRow(doc, y, pageWidth, label, value, 7);
   });
 
-  // The monthly payment is the emotional core of the document, so it's
-  // anchored to a fixed spot near the bottom of the page — big, on its
-  // own, regardless of how much (or little) sits above it.
   const boxHeight = 62;
   const boxY = pageHeight - margin - boxHeight;
   doc.setFillColor(...PDF_COLORS.navy);
   doc.roundedRect(margin, boxY, contentWidth, boxHeight, 5, 5, "F");
-
   doc.setDrawColor(...PDF_COLORS.gold);
   doc.setLineWidth(0.6);
   doc.line(margin + 10, boxY + 15, margin + 34, boxY + 15);
-
   doc.setFont("Roboto", "bold");
   doc.setFontSize(11.5);
   doc.setTextColor(...PDF_COLORS.white);
@@ -230,99 +324,145 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setFontSize(10);
   doc.setTextColor(220, 226, 236);
   doc.text("Ежемесячный платёж", margin + 10, boxY + 33);
-
   doc.setFont("Roboto", "bold");
   doc.setFontSize(42);
   doc.setTextColor(...PDF_COLORS.white);
   doc.text(formatCurrency(result.monthlyPayment, currency), margin + 10, boxY + 54);
 
-  // ---------- PAGE 2: genplan, floor plan, contacts ----------
+  // ================= PAGE 2 — Всё остальное, в парных колонках =================
   doc.addPage();
-  y = margin;
+
+  const banner2Height = 20;
+  doc.setFillColor(...PDF_COLORS.navy);
+  doc.rect(0, 0, pageWidth, banner2Height, "F");
+  const logoHeight2 = 6.5;
+  const logoWidth2 = (logo.width / logo.height) * logoHeight2;
+  doc.addImage(logo.dataUrl, "PNG", margin, (banner2Height - logoHeight2) / 2, logoWidth2, logoHeight2, undefined, "FAST");
+  doc.setFont("Roboto", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...PDF_COLORS.white);
+  doc.text("ЖАЙГАШУУСУ, ПЛАНДАР ЖАНА КОМПЛЕКТАЦИЯ", pageWidth - margin, 9, { align: "right" });
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(190, 200, 218);
+  doc.text("Расположение, планировки и комплектация", pageWidth - margin, 14, { align: "right" });
+
+  y = banner2Height + 8;
+
+  const colGap = 10;
+  const colWidth = (contentWidth - colGap) / 2;
+  const leftX = margin;
+  const rightX = margin + colWidth + colGap;
+
+  // --- Row 1: genplan + location map, side by side ---
+  y = drawSectionHeading(doc, y, "Жайгашуусу", "Расположение", pageWidth);
+  let rowBottom = y;
 
   const blockRegion = getBlockRegion(extras.block);
   if (hasGenplanImage() && blockRegion) {
     const genplan = await loadImage(CONFIG.genplan.image);
-    const gpWidth = 132;
-    const gpHeight = (genplan.height / genplan.width) * gpWidth;
-    const gpX = (pageWidth - gpWidth) / 2;
+    const gpHeight = (genplan.height / genplan.width) * colWidth;
+    doc.addImage(genplan.dataUrl, "JPEG", leftX, y, colWidth, gpHeight, undefined, "MEDIUM");
+    frameImage(doc, leftX, y, colWidth, gpHeight);
 
-    y = drawSectionHeading(doc, y, "Генплан", "Генплан");
-
-    doc.addImage(genplan.dataUrl, "JPEG", gpX, y, gpWidth, gpHeight, undefined, "MEDIUM");
-
-    // A small inward inset + thinner stroke than the on-screen CSS
-    // highlight: at this image size a 1mm centered stroke would put a
-    // visible sliver of the line itself past the block's edge, which
-    // reads as "touching the neighbor" even though the rectangle's own
-    // coordinates are correct.
-    const strokeWidth = 0.5;
-    const inset = 0.5;
-    const rx = gpX + (blockRegion.x / 100) * gpWidth + inset;
+    const strokeWidth = 0.45;
+    const inset = 0.45;
+    const rx = leftX + (blockRegion.x / 100) * colWidth + inset;
     const ry = y + (blockRegion.y / 100) * gpHeight + inset;
-    const rw = (blockRegion.width / 100) * gpWidth - inset * 2;
+    const rw = (blockRegion.width / 100) * colWidth - inset * 2;
     const rh = (blockRegion.height / 100) * gpHeight - inset * 2;
-
     doc.setDrawColor(...PDF_COLORS.gold);
     doc.setLineWidth(strokeWidth);
-    doc.roundedRect(rx, ry, rw, rh, 1.2, 1.2, "S");
+    doc.roundedRect(rx, ry, rw, rh, 1, 1, "S");
 
     const labelText = `Блок ${extras.block}`;
     doc.setFont("Roboto", "bold");
-    doc.setFontSize(8.5);
-    const labelWidth = doc.getTextWidth(labelText) + 6;
-    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, gpX), gpX + gpWidth - labelWidth);
-    const labelY = Math.max(ry - 6, y + 2);
+    doc.setFontSize(7.5);
+    const labelWidth = doc.getTextWidth(labelText) + 5;
+    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, leftX), leftX + colWidth - labelWidth);
+    const labelY = Math.max(ry - 5, y + 2);
     doc.setFillColor(...PDF_COLORS.gold);
-    doc.roundedRect(labelX, labelY - 4, labelWidth, 5.5, 2, 2, "F");
+    doc.roundedRect(labelX, labelY - 3.6, labelWidth, 4.8, 1.5, 1.5, "F");
     doc.setTextColor(...PDF_COLORS.navy);
     doc.text(labelText, labelX + labelWidth / 2, labelY, { align: "center" });
 
-    y += gpHeight + 8;
+    rowBottom = Math.max(rowBottom, y + gpHeight);
   }
 
-  // Floor plan matched by block + exact area — large and unobscured,
-  // since this is the second half of "what am I actually buying". If
-  // there's no exact match, the section is skipped entirely rather than
-  // showing a "not found" note in a document that goes to the client.
+  if (CONFIG.project.locationMap) {
+    const locMap = await loadImage(CONFIG.project.locationMap);
+    const lmHeight = (locMap.height / locMap.width) * colWidth;
+    doc.addImage(locMap.dataUrl, "JPEG", rightX, y, colWidth, lmHeight, undefined, "MEDIUM");
+    frameImage(doc, rightX, y, colWidth, lmHeight);
+    rowBottom = Math.max(rowBottom, y + lmHeight);
+  }
+
+  y = rowBottom + 7;
+
+  // --- Row 2: nearby infrastructure, three columns ---
+  const infra = CONFIG.project.infrastructure;
+  if (infra) {
+    y = drawSectionHeading(doc, y, "Инфраструктура", "Инфраструктура рядом", pageWidth);
+    const infraGap = 7;
+    const infraColWidth = (contentWidth - infraGap * 2) / 3;
+    const categories = [infra.parks, infra.schools, infra.markets].filter(Boolean);
+    let infraBottom = y;
+    categories.forEach((cat, i) => {
+      const colX = margin + i * (infraColWidth + infraGap);
+      infraBottom = Math.max(infraBottom, drawInfraColumn(doc, colX, y, infraColWidth, cat));
+    });
+    y = infraBottom + 7;
+  }
+
+  // --- Row 3: 3D floor plan + fit-out checklist, side by side ---
   const floorPlan = findFloorPlan(extras.block, input.area);
-  if (floorPlan) {
-    const plan = await loadImage(floorPlan.image);
-    const fpWidth = 156;
-    const fpHeight = (plan.height / plan.width) * fpWidth;
-    const fpX = (pageWidth - fpWidth) / 2;
+  const komplectation = CONFIG.project.komplectation;
+  if (floorPlan || (komplectation && komplectation.length > 0)) {
+    y = drawSectionHeading(doc, y, "Планировка жана комплектация", "Планировка и комплектация", pageWidth);
+    let row3Bottom = y;
 
-    y = drawSectionHeading(doc, y, "Планировка", "Планировка");
-    doc.addImage(plan.dataUrl, "JPEG", fpX, y, fpWidth, fpHeight, undefined, "MEDIUM");
-    y += fpHeight + 8;
+    if (floorPlan) {
+      const plan = await loadImage(floorPlan.image);
+      const fpHeight = (plan.height / plan.width) * colWidth;
+      doc.addImage(plan.dataUrl, "JPEG", leftX, y, colWidth, fpHeight, undefined, "MEDIUM");
+      frameImage(doc, leftX, y, colWidth, fpHeight);
+      row3Bottom = Math.max(row3Bottom, y + fpHeight);
+    }
+
+    if (komplectation && komplectation.length > 0) {
+      const kBottom = drawKomplectationColumns(doc, rightX, y, colWidth, komplectation, 2);
+      row3Bottom = Math.max(row3Bottom, kBottom);
+    }
+
+    y = row3Bottom + 7;
   }
 
+  // --- Row 4: client + manager, side by side ---
   const clientRows = [];
   if (extras.clientName) clientRows.push(["Аты / Имя", extras.clientName]);
   if (extras.clientPhone) clientRows.push(["Телефону / Телефон", extras.clientPhone]);
-
-  if (clientRows.length > 0) {
-    y = drawSectionHeading(doc, y, "Кардар", "Клиент");
-    clientRows.forEach(([label, value]) => {
-      y = drawRow(doc, y, pageWidth, label, value, 6.5);
-    });
-    y += 3;
-  }
-
   const managerRows = [];
   if (extras.managerName) managerRows.push(["Аты / Имя", extras.managerName]);
   if (extras.managerPhone) managerRows.push(["Телефону / Телефон", extras.managerPhone]);
 
-  if (managerRows.length > 0) {
-    y = drawSectionHeading(doc, y, "Менеджер", "Менеджер");
-    managerRows.forEach(([label, value]) => {
-      y = drawRow(doc, y, pageWidth, label, value, 6.5);
-    });
-    y += 3;
+  if (clientRows.length > 0 || managerRows.length > 0) {
+    let cardBottom = y;
+    if (clientRows.length > 0) {
+      const h = drawContactCard(doc, leftX, y, colWidth, "Кардар", "Клиент", clientRows);
+      cardBottom = Math.max(cardBottom, y + h);
+    }
+    if (managerRows.length > 0) {
+      const h = drawContactCard(doc, rightX, y, colWidth, "Менеджер", "Менеджер", managerRows);
+      cardBottom = Math.max(cardBottom, y + h);
+    }
+    y = cardBottom + 6;
   }
 
-  // Footer signature, anchored to the bottom of page 2 so it never
-  // shifts the layout above and never spills onto a third page.
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.gray);
+  doc.text(`Эсептин күнү / Дата расчёта: ${formatCalculationDate()}`, pageWidth / 2, y, { align: "center" });
+
   const footerY = pageHeight - margin;
   doc.setDrawColor(...PDF_COLORS.grayLight);
   doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
