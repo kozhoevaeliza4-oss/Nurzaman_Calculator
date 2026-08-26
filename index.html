@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Калькулятор рассрочки — Nurzaman</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="icon" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Nurzaman Calculator" />
+</head>
+<body>
+  <div class="page">
+    <header class="brand">
+      <img class="brand__logo" src="assets/logo.png" alt="Nurzaman — курулуш компаниясы" />
+    </header>
+
+    <figure class="project">
+      <img class="project__image" src="assets/render.jpg" alt="Европейский квартал" />
+      <figcaption class="project__caption">
+        <span class="project__hint">Долбоор / Проект</span>
+        <span class="project__name">Европейский квартал</span>
+      </figcaption>
+    </figure>
+
+    <main class="card">
+      <h1 class="card__title">
+        <span class="card__title-ky">Бөлүп төлөө калькулятору</span>
+        <span class="card__title-sep">/</span>
+        <span class="card__title-ru">Калькулятор рассрочки</span>
+      </h1>
+
+      <form class="form" id="calc-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="currency">
+            <span class="field__label-ky">Эсептөө валютасы</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Валюта расчёта</span>
+          </label>
+          <select class="field__input field__select" id="currency" name="currency">
+            <option value="USD" selected>$ USD — доллар США</option>
+            <option value="KGS">сом / KGS</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="area">
+            <span class="field__label-ky">Батирдин аянты, м²</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Площадь квартиры, м²</span>
+          </label>
+          <input
+            class="field__input"
+            type="number"
+            id="area"
+            name="area"
+            placeholder="Мисалы, 65 / Например, 65"
+            min="0"
+            step="any"
+            inputmode="decimal"
+          />
+          <p class="field__error" id="area-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="pricePerM2">
+            <span class="field__label-ky">1 м² баасы</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Цена за м²</span>
+          </label>
+          <div class="field__prefixed">
+            <span class="field__prefix" id="pricePerM2-prefix">$</span>
+            <input
+              class="field__input field__input--prefixed"
+              type="number"
+              id="pricePerM2"
+              name="pricePerM2"
+              placeholder="Мисалы, 1050 / Например, 1050"
+              min="0"
+              step="any"
+              inputmode="decimal"
+            />
+          </div>
+          <p class="field__error" id="pricePerM2-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="downPayment">
+            <span class="field__label-ky">Баштапкы төлөм</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Первоначальный взнос</span>
+          </label>
+          <div class="field__prefixed">
+            <span class="field__prefix" id="downPayment-prefix">$</span>
+            <input
+              class="field__input field__input--prefixed"
+              type="number"
+              id="downPayment"
+              name="downPayment"
+              placeholder="Мисалы, 10 000 / Например, 10 000"
+              min="0"
+              step="any"
+              inputmode="decimal"
+            />
+          </div>
+          <p class="field__error" id="downPayment-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="term">
+            <span class="field__label-ky">Бөлүп төлөө мөөнөтү</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Срок рассрочки</span>
+          </label>
+          <select class="field__input field__select" id="term" name="term">
+            <option value="12">12 ай / 12 месяцев</option>
+            <option value="18">18 ай / 18 месяцев</option>
+            <option value="24">24 ай / 24 месяца</option>
+            <option value="30">30 ай / 30 месяцев</option>
+            <option value="36" selected>36 ай / 36 месяцев</option>
+            <option value="48">48 ай / 48 месяцев</option>
+            <option value="60">60 ай / 60 месяцев</option>
+          </select>
+        </div>
+      </form>
+
+      <section class="results" id="results" aria-live="polite">
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Батирдин баасы</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Стоимость квартиры</span>
+          </span>
+          <span class="results__value" id="result-total">0 $</span>
+        </div>
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Баштапкы төлөм</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Первоначальный взнос</span>
+          </span>
+          <span class="results__value" id="result-down">0 $</span>
+        </div>
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Төлөнө турган калдык</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Остаток к оплате</span>
+          </span>
+          <span class="results__value" id="result-remainder">0 $</span>
+        </div>
+
+        <div class="results__divider"></div>
+
+        <div class="results__row results__row--highlight">
+          <span class="results__label">
+            <span class="results__label-ky">Ай сайынкы төлөм</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Ежемесячный платеж</span>
+          </span>
+          <span class="results__value results__value--big" id="result-monthly">0 $</span>
+        </div>
+      </section>
+
+      <button type="button" class="send-button" id="send-button" disabled>
+        <span class="send-button__text">
+          <span class="send-button__ky">Кардарга жөнөтүү</span>
+          <span class="card__title-sep">/</span>
+          <span class="send-button__ru">Отправить клиенту</span>
+        </span>
+      </button>
+      <p class="send-error" id="send-error"></p>
+    </main>
+
+    <button type="button" class="install-hint" id="install-button" hidden>
+      <span class="install-hint__ky">Колдонмо катары кошуу</span>
+      <span class="card__title-sep">/</span>
+      <span class="install-hint__ru">Установить приложение</span>
+    </button>
+    <p class="install-hint-text" id="install-hint-text" hidden></p>
+
+    <footer class="footer">
+      <span>© Nurzaman, <span id="year"></span></span>
+      <span class="signature">created by Elizka</span>
+    </footer>
+  </div>
+
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/vendor/roboto-regular-font.js"></script>
+  <script src="js/vendor/roboto-bold-font.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
