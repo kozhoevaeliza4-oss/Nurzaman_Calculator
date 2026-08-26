@@ -111,25 +111,11 @@ function drawRow(doc, y, pageWidth, label, value) {
 }
 
 /**
- * Sanitizes a value for safe use inside a downloaded file name (strips
- * characters Windows/macOS forbid in file names).
+ * Auto-generated PDF file name. Kept as a function (rather than a bare
+ * constant) so it stays the one place to touch if the naming scheme
+ * needs to change later.
  */
-function sanitizeForFileName(value) {
-  return String(value).replace(/[\\/:*?"<>|]/g, "").trim();
-}
-
-/**
- * Builds the auto-generated PDF file name:
- * "Nurzaman_EK_Квартира_115_37.96м2.pdf" when an apartment number is set,
- * or "Nurzaman_EK_Расчет.pdf" otherwise.
- */
-function buildOfferPdfFileName(state) {
-  const apartmentNumber = state && state.extras && state.extras.apartmentNumber;
-  if (apartmentNumber) {
-    const area = state.input.area;
-    const areaStr = Number.isFinite(area) ? String(Math.round(area * 100) / 100) : "";
-    return `Nurzaman_EK_Квартира_${sanitizeForFileName(apartmentNumber)}_${areaStr}м2.pdf`;
-  }
+function buildOfferPdfFileName() {
   return "Nurzaman_EK_Расчет.pdf";
 }
 
@@ -202,7 +188,6 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   // Apartment data — only the fields the manager actually filled in
   const apartmentRows = [];
   if (extras.block) apartmentRows.push(["Блок / Блок", extras.block]);
-  if (extras.apartmentNumber) apartmentRows.push(["Батир № / Квартира №", extras.apartmentNumber]);
   if (extras.floor) apartmentRows.push(["Кабат / Этаж", extras.floor]);
   if (extras.rooms) apartmentRows.push(["Бөлмө саны / Комнат", extras.rooms]);
 

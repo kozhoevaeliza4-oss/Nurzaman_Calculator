@@ -15,7 +15,6 @@
     term: document.getElementById("term"),
 
     block: document.getElementById("block"),
-    apartmentNumber: document.getElementById("apartmentNumber"),
     floor: document.getElementById("floor"),
     rooms: document.getElementById("rooms"),
 
@@ -89,7 +88,6 @@
   function readExtras() {
     return {
       block: els.block.value.trim(),
-      apartmentNumber: els.apartmentNumber.value.trim(),
       floor: els.floor.value.trim(),
       rooms: els.rooms.value.trim(),
       clientName: els.clientName.value.trim(),
@@ -199,6 +197,19 @@
     els.floorplanBody.appendChild(img);
   }
 
+  // The suggested amount is only ever shown as a placeholder hint — the
+  // manager still types in whatever down payment the client actually
+  // agrees to. Falls back to the generic example once area/price aren't
+  // both known yet.
+  function updateDownPaymentPlaceholder(area, pricePerM2) {
+    if (Number.isFinite(area) && area > 0 && Number.isFinite(pricePerM2) && pricePerM2 > 0) {
+      const suggested = formatCurrency(area * pricePerM2 * 0.3, els.currency.value);
+      els.downPayment.placeholder = `Сунуш: ${suggested} (30%) / Рекомендуем: ${suggested} (30%)`;
+    } else {
+      els.downPayment.placeholder = "Мисалы, 10 000 / Например, 10 000";
+    }
+  }
+
   function recalculate() {
     const input = readInput();
     const extras = readExtras();
@@ -208,6 +219,7 @@
     hideSendStatus(); // the numbers are changing — any previously generated PDF is now stale
     updateGenplan(extras.block);
     updateFloorPlan(extras.block, input.area);
+    updateDownPaymentPlaceholder(input.area, input.pricePerM2);
 
     if (Object.keys(errors).length > 0) {
       renderEmptyResults();
@@ -396,7 +408,6 @@
       els.pricePerM2,
       els.downPayment,
       els.block,
-      els.apartmentNumber,
       els.floor,
       els.rooms,
       els.clientName,
