@@ -5,7 +5,7 @@
  * first load. Bump CACHE_NAME whenever a cached file's content changes
  * so clients pick up the new version instead of stale cache.
  */
-const CACHE_NAME = "nurzaman-calculator-v1";
+const CACHE_NAME = "nurzaman-calculator-v2";
 
 const APP_SHELL = [
   "./",
@@ -16,6 +16,8 @@ const APP_SHELL = [
   "./js/currency.js",
   "./js/format.js",
   "./js/calculator.js",
+  "./js/genplan.js",
+  "./js/floorplans.js",
   "./js/pdf.js",
   "./js/app.js",
   "./js/vendor/jspdf.umd.min.js",

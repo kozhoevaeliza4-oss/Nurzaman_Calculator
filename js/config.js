@@ -46,6 +46,42 @@ const CONFIG = {
   //   ]},
   // ],
   projects: [],
+
+  // General site plan (genplan) of the project + a map of block number ->
+  // highlight rectangle. `image` stays null until a real genplan file is
+  // added to assets/ — the UI and PDF both hide the genplan section
+  // entirely while it's null instead of showing a broken image.
+  //
+  // Rectangle coordinates are in PERCENT of the image's own width/height
+  // (0-100), not pixels, so they stay correct no matter what size the
+  // image is displayed at. Find them once (e.g. by opening the genplan in
+  // an image editor and reading the block's bounding box in pixels, then
+  // dividing by the full image width/height and multiplying by 100).
+  //
+  // Example once the real file + coordinates are known:
+  // genplan: {
+  //   image: "assets/genplan.jpg",
+  //   blocks: {
+  //     "14": { x: 32, y: 18, width: 12, height: 15 },
+  //     "13": { x: 45, y: 18, width: 12, height: 15 },
+  //   },
+  // },
+  genplan: {
+    image: null,
+    blocks: {},
+  },
+
+  // Apartment floor plans. Each entry is matched by EXACT area (no
+  // nearest-match) and, if `block` is set, only for that block; entries
+  // with no `block` apply to every block. Add new layouts here as they
+  // become available — nothing else in the code needs to change.
+  //
+  // Example entries once real files exist:
+  // floorPlans: [
+  //   { area: 37.96, rooms: 1, block: "14", image: "assets/floorplans/14-37.96.jpg" },
+  //   { area: 40.22, rooms: 1, block: null, image: "assets/floorplans/1-room-40.22.jpg" },
+  // ],
+  floorPlans: [],
 };
 
 if (typeof module !== "undefined" && module.exports) {

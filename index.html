@@ -49,6 +49,78 @@
           </select>
         </div>
 
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="block">
+              <span class="field__label-ky">Блок</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Блок</span>
+            </label>
+            <input
+              class="field__input"
+              type="text"
+              id="block"
+              name="block"
+              placeholder="Мисалы, 14 / Например, 14"
+              inputmode="text"
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="apartmentNumber">
+              <span class="field__label-ky">Батир №</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Квартира №</span>
+            </label>
+            <input
+              class="field__input"
+              type="text"
+              id="apartmentNumber"
+              name="apartmentNumber"
+              placeholder="Мисалы, 115 / Например, 115"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="floor">
+              <span class="field__label-ky">Кабат</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Этаж</span>
+            </label>
+            <input
+              class="field__input"
+              type="number"
+              id="floor"
+              name="floor"
+              placeholder="Мисалы, 5 / Например, 5"
+              min="1"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="rooms">
+              <span class="field__label-ky">Бөлмө саны</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Комнат</span>
+            </label>
+            <input
+              class="field__input"
+              type="number"
+              id="rooms"
+              name="rooms"
+              placeholder="Мисалы, 2 / Например, 2"
+              min="1"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
         <div class="field">
           <label class="field__label" for="area">
             <span class="field__label-ky">Батирдин аянты, м²</span>
@@ -128,6 +200,58 @@
             <option value="60">60 ай / 60 месяцев</option>
           </select>
         </div>
+
+        <div class="field-section">
+          <span class="field-section__ky">Кардар</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Клиент</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="clientName">
+              <span class="field__label-ky">Аты</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Имя</span>
+            </label>
+            <input class="field__input" type="text" id="clientName" name="clientName" placeholder="Мисалы, Айбек / Например, Айбек" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="clientPhone">
+              <span class="field__label-ky">Телефону</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Телефон</span>
+            </label>
+            <input class="field__input" type="tel" id="clientPhone" name="clientPhone" placeholder="+996 XXX XXX XXX" />
+          </div>
+        </div>
+
+        <div class="field-section">
+          <span class="field-section__ky">Менеджер</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Менеджер</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="managerName">
+              <span class="field__label-ky">Аты</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Имя</span>
+            </label>
+            <input class="field__input" type="text" id="managerName" name="managerName" placeholder="Мисалы, Элиза / Например, Элиза" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="managerPhone">
+              <span class="field__label-ky">Телефону</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Телефон</span>
+            </label>
+            <input class="field__input" type="tel" id="managerPhone" name="managerPhone" placeholder="+996 XXX XXX XXX" />
+          </div>
+        </div>
       </form>
 
       <section class="results" id="results" aria-live="polite">
@@ -166,6 +290,29 @@
           </span>
           <span class="results__value results__value--big" id="result-monthly">0 $</span>
         </div>
+      </section>
+
+      <section class="genplan" id="genplan-section" hidden>
+        <div class="field-section">
+          <span class="field-section__ky">Генплан</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Генплан</span>
+        </div>
+        <div class="genplan__frame">
+          <img class="genplan__image" id="genplan-image" alt="Генплан Европейский квартал" />
+          <div class="genplan__highlight" id="genplan-highlight" hidden>
+            <span class="genplan__label" id="genplan-label"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="floorplan" id="floorplan-section" hidden>
+        <div class="field-section">
+          <span class="field-section__ky">Планировка</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Планировка</span>
+        </div>
+        <div class="floorplan__body" id="floorplan-body"></div>
       </section>
 
       <button type="button" class="send-button" id="send-button" disabled>
@@ -212,6 +359,8 @@
   <script src="js/currency.js"></script>
   <script src="js/format.js"></script>
   <script src="js/calculator.js"></script>
+  <script src="js/genplan.js"></script>
+  <script src="js/floorplans.js"></script>
   <script src="js/pdf.js"></script>
   <script src="js/app.js"></script>
 </body>

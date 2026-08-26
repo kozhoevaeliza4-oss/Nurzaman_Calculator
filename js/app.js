@@ -14,6 +14,16 @@
     downPayment: document.getElementById("downPayment"),
     term: document.getElementById("term"),
 
+    block: document.getElementById("block"),
+    apartmentNumber: document.getElementById("apartmentNumber"),
+    floor: document.getElementById("floor"),
+    rooms: document.getElementById("rooms"),
+
+    clientName: document.getElementById("clientName"),
+    clientPhone: document.getElementById("clientPhone"),
+    managerName: document.getElementById("managerName"),
+    managerPhone: document.getElementById("managerPhone"),
+
     areaError: document.getElementById("area-error"),
     pricePerM2Error: document.getElementById("pricePerM2-error"),
     downPaymentError: document.getElementById("downPayment-error"),
@@ -22,6 +32,14 @@
     resultDown: document.getElementById("result-down"),
     resultRemainder: document.getElementById("result-remainder"),
     resultMonthly: document.getElementById("result-monthly"),
+
+    genplanSection: document.getElementById("genplan-section"),
+    genplanImage: document.getElementById("genplan-image"),
+    genplanHighlight: document.getElementById("genplan-highlight"),
+    genplanLabel: document.getElementById("genplan-label"),
+
+    floorplanSection: document.getElementById("floorplan-section"),
+    floorplanBody: document.getElementById("floorplan-body"),
 
     sendButton: document.getElementById("send-button"),
     sendError: document.getElementById("send-error"),
@@ -64,6 +82,23 @@
     };
   }
 
+  // Apartment identity + client/manager contact details. These never
+  // block the calculation or the send button — they only enrich the PDF
+  // and drive the genplan/floor-plan lookups — so they're read separately
+  // from the validated financial input above.
+  function readExtras() {
+    return {
+      block: els.block.value.trim(),
+      apartmentNumber: els.apartmentNumber.value.trim(),
+      floor: els.floor.value.trim(),
+      rooms: els.rooms.value.trim(),
+      clientName: els.clientName.value.trim(),
+      clientPhone: els.clientPhone.value.trim(),
+      managerName: els.managerName.value.trim(),
+      managerPhone: els.managerPhone.value.trim(),
+    };
+  }
+
   function clearErrors() {
     els.areaError.textContent = "";
     els.pricePerM2Error.textContent = "";
@@ -100,12 +135,79 @@
     els.resultMonthly.textContent = formatCurrency(0, currency);
   }
 
+  function updateGenplan(block) {
+    if (!hasGenplanImage()) {
+      els.genplanSection.hidden = true;
+      return;
+    }
+
+    const region = getBlockRegion(block);
+    if (!region) {
+      // Genplan exists, but either no block was typed yet or this
+      // specific block has no configured position — showing a highlight
+      // in the wrong place would be worse than showing none at all.
+      els.genplanHighlight.hidden = true;
+      els.genplanSection.hidden = false;
+      if (els.genplanImage.src !== CONFIG.genplan.image) {
+        els.genplanImage.src = CONFIG.genplan.image;
+      }
+      return;
+    }
+
+    els.genplanSection.hidden = false;
+    if (els.genplanImage.src !== CONFIG.genplan.image) {
+      els.genplanImage.src = CONFIG.genplan.image;
+    }
+    els.genplanHighlight.hidden = false;
+    els.genplanHighlight.style.left = `${region.x}%`;
+    els.genplanHighlight.style.top = `${region.y}%`;
+    els.genplanHighlight.style.width = `${region.width}%`;
+    els.genplanHighlight.style.height = `${region.height}%`;
+    els.genplanLabel.textContent = `Блок ${block}`;
+  }
+
+  function renderFloorPlanNotFound() {
+    els.floorplanBody.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "floorplan__not-found";
+    wrap.innerHTML =
+      '<span class="floorplan__not-found-ky">Планировка табылган жок</span>' +
+      '<span class="field__label-sep">/</span>' +
+      '<span>Планировка не найдена</span>';
+    els.floorplanBody.appendChild(wrap);
+  }
+
+  function updateFloorPlan(block, area) {
+    if (!Number.isFinite(area)) {
+      els.floorplanSection.hidden = true;
+      return;
+    }
+
+    els.floorplanSection.hidden = false;
+    const plan = findFloorPlan(block, area);
+
+    if (!plan) {
+      renderFloorPlanNotFound();
+      return;
+    }
+
+    els.floorplanBody.innerHTML = "";
+    const img = document.createElement("img");
+    img.className = "floorplan__image";
+    img.src = plan.image;
+    img.alt = `Планировка ${plan.area} м²`;
+    els.floorplanBody.appendChild(img);
+  }
+
   function recalculate() {
     const input = readInput();
+    const extras = readExtras();
     const errors = validateInstallmentInput(input);
 
     renderErrors(errors);
     hideSendStatus(); // the numbers are changing — any previously generated PDF is now stale
+    updateGenplan(extras.block);
+    updateFloorPlan(extras.block, input.area);
 
     if (Object.keys(errors).length > 0) {
       renderEmptyResults();
@@ -116,7 +218,7 @@
 
     const result = calculateInstallment(input);
     renderResults(result);
-    lastValidState = { input, result, currency: els.currency.value };
+    lastValidState = { input, result, currency: els.currency.value, extras };
     els.sendButton.disabled = false;
   }
 
@@ -212,7 +314,7 @@
 
     try {
       const doc = await buildOfferPdf(lastValidState);
-      const fileName = "Nurzaman-rassrochka.pdf";
+      const fileName = buildOfferPdfFileName(lastValidState);
       const blob = doc.output("blob");
       lastGeneratedPdf = { blob, fileName };
 
@@ -289,7 +391,19 @@
     const yearEl = document.getElementById("year");
     if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
-    [els.area, els.pricePerM2, els.downPayment].forEach((input) => {
+    [
+      els.area,
+      els.pricePerM2,
+      els.downPayment,
+      els.block,
+      els.apartmentNumber,
+      els.floor,
+      els.rooms,
+      els.clientName,
+      els.clientPhone,
+      els.managerName,
+      els.managerPhone,
+    ].forEach((input) => {
       input.addEventListener("input", recalculate);
     });
 
