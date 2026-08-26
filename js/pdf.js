@@ -155,17 +155,17 @@ function drawParamCard(doc, x, y, width, height, value, ky, ru) {
   doc.setFillColor(...PDF_COLORS.cardBg);
   doc.roundedRect(x, y, width, height, 2.5, 2.5, "F");
   doc.setFillColor(...PDF_COLORS.gold);
-  doc.rect(x, y, width, 1, "F");
+  doc.rect(x, y, width, 1.2, "F");
 
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(13);
+  doc.setFontSize(17);
   doc.setTextColor(...PDF_COLORS.navy);
-  doc.text(value, x + width / 2, y + height / 2 + 1, { align: "center" });
+  doc.text(value, x + width / 2, y + height / 2 + 2, { align: "center" });
 
   doc.setFont("Roboto", "normal");
-  doc.setFontSize(6.3);
+  doc.setFontSize(6.8);
   doc.setTextColor(...PDF_COLORS.gray);
-  doc.text(`${ky} / ${ru}`.toUpperCase(), x + width / 2, y + height - 4, { align: "center" });
+  doc.text(`${ky} / ${ru}`.toUpperCase(), x + width / 2, y + height - 5.5, { align: "center" });
 }
 
 /**
@@ -175,9 +175,9 @@ function drawParamCard(doc, x, y, width, height, value, ky, ru) {
  * leading into the monthly payment box below it.
  */
 function drawFinanceFlowCard(doc, x, y, width, rows) {
-  const rowHeight = 9.2;
-  const paddingTop = 8;
-  const cardHeight = paddingTop + rows.length * rowHeight + 4;
+  const rowHeight = 11.5;
+  const paddingTop = 10;
+  const cardHeight = paddingTop + rows.length * rowHeight + 6;
 
   doc.setFillColor(...PDF_COLORS.cardBg);
   doc.roundedRect(x, y, width, cardHeight, 3, 3, "F");
@@ -315,7 +315,7 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setTextColor(190, 200, 218);
   doc.text(CONFIG.project.name, pageWidth / 2, 29.5, { align: "center" });
 
-  let y = bannerHeight + 8;
+  let y = bannerHeight + 12;
 
   // --- Квартира: компактные карточки-параметры (63 м² / 2 комнаты / 5 этаж / блок 12) ---
   const paramDefs = [
@@ -325,13 +325,13 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     extras.block ? [`${extras.block}`, "Блок", "Блок"] : null,
   ].filter(Boolean);
 
-  const paramGap = 5;
-  const paramHeight = 18;
+  const paramGap = 6;
+  const paramHeight = 24;
   const paramWidth = (contentWidth - paramGap * (paramDefs.length - 1)) / paramDefs.length;
   paramDefs.forEach(([value, ky, ru], i) => {
     drawParamCard(doc, margin + i * (paramWidth + paramGap), y, paramWidth, paramHeight, value, ky, ru);
   });
-  y += paramHeight + 8;
+  y += paramHeight + 12;
 
   // --- Финансовый расчёт: единая карточка-цепочка, ведущая к платежу ---
   y = drawSectionHeading(doc, y, "Каржылык эсеп", "Финансовый расчёт", pageWidth);
@@ -346,7 +346,11 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   y += financeCardHeight + 8;
 
   // --- Ежемесячный платёж: главный визуальный акцент страницы ---
-  const boxHeight = Math.max(58, pageHeight - margin - y);
+  // Clamped height: big enough to dominate the page, but capped so it
+  // never turns into a slab of mostly-empty navy space when the content
+  // above is short — any extra leftover becomes quiet breathing room
+  // above the box instead of dead space inside it.
+  const boxHeight = Math.min(78, Math.max(62, pageHeight - margin - y));
   const boxY = pageHeight - margin - boxHeight;
   doc.setFillColor(...PDF_COLORS.navy);
   doc.roundedRect(margin, boxY, contentWidth, boxHeight, 5, 5, "F");
@@ -361,20 +365,34 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setFontSize(9.5);
   doc.setTextColor(220, 226, 236);
   doc.text("Ежемесячный платёж", margin + 10, boxY + 29.5);
+
+  // Мини-разбивка цепочки (стоимость -> взнос -> остаток -> срок), занимает
+  // середину блока вместо пустоты — вертикально центрирована между
+  // подзаголовком и крупной суммой, каким бы ни было итоговое boxHeight.
+  const breakdown = [
+    ["Стоимость", formatCurrency(result.totalPrice, currency)],
+    ["Взнос", formatCurrency(result.downPayment, currency)],
+    ["Остаток", formatCurrency(result.remainder, currency)],
+    ["Срок", `${input.termMonths} мес.`],
+  ];
+  const breakdownY = boxY + 29.5 + (boxHeight - 29.5 - 32) / 2 + 8;
+  const breakdownColWidth = contentWidth / breakdown.length;
+  breakdown.forEach(([label, value], i) => {
+    const colX = margin + i * breakdownColWidth;
+    doc.setFont("Roboto", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...PDF_COLORS.gold);
+    doc.text(label.toUpperCase(), colX, breakdownY);
+    doc.setFont("Roboto", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...PDF_COLORS.white);
+    doc.text(value, colX, breakdownY + 5.5);
+  });
+
   doc.setFont("Roboto", "bold");
   doc.setFontSize(40);
   doc.setTextColor(...PDF_COLORS.gold);
-  doc.text(formatCurrency(result.monthlyPayment, currency), margin + 10, boxY + boxHeight - 14);
-
-  // Короткая расшифровка цепочки прямо под ключевой цифрой.
-  const chainText = `${formatCurrency(result.totalPrice, currency)}  →  ${formatCurrency(
-    result.downPayment,
-    currency
-  )}  →  ${formatCurrency(result.remainder, currency)}  →  ${input.termMonths} мес.`;
-  doc.setFont("Roboto", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(190, 200, 218);
-  doc.text(chainText, margin + 10, boxY + boxHeight - 6);
+  doc.text(formatCurrency(result.monthlyPayment, currency), margin + 10, boxY + boxHeight - 12);
 
   // ================= PAGE 2 — Всё остальное, в парных колонках =================
   doc.addPage();
