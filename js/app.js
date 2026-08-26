@@ -25,6 +25,8 @@
 
     sendButton: document.getElementById("send-button"),
     sendError: document.getElementById("send-error"),
+    sendStatus: document.getElementById("send-status"),
+    sendDownloadButton: document.getElementById("send-download-button"),
 
     installButton: document.getElementById("install-button"),
     installHintText: document.getElementById("install-hint-text"),
@@ -40,6 +42,10 @@
   // the "send to client" button can build the PDF from the exact same
   // numbers already on screen instead of re-deriving them.
   let lastValidState = null;
+
+  // The most recently generated PDF, kept so the "download again" button
+  // can re-save it without regenerating (and re-fetching the images).
+  let lastGeneratedPdf = null;
 
   function parseNumber(rawValue) {
     if (rawValue === "" || rawValue === null || rawValue === undefined) {
@@ -99,6 +105,7 @@
     const errors = validateInstallmentInput(input);
 
     renderErrors(errors);
+    hideSendStatus(); // the numbers are changing — any previously generated PDF is now stale
 
     if (Object.keys(errors).length > 0) {
       renderEmptyResults();
@@ -141,37 +148,78 @@
     els.sendButton.disabled = isBusy || !lastValidState;
   }
 
+  function hideSendStatus() {
+    els.sendStatus.hidden = true;
+  }
+
+  function showSendStatus() {
+    els.sendStatus.hidden = false;
+  }
+
+  /**
+   * Real phones and tablets (iOS/Android) have a native share sheet that
+   * actually handles files (WhatsApp, Telegram, AirDrop, ...). Desktop
+   * Chrome on Windows/macOS/Linux can *report* navigator.share/canShare
+   * as present, but the OS-level share picker for files is unreliable
+   * there (Windows in particular throws "couldn't show all the ways to
+   * share" for PDFs) — so desktop always uses direct download instead of
+   * trusting feature detection alone.
+   */
+  function isTouchPrimaryDevice() {
+    const ua = navigator.userAgent || "";
+    const isIos = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+    return isIos || isAndroid;
+  }
+
+  /**
+   * Tries the native share sheet. Returns true when the situation is
+   * "handled" (shared, or the user deliberately closed the sheet) and
+   * false when the caller should fall back to a direct download instead.
+   */
+  async function tryNativeShare(blob, fileName) {
+    if (!isTouchPrimaryDevice()) return false;
+    if (typeof File === "undefined" || !navigator.share || !navigator.canShare) return false;
+
+    const file = new File([blob], fileName, { type: "application/pdf" });
+    if (!navigator.canShare({ files: [file] })) return false;
+
+    try {
+      await navigator.share({ files: [file], title: "Nurzaman — расчёт рассрочки" });
+      return true;
+    } catch (shareErr) {
+      return shareErr && shareErr.name === "AbortError"; // user cancelled on purpose — otherwise fall back
+    }
+  }
+
+  function triggerDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function handleSendClick() {
     if (!lastValidState) return;
 
     els.sendError.textContent = "";
+    hideSendStatus();
     setSendButtonBusy(true);
 
     try {
       const doc = await buildOfferPdf(lastValidState);
       const fileName = "Nurzaman-rassrochka.pdf";
       const blob = doc.output("blob");
+      lastGeneratedPdf = { blob, fileName };
 
-      let shared = false;
-      if (typeof File !== "undefined" && navigator.canShare) {
-        const file = new File([blob], fileName, { type: "application/pdf" });
-        if (navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "Nurzaman — расчёт рассрочки",
-            });
-            shared = true;
-          } catch (shareErr) {
-            if (shareErr && shareErr.name === "AbortError") {
-              shared = true; // user cancelled the share sheet on purpose
-            }
-          }
-        }
-      }
-
-      if (!shared) {
-        doc.save(fileName);
+      const handledByShare = await tryNativeShare(blob, fileName);
+      if (!handledByShare) {
+        triggerDownload(blob, fileName);
+        showSendStatus();
       }
     } catch (err) {
       console.error(err);
@@ -180,6 +228,11 @@
     } finally {
       setSendButtonBusy(false);
     }
+  }
+
+  function handleDownloadAgainClick() {
+    if (!lastGeneratedPdf) return;
+    triggerDownload(lastGeneratedPdf.blob, lastGeneratedPdf.fileName);
   }
 
   // --- PWA install prompt (Android/Chrome) + manual instructions (iOS) ---
@@ -243,6 +296,7 @@
     els.term.addEventListener("change", recalculate);
     els.currency.addEventListener("change", handleCurrencyChange);
     els.sendButton.addEventListener("click", handleSendClick);
+    els.sendDownloadButton.addEventListener("click", handleDownloadAgainClick);
 
     updateCurrencyPrefixes();
     recalculate();
