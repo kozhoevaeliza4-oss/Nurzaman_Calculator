@@ -148,7 +148,7 @@ function drawApartmentStrip(doc, x, y, width, height, params) {
  * label-left/value-right table split across the page.
  */
 function drawFinanceChain(doc, x, y, width, rows) {
-  const rowHeight = 17;
+  const rowHeight = 19;
   const dotX = x + 2;
   const textX = dotX + 8;
   const lineTop = y + 2;
@@ -331,12 +331,12 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setTextColor(...PDF_COLORS.gold);
   doc.text(CONFIG.project.name, pageWidth / 2, 40.5, { align: "center" });
 
-  let y = bannerHeight + 12;
+  let y = bannerHeight + 20;
 
   // --- Моя квартира: один компактный ряд с 4 параметрами + генплан ---
   const blockRegion = getBlockRegion(extras.block);
   const hasGenplan = hasGenplanImage() && blockRegion;
-  const stripHeight = 30;
+  const stripHeight = 34;
   const thumbGap = 8;
   const thumbWidth = hasGenplan ? 52 : 0;
   const stripWidth = contentWidth - (hasGenplan ? thumbWidth + thumbGap : 0);
@@ -373,7 +373,7 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     doc.roundedRect(rx, ry, rw, rh, 1, 1, "S");
   }
 
-  y += stripHeight + 13;
+  y += stripHeight + 18;
 
   // --- Ваш финансовый расчёт: одна цепочка, каждая цифра один раз ---
   y = drawSectionHeading(doc, y, "Ваш финансовый расчёт", pageWidth, 12);
@@ -386,14 +386,14 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     ["Рассрочка", `${input.termMonths} месяцев`],
   ];
   y = drawFinanceChain(doc, margin, y, contentWidth, financeRows);
-  y += 6;
+  y += 10;
 
   // --- Ежемесячный платёж: самый крупный элемент всего PDF, ровно один раз ---
   // The label + divider + number move as ONE group, vertically centered in
   // the box — so whatever the box's final height, there is no dead gap
   // between an anchored-top label and an anchored-bottom number.
-  const boxHeight = Math.min(92, Math.max(58, pageHeight - margin - y));
-  const boxY = pageHeight - margin - boxHeight;
+  const boxHeight = 56;
+  const boxY = y;
   doc.setFillColor(...PDF_COLORS.navy);
   doc.roundedRect(margin, boxY, contentWidth, boxHeight, 4, 4, "F");
 
