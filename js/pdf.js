@@ -2,12 +2,13 @@
  * Builds the client-facing PDF: a personal "your future home" calculation
  * laid out as a single premium document across exactly 2 pages:
  *
- *   1. The apartment and the money — a navy cover band with the title,
- *      project name, apartment data, financial breakdown, and the
- *      monthly payment as the big closing accent.
- *   2. The apartment and its place — genplan (block highlighted) next
- *      to the location/infrastructure map, the 3D floor plan large and
- *      full-width, then client + manager contacts and the calc date.
+ *   1. The home and the money — a navy cover band with the title, the
+ *      genplan (block highlighted) next to the location map, apartment
+ *      params, financial breakdown, and the monthly payment as the big
+ *      closing accent.
+ *   2. Infrastructure and the apartment itself — nearby infrastructure,
+ *      the 3D floor plan large and full-width, the fit-out checklist,
+ *      then client + manager contacts and the calc date.
  *
  * Pure PDF-drawing logic — no DOM reads happen here, the caller passes in
  * already-validated input and a computed result (see calculator.js).
@@ -110,9 +111,9 @@ function drawSectionHeading(doc, y, ky, ru, pageWidth) {
  * on page 2 reads as one closing element instead of two loose boxes.
  */
 function drawUnifiedContactCard(doc, x, y, width, left, right) {
-  const rowHeight = 5.4;
+  const rowHeight = 6.2;
   const rows = Math.max(left.rows.length, right.rows.length, 1);
-  const cardHeight = 9.5 + rows * rowHeight;
+  const cardHeight = 12 + rows * rowHeight;
 
   doc.setFillColor(...PDF_COLORS.cardBg);
   doc.roundedRect(x, y, width, cardHeight, 3, 3, "F");
@@ -124,19 +125,19 @@ function drawUnifiedContactCard(doc, x, y, width, left, right) {
     { originX: x, data: left },
     { originX: dividerX, data: right },
   ].forEach(({ originX, data }) => {
-    let innerY = y + 7.5;
+    let innerY = y + 9;
     doc.setFont("Roboto", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(...PDF_COLORS.navy);
     doc.text(`${data.ky} / ${data.ru}`.toUpperCase(), originX + 7, innerY);
-    innerY += 5.6;
+    innerY += 6.3;
     data.rows.forEach(([label, value]) => {
       doc.setFont("Roboto", "normal");
-      doc.setFontSize(7.8);
+      doc.setFontSize(8.3);
       doc.setTextColor(...PDF_COLORS.gray);
       doc.text(label, originX + 7, innerY);
       doc.setFont("Roboto", "bold");
-      doc.setFontSize(8.8);
+      doc.setFontSize(9.3);
       doc.setTextColor(...PDF_COLORS.navy);
       doc.text(value, originX + halfWidth - 7, innerY, { align: "right" });
       innerY += rowHeight;
@@ -214,19 +215,19 @@ function drawFinanceFlowCard(doc, x, y, width, rows) {
 /** Draws one infrastructure category (bilingual label + wrapped item list) in a column. Returns the bottom y. */
 function drawInfraColumn(doc, x, y, width, category) {
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(8.5);
   doc.setTextColor(...PDF_COLORS.navy);
   const headerLines = doc.splitTextToSize(`${category.ru} / ${category.ky}`, width);
-  headerLines.forEach((line, i) => doc.text(line, x, y + i * 3.6));
-  let cy = y + headerLines.length * 3.6 + 2;
+  headerLines.forEach((line, i) => doc.text(line, x, y + i * 4));
+  let cy = y + headerLines.length * 4 + 3;
 
   doc.setFont("Roboto", "normal");
-  doc.setFontSize(6.9);
+  doc.setFontSize(7.3);
   doc.setTextColor(...PDF_COLORS.gray);
   category.items.forEach((item) => {
     const lines = doc.splitTextToSize(`•  ${item}`, width);
-    lines.forEach((line, i) => doc.text(line, x, cy + i * 3.2));
-    cy += lines.length * 3.2 + 0.8;
+    lines.forEach((line, i) => doc.text(line, x, cy + i * 3.6));
+    cy += lines.length * 3.6 + 1.5;
   });
 
   return cy;
@@ -245,15 +246,15 @@ function drawKomplectationColumns(doc, x, y, totalWidth, items, columns) {
     const colX = x + c * (colWidth + gap);
     colItems.forEach((item) => {
       doc.setFont("Roboto", "bold");
-      doc.setFontSize(8.5);
+      doc.setFontSize(9);
       doc.setTextColor(...PDF_COLORS.gold);
       doc.text("✓", colX, cy);
       doc.setFont("Roboto", "normal");
-      doc.setFontSize(7.8);
+      doc.setFontSize(8.3);
       doc.setTextColor(...PDF_COLORS.navy);
       const lines = doc.splitTextToSize(item.ru, colWidth - 6);
-      lines.forEach((line, i) => doc.text(line, colX + 5.5, cy + i * 3.5));
-      cy += lines.length * 3.5 + 1.8;
+      lines.forEach((line, i) => doc.text(line, colX + 5.5, cy + i * 3.9));
+      cy += lines.length * 3.9 + 3;
     });
     maxBottom = Math.max(maxBottom, cy);
   }
@@ -315,7 +316,68 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setTextColor(190, 200, 218);
   doc.text(CONFIG.project.name, pageWidth / 2, 29.5, { align: "center" });
 
-  let y = bannerHeight + 12;
+  let y = bannerHeight + 10;
+
+  // --- Дом: генплан с выделенным блоком + карта расположения, side by side ---
+  const p1ColGap = 10;
+  const p1ColWidth = (contentWidth - p1ColGap) / 2;
+  const p1LeftX = margin;
+  const p1RightX = margin + p1ColWidth + p1ColGap;
+  const maxLocationHeight = 40;
+
+  y = drawSectionHeading(doc, y, "Жайгашуусу", "Ваш дом на генплане", pageWidth);
+  let locationBottom = y;
+
+  const blockRegion = getBlockRegion(extras.block);
+  if (hasGenplanImage() && blockRegion) {
+    const genplan = await loadImage(CONFIG.genplan.image);
+    let gpWidth = p1ColWidth;
+    let gpHeight = (genplan.height / genplan.width) * gpWidth;
+    if (gpHeight > maxLocationHeight) {
+      gpHeight = maxLocationHeight;
+      gpWidth = (genplan.width / genplan.height) * gpHeight;
+    }
+    doc.addImage(genplan.dataUrl, "JPEG", p1LeftX, y, gpWidth, gpHeight, undefined, "MEDIUM");
+    frameImage(doc, p1LeftX, y, gpWidth, gpHeight);
+
+    const strokeWidth = 0.45;
+    const inset = 0.45;
+    const rx = p1LeftX + (blockRegion.x / 100) * gpWidth + inset;
+    const ry = y + (blockRegion.y / 100) * gpHeight + inset;
+    const rw = (blockRegion.width / 100) * gpWidth - inset * 2;
+    const rh = (blockRegion.height / 100) * gpHeight - inset * 2;
+    doc.setDrawColor(...PDF_COLORS.gold);
+    doc.setLineWidth(strokeWidth);
+    doc.roundedRect(rx, ry, rw, rh, 1, 1, "S");
+
+    const labelText = `Блок ${extras.block}`;
+    doc.setFont("Roboto", "bold");
+    doc.setFontSize(7.5);
+    const labelWidth = doc.getTextWidth(labelText) + 5;
+    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, p1LeftX), p1LeftX + gpWidth - labelWidth);
+    const labelY = Math.max(ry - 5, y + 2);
+    doc.setFillColor(...PDF_COLORS.gold);
+    doc.roundedRect(labelX, labelY - 3.6, labelWidth, 4.8, 1.5, 1.5, "F");
+    doc.setTextColor(...PDF_COLORS.navy);
+    doc.text(labelText, labelX + labelWidth / 2, labelY, { align: "center" });
+
+    locationBottom = Math.max(locationBottom, y + gpHeight);
+  }
+
+  if (CONFIG.project.locationMap) {
+    const locMap = await loadImage(CONFIG.project.locationMap);
+    let lmWidth = p1ColWidth;
+    let lmHeight = (locMap.height / locMap.width) * lmWidth;
+    if (lmHeight > maxLocationHeight) {
+      lmHeight = maxLocationHeight;
+      lmWidth = (locMap.width / locMap.height) * lmHeight;
+    }
+    doc.addImage(locMap.dataUrl, "JPEG", p1RightX, y, lmWidth, lmHeight, undefined, "MEDIUM");
+    frameImage(doc, p1RightX, y, lmWidth, lmHeight);
+    locationBottom = Math.max(locationBottom, y + lmHeight);
+  }
+
+  y = locationBottom + 10;
 
   // --- Квартира: компактные карточки-параметры (63 м² / 2 комнаты / 5 этаж / блок 12) ---
   const paramDefs = [
@@ -406,80 +468,19 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   doc.setFont("Roboto", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(...PDF_COLORS.white);
-  doc.text("ЖАЙГАШУУСУ, ПЛАНДАР ЖАНА КОМПЛЕКТАЦИЯ", pageWidth - margin, 9, { align: "right" });
+  doc.text("ПЛАНДАР ЖАНА КОМПЛЕКТАЦИЯ", pageWidth - margin, 9, { align: "right" });
   doc.setFont("Roboto", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(190, 200, 218);
-  doc.text("Расположение, планировки и комплектация", pageWidth - margin, 14, { align: "right" });
+  doc.text("Инфраструктура, планировка и комплектация", pageWidth - margin, 14, { align: "right" });
 
-  y = banner2Height + 8;
+  y = banner2Height + 12;
 
-  const colGap = 10;
-  const colWidth = (contentWidth - colGap) / 2;
-  const leftX = margin;
-  const rightX = margin + colWidth + colGap;
-
-  // --- Row 1: genplan + location map, side by side ---
-  y = drawSectionHeading(doc, y, "Жайгашуусу", "Расположение", pageWidth);
-  let rowBottom = y;
-
-  const maxLocationHeight = 42;
-  const blockRegion = getBlockRegion(extras.block);
-  if (hasGenplanImage() && blockRegion) {
-    const genplan = await loadImage(CONFIG.genplan.image);
-    let gpWidth = colWidth;
-    let gpHeight = (genplan.height / genplan.width) * gpWidth;
-    if (gpHeight > maxLocationHeight) {
-      gpHeight = maxLocationHeight;
-      gpWidth = (genplan.width / genplan.height) * gpHeight;
-    }
-    doc.addImage(genplan.dataUrl, "JPEG", leftX, y, gpWidth, gpHeight, undefined, "MEDIUM");
-    frameImage(doc, leftX, y, gpWidth, gpHeight);
-
-    const strokeWidth = 0.45;
-    const inset = 0.45;
-    const rx = leftX + (blockRegion.x / 100) * gpWidth + inset;
-    const ry = y + (blockRegion.y / 100) * gpHeight + inset;
-    const rw = (blockRegion.width / 100) * gpWidth - inset * 2;
-    const rh = (blockRegion.height / 100) * gpHeight - inset * 2;
-    doc.setDrawColor(...PDF_COLORS.gold);
-    doc.setLineWidth(strokeWidth);
-    doc.roundedRect(rx, ry, rw, rh, 1, 1, "S");
-
-    const labelText = `Блок ${extras.block}`;
-    doc.setFont("Roboto", "bold");
-    doc.setFontSize(7.5);
-    const labelWidth = doc.getTextWidth(labelText) + 5;
-    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, leftX), leftX + gpWidth - labelWidth);
-    const labelY = Math.max(ry - 5, y + 2);
-    doc.setFillColor(...PDF_COLORS.gold);
-    doc.roundedRect(labelX, labelY - 3.6, labelWidth, 4.8, 1.5, 1.5, "F");
-    doc.setTextColor(...PDF_COLORS.navy);
-    doc.text(labelText, labelX + labelWidth / 2, labelY, { align: "center" });
-
-    rowBottom = Math.max(rowBottom, y + gpHeight);
-  }
-
-  if (CONFIG.project.locationMap) {
-    const locMap = await loadImage(CONFIG.project.locationMap);
-    let lmWidth = colWidth;
-    let lmHeight = (locMap.height / locMap.width) * lmWidth;
-    if (lmHeight > maxLocationHeight) {
-      lmHeight = maxLocationHeight;
-      lmWidth = (locMap.width / locMap.height) * lmHeight;
-    }
-    doc.addImage(locMap.dataUrl, "JPEG", rightX, y, lmWidth, lmHeight, undefined, "MEDIUM");
-    frameImage(doc, rightX, y, lmWidth, lmHeight);
-    rowBottom = Math.max(rowBottom, y + lmHeight);
-  }
-
-  y = rowBottom + 5;
-
-  // --- Row 2: nearby infrastructure, three columns ---
+  // --- Row 1: nearby infrastructure, three columns ---
   const infra = CONFIG.project.infrastructure;
   if (infra) {
     y = drawSectionHeading(doc, y, "Инфраструктура", "Инфраструктура рядом", pageWidth);
-    const infraGap = 7;
+    const infraGap = 9;
     const infraColWidth = (contentWidth - infraGap * 2) / 3;
     const categories = [infra.parks, infra.schools, infra.markets].filter(Boolean);
     let infraBottom = y;
@@ -487,15 +488,15 @@ async function buildOfferPdf({ input, result, currency, extras }) {
       const colX = margin + i * (infraColWidth + infraGap);
       infraBottom = Math.max(infraBottom, drawInfraColumn(doc, colX, y, infraColWidth, cat));
     });
-    y = infraBottom + 5;
+    y = infraBottom + 10;
   }
 
-  // --- Row 3: 3D floor plan — large and full-width, the visual centerpiece ---
+  // --- Row 2: 3D floor plan — large and full-width, the visual centerpiece ---
   const floorPlan = findFloorPlan(extras.block, input.area);
   if (floorPlan) {
     y = drawSectionHeading(doc, y, "Планировка", "Планировка квартиры", pageWidth);
     const plan = await loadImage(floorPlan.image);
-    const maxFpHeight = 60;
+    const maxFpHeight = 72;
     let fpWidth = contentWidth;
     let fpHeight = (plan.height / plan.width) * fpWidth;
     if (fpHeight > maxFpHeight) {
@@ -508,14 +509,14 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     y += fpHeight + 5;
   }
 
-  // --- Row 4: fit-out checklist, full-width in 2 columns ---
+  // --- Row 3: fit-out checklist, full-width in 2 columns ---
   const komplectation = CONFIG.project.komplectation;
   if (komplectation && komplectation.length > 0) {
     y = drawSectionHeading(doc, y, "Комплектация", "Комплектация", pageWidth);
-    y = drawKomplectationColumns(doc, margin, y, contentWidth, komplectation, 2) + 5;
+    y = drawKomplectationColumns(doc, margin, y, contentWidth, komplectation, 2) + 10;
   }
 
-  // --- Row 5: client + manager, as one unified contact block ---
+  // --- Row 4: client + manager, as one unified contact block ---
   const clientRows = [];
   if (extras.clientName) clientRows.push(["Аты / Имя", extras.clientName]);
   if (extras.clientPhone) clientRows.push(["Телефону / Телефон", extras.clientPhone]);
