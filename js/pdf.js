@@ -1,9 +1,19 @@
 /**
- * Builds the client-facing PDF offer card. Pure PDF-drawing logic — no
- * DOM reads happen here, the caller passes in already-validated input
- * and a computed result (see calculator.js). Kept separate from app.js
- * so the layout can evolve (e.g. per-project templates later) without
- * touching the calculator or the DOM binding layer.
+ * Builds the client-facing PDF: a personal "your future home" calculation
+ * rather than a generic commercial offer. Pure PDF-drawing logic — no DOM
+ * reads happen here, the caller passes in already-validated input and a
+ * computed result (see calculator.js). Kept separate from app.js so the
+ * layout can evolve without touching the calculator or the DOM binding
+ * layer.
+ *
+ * Layout is deliberately fixed at exactly two pages:
+ *  - Page 1: brand header, a small render, apartment data, the financial
+ *    breakdown, and the monthly payment anchored large at the bottom.
+ *  - Page 2: genplan (with the block highlighted), the matched floor
+ *    plan, then client and manager contacts.
+ * Nothing here changes the calculator's math or the genplan/floor-plan
+ * matching logic — both are read as-is from calculator.js / genplan.js /
+ * floorplans.js.
  */
 
 const PDF_COLORS = {
@@ -57,34 +67,25 @@ function registerFonts(doc) {
 }
 
 function drawLeopardBadge(doc, x, yCenter, label) {
-  const width = 36;
-  const height = 6.5;
+  const width = 34;
+  const height = 6;
   doc.setFillColor(...PDF_COLORS.leopardBase);
   doc.roundedRect(x, yCenter - height / 2, width, height, height / 2, height / 2, "F");
 
   doc.setFillColor(...PDF_COLORS.leopardSpot);
   const spots = [
-    [x + 5, yCenter - 1.2, 0.55],
-    [x + 11, yCenter + 1, 0.45],
-    [x + 17, yCenter - 1.6, 0.6],
-    [x + 23, yCenter + 0.8, 0.4],
-    [x + 29, yCenter - 1, 0.5],
+    [x + 5, yCenter - 1, 0.5],
+    [x + 10.5, yCenter + 0.9, 0.4],
+    [x + 16, yCenter - 1.4, 0.55],
+    [x + 22, yCenter + 0.7, 0.38],
+    [x + 27.5, yCenter - 0.9, 0.45],
   ];
   spots.forEach(([sx, sy, r]) => doc.circle(sx, sy, r, "F"));
 
   doc.setFont("Roboto", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor(...PDF_COLORS.leopardSpot);
   doc.text(label, x + width / 2, yCenter + 1, { align: "center" });
-}
-
-/** Adds a page and resets `y` when the next block wouldn't fit. */
-function ensureSpace(doc, y, needed, pageHeight) {
-  if (y + needed > pageHeight - PDF_MARGIN) {
-    doc.addPage();
-    return PDF_MARGIN;
-  }
-  return y;
 }
 
 function drawSectionHeading(doc, y, ky, ru) {
@@ -95,7 +96,7 @@ function drawSectionHeading(doc, y, ky, ru) {
   return y + 6;
 }
 
-function drawRow(doc, y, pageWidth, label, value) {
+function drawRow(doc, y, pageWidth, label, value, rowHeight) {
   doc.setFont("Roboto", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...PDF_COLORS.gray);
@@ -104,17 +105,13 @@ function drawRow(doc, y, pageWidth, label, value) {
   doc.setFontSize(11);
   doc.setTextColor(...PDF_COLORS.navy);
   doc.text(value, pageWidth - PDF_MARGIN, y, { align: "right" });
-  y += 7;
+  y += rowHeight;
   doc.setDrawColor(245, 246, 248);
-  doc.line(PDF_MARGIN, y - 2.3, pageWidth - PDF_MARGIN, y - 2.3);
+  doc.line(PDF_MARGIN, y - rowHeight * 0.33, pageWidth - PDF_MARGIN, y - rowHeight * 0.33);
   return y;
 }
 
-/**
- * Auto-generated PDF file name. Kept as a function (rather than a bare
- * constant) so it stays the one place to touch if the naming scheme
- * needs to change later.
- */
+/** Auto-generated PDF file name. */
 function buildOfferPdfFileName() {
   return "Nurzaman_EK_Расчет.pdf";
 }
@@ -144,111 +141,117 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     loadImage(CONFIG.project.render),
   ]);
 
+  // ---------- PAGE 1: the personal calculation ----------
   let y = margin;
 
-  // Header: logo + offer title
-  const logoWidth = 34;
+  const logoWidth = 26;
   const logoHeight = (logo.height / logo.width) * logoWidth;
   doc.addImage(logo.dataUrl, "PNG", margin, y, logoWidth, logoHeight, undefined, "FAST");
+  y += Math.max(logoHeight, 6) + 7;
 
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(12);
+  doc.setFontSize(19);
   doc.setTextColor(...PDF_COLORS.navy);
-  doc.text("Бөлүп төлөө боюнча сунуш", pageWidth - margin, y + 5, { align: "right" });
-  doc.setFont("Roboto", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...PDF_COLORS.gray);
-  doc.text("Коммерческое предложение по рассрочке", pageWidth - margin, y + 10.5, {
-    align: "right",
-  });
+  doc.text("БОЛОЧОК ҮЙҮҢҮЗДҮН ЭСЕБИ", pageWidth / 2, y, { align: "center" });
+  y += 8.5;
 
-  y += Math.max(logoHeight, 13) + 8;
-
-  // Hero render image
-  const imgWidth = contentWidth;
-  const imgHeight = (render.height / render.width) * imgWidth;
-  doc.addImage(render.dataUrl, "JPEG", margin, y, imgWidth, imgHeight, undefined, "MEDIUM");
-  y += imgHeight + 7;
-
-  // Project name
-  doc.setFont("Roboto", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(...PDF_COLORS.navy);
-  doc.text(CONFIG.project.name, margin, y);
-  doc.setFont("Roboto", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...PDF_COLORS.gray);
-  doc.text("Долбоор / Проект", pageWidth - margin, y, { align: "right" });
+  doc.setFontSize(13);
+  doc.text("РАСЧЁТ ВАШЕГО БУДУЩЕГО ДОМА", pageWidth / 2, y, { align: "center" });
   y += 8;
+
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...PDF_COLORS.gray);
+  doc.text("Сиздин болочок үйүңүз ушул эсептен башталат", pageWidth / 2, y, { align: "center" });
+  y += 4.6;
+  doc.text("Ваш будущий дом начинается с этого расчёта", pageWidth / 2, y, { align: "center" });
+  y += 6;
 
   doc.setDrawColor(...PDF_COLORS.grayLight);
   doc.line(margin, y, pageWidth - margin, y);
+  y += 7;
+
+  // A small render — this page is about the client's numbers, not the
+  // building, so the image stays modest and centered.
+  const renderWidth = 92;
+  const renderHeight = (render.height / render.width) * renderWidth;
+  doc.addImage(render.dataUrl, "JPEG", (pageWidth - renderWidth) / 2, y, renderWidth, renderHeight, undefined, "MEDIUM");
+  y += renderHeight + 7;
+
+  doc.setFont("Roboto", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...PDF_COLORS.navy);
+  doc.text(CONFIG.project.name, pageWidth / 2, y, { align: "center" });
   y += 8;
 
-  // Apartment data — only the fields the manager actually filled in
-  const apartmentRows = [];
+  // Apartment data — area always shown (it's always known by this point);
+  // block/floor/rooms only when the manager filled them in.
+  const apartmentRows = [[`Батирдин аянты, м² / Площадь, м²`, `${formatNumber(input.area)} м²`]];
   if (extras.block) apartmentRows.push(["Блок / Блок", extras.block]);
   if (extras.floor) apartmentRows.push(["Кабат / Этаж", extras.floor]);
   if (extras.rooms) apartmentRows.push(["Бөлмө саны / Комнат", extras.rooms]);
 
-  if (apartmentRows.length > 0) {
-    y = ensureSpace(doc, y, 6 + apartmentRows.length * 7, pageHeight);
-    y = drawSectionHeading(doc, y, "Батирдин маалыматы", "Данные квартиры");
-    apartmentRows.forEach(([label, value]) => {
-      y = drawRow(doc, y, pageWidth, label, value);
-    });
-    y += 3;
-  }
+  y = drawSectionHeading(doc, y, "Батирдин маалыматы", "Данные квартиры");
+  apartmentRows.forEach(([label, value]) => {
+    y = drawRow(doc, y, pageWidth, label, value, 7);
+  });
+  y += 4;
 
-  // Financial rows
   const financeRows = [
-    ["Батирдин аянты, м² / Площадь квартиры", `${formatNumber(input.area)} м²`],
     ["1 м² баасы / Цена за м²", formatCurrency(input.pricePerM2, currency)],
-    ["Бөлүп төлөө мөөнөтү / Срок рассрочки", `${input.termMonths} ай / ${input.termMonths} мес.`],
     ["Батирдин баасы / Стоимость квартиры", formatCurrency(result.totalPrice, currency)],
     ["Баштапкы төлөм / Первоначальный взнос", formatCurrency(result.downPayment, currency)],
     ["Төлөнө турган калдык / Остаток к оплате", formatCurrency(result.remainder, currency)],
+    ["Бөлүп төлөө мөөнөтү / Срок рассрочки", `${input.termMonths} ай / ${input.termMonths} мес.`],
   ];
 
-  y = ensureSpace(doc, y, 6 + financeRows.length * 7, pageHeight);
   y = drawSectionHeading(doc, y, "Каржылык эсеп", "Финансовый расчёт");
   financeRows.forEach(([label, value]) => {
-    y = drawRow(doc, y, pageWidth, label, value);
+    y = drawRow(doc, y, pageWidth, label, value, 7);
   });
 
-  y += 5;
-
-  // Highlighted monthly payment box — the main focal point of the offer
-  const boxHeight = 34;
-  y = ensureSpace(doc, y, boxHeight, pageHeight);
+  // The monthly payment is the emotional core of the document, so it's
+  // anchored to a fixed spot near the bottom of the page — big, on its
+  // own, regardless of how much (or little) sits above it.
+  const boxHeight = 62;
+  const boxY = pageHeight - margin - boxHeight;
   doc.setFillColor(...PDF_COLORS.navy);
-  doc.roundedRect(margin, y, contentWidth, boxHeight, 4, 4, "F");
+  doc.roundedRect(margin, boxY, contentWidth, boxHeight, 5, 5, "F");
 
-  doc.setFont("Roboto", "normal");
-  doc.setFontSize(10.5);
-  doc.setTextColor(...PDF_COLORS.white);
-  doc.text("Ай сайынкы төлөм / Ежемесячный платеж", margin + 8, y + 12);
+  doc.setDrawColor(...PDF_COLORS.gold);
+  doc.setLineWidth(0.6);
+  doc.line(margin + 10, boxY + 15, margin + 34, boxY + 15);
 
   doc.setFont("Roboto", "bold");
-  doc.setFontSize(24);
-  doc.text(formatCurrency(result.monthlyPayment, currency), margin + 8, y + 25);
+  doc.setFontSize(11.5);
+  doc.setTextColor(...PDF_COLORS.white);
+  doc.text("АЙ САЙЫНКЫ ТӨЛӨМ", margin + 10, boxY + 26);
+  doc.setFont("Roboto", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(220, 226, 236);
+  doc.text("Ежемесячный платёж", margin + 10, boxY + 33);
 
-  y += boxHeight + 10;
+  doc.setFont("Roboto", "bold");
+  doc.setFontSize(42);
+  doc.setTextColor(...PDF_COLORS.white);
+  doc.text(formatCurrency(result.monthlyPayment, currency), margin + 10, boxY + 54);
 
-  // Genplan with the selected block highlighted — only when both a real
-  // genplan image and a known position for this block are configured.
+  // ---------- PAGE 2: genplan, floor plan, contacts ----------
+  doc.addPage();
+  y = margin;
+
   const blockRegion = getBlockRegion(extras.block);
   if (hasGenplanImage() && blockRegion) {
     const genplan = await loadImage(CONFIG.genplan.image);
-    const gpWidth = contentWidth;
+    const gpWidth = 132;
     const gpHeight = (genplan.height / genplan.width) * gpWidth;
+    const gpX = (pageWidth - gpWidth) / 2;
 
-    y = ensureSpace(doc, y, 6 + gpHeight + 6, pageHeight);
     y = drawSectionHeading(doc, y, "Генплан", "Генплан");
 
-    doc.addImage(genplan.dataUrl, "JPEG", margin, y, gpWidth, gpHeight, undefined, "MEDIUM");
+    doc.addImage(genplan.dataUrl, "JPEG", gpX, y, gpWidth, gpHeight, undefined, "MEDIUM");
 
-    const rx = margin + (blockRegion.x / 100) * gpWidth;
+    const rx = gpX + (blockRegion.x / 100) * gpWidth;
     const ry = y + (blockRegion.y / 100) * gpHeight;
     const rw = (blockRegion.width / 100) * gpWidth;
     const rh = (blockRegion.height / 100) * gpHeight;
@@ -261,7 +264,7 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     doc.setFont("Roboto", "bold");
     doc.setFontSize(8.5);
     const labelWidth = doc.getTextWidth(labelText) + 6;
-    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, margin), margin + gpWidth - labelWidth);
+    const labelX = Math.min(Math.max(rx + rw / 2 - labelWidth / 2, gpX), gpX + gpWidth - labelWidth);
     const labelY = Math.max(ry - 6, y + 2);
     doc.setFillColor(...PDF_COLORS.gold);
     doc.roundedRect(labelX, labelY - 4, labelWidth, 5.5, 2, 2, "F");
@@ -271,31 +274,30 @@ async function buildOfferPdf({ input, result, currency, extras }) {
     y += gpHeight + 8;
   }
 
-  // Floor plan matched by block + exact area — omitted entirely (rather
-  // than showing a "not found" note) when there's no exact match, since
-  // this PDF goes straight to the client.
+  // Floor plan matched by block + exact area — large and unobscured,
+  // since this is the second half of "what am I actually buying". If
+  // there's no exact match, the section is skipped entirely rather than
+  // showing a "not found" note in a document that goes to the client.
   const floorPlan = findFloorPlan(extras.block, input.area);
   if (floorPlan) {
     const plan = await loadImage(floorPlan.image);
-    const fpWidth = Math.min(contentWidth, 100);
+    const fpWidth = 156;
     const fpHeight = (plan.height / plan.width) * fpWidth;
+    const fpX = (pageWidth - fpWidth) / 2;
 
-    y = ensureSpace(doc, y, 6 + fpHeight, pageHeight);
     y = drawSectionHeading(doc, y, "Планировка", "Планировка");
-    doc.addImage(plan.dataUrl, "JPEG", margin, y, fpWidth, fpHeight, undefined, "MEDIUM");
+    doc.addImage(plan.dataUrl, "JPEG", fpX, y, fpWidth, fpHeight, undefined, "MEDIUM");
     y += fpHeight + 8;
   }
 
-  // Client / manager contact details
   const clientRows = [];
   if (extras.clientName) clientRows.push(["Аты / Имя", extras.clientName]);
   if (extras.clientPhone) clientRows.push(["Телефону / Телефон", extras.clientPhone]);
 
   if (clientRows.length > 0) {
-    y = ensureSpace(doc, y, 6 + clientRows.length * 7, pageHeight);
     y = drawSectionHeading(doc, y, "Кардар", "Клиент");
     clientRows.forEach(([label, value]) => {
-      y = drawRow(doc, y, pageWidth, label, value);
+      y = drawRow(doc, y, pageWidth, label, value, 6.5);
     });
     y += 3;
   }
@@ -305,26 +307,23 @@ async function buildOfferPdf({ input, result, currency, extras }) {
   if (extras.managerPhone) managerRows.push(["Телефону / Телефон", extras.managerPhone]);
 
   if (managerRows.length > 0) {
-    y = ensureSpace(doc, y, 6 + managerRows.length * 7, pageHeight);
     y = drawSectionHeading(doc, y, "Менеджер", "Менеджер");
     managerRows.forEach(([label, value]) => {
-      y = drawRow(doc, y, pageWidth, label, value);
+      y = drawRow(doc, y, pageWidth, label, value, 6.5);
     });
     y += 3;
   }
 
-  // Footer
-  y = ensureSpace(doc, y, 14, pageHeight);
+  // Footer signature, anchored to the bottom of page 2 so it never
+  // shifts the layout above and never spills onto a third page.
+  const footerY = pageHeight - margin;
   doc.setDrawColor(...PDF_COLORS.grayLight);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
+  doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
   doc.setFont("Roboto", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...PDF_COLORS.gray);
-  doc.text(`© Nurzaman, ${new Date().getFullYear()}`, margin, y + 1.5);
-
-  drawLeopardBadge(doc, pageWidth - margin - 36, y + 1.5, "created by Elizka");
+  doc.text(`© Nurzaman, ${new Date().getFullYear()}`, margin, footerY - 2);
+  drawLeopardBadge(doc, pageWidth - margin - 34, footerY - 3.5, "created by Elizka");
 
   return doc;
 }
