@@ -5,7 +5,7 @@
  * first load. Bump CACHE_NAME whenever a cached file's content changes
  * so clients pick up the new version instead of stale cache.
  */
-const CACHE_NAME = "nurzaman-calculator-v2";
+const CACHE_NAME = "nurzaman-calculator-v3";
 
 const APP_SHELL = [
   "./",
@@ -25,6 +25,7 @@ const APP_SHELL = [
   "./js/vendor/roboto-bold-font.js",
   "./assets/logo.png",
   "./assets/render.jpg",
+  "./assets/genplan.jpg",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-192-maskable.png",

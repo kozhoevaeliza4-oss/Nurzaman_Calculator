@@ -47,28 +47,31 @@ const CONFIG = {
   // ],
   projects: [],
 
-  // General site plan (genplan) of the project + a map of block number ->
-  // highlight rectangle. `image` stays null until a real genplan file is
-  // added to assets/ — the UI and PDF both hide the genplan section
-  // entirely while it's null instead of showing a broken image.
-  //
-  // Rectangle coordinates are in PERCENT of the image's own width/height
-  // (0-100), not pixels, so they stay correct no matter what size the
-  // image is displayed at. Find them once (e.g. by opening the genplan in
-  // an image editor and reading the block's bounding box in pixels, then
-  // dividing by the full image width/height and multiplying by 100).
-  //
-  // Example once the real file + coordinates are known:
-  // genplan: {
-  //   image: "assets/genplan.jpg",
-  //   blocks: {
-  //     "14": { x: 32, y: 18, width: 12, height: 15 },
-  //     "13": { x: 45, y: 18, width: 12, height: 15 },
-  //   },
-  // },
+  // General site plan (genplan) of Европейский квартал + a map of block
+  // number -> highlight rectangle. Rectangles are in PERCENT of the
+  // image's own width/height (0-100) so they stay correct at any display
+  // size. Measured directly off the real genplan photo (assets/genplan.jpg,
+  // 4000x2323 source) using the numbered reference the client sent — if a
+  // box ever looks slightly off against the real building, just nudge the
+  // numbers below, nothing else needs to change.
   genplan: {
-    image: null,
-    blocks: {},
+    image: "assets/genplan.jpg",
+    blocks: {
+      "14": { x: 50.0, y: 11.84, width: 5.0, height: 17.22 },
+      "13": { x: 61.25, y: 11.84, width: 5.0, height: 16.15 },
+      "12": { x: 21.08, y: 33.79, width: 10.8, height: 11.97 },
+      "11": { x: 31.88, y: 33.79, width: 10.8, height: 11.97 },
+      "10": { x: 42.68, y: 33.79, width: 10.8, height: 11.97 },
+      "9": { x: 53.48, y: 33.79, width: 10.8, height: 11.97 },
+      "8": { x: 64.28, y: 33.79, width: 10.8, height: 11.97 },
+      "7": { x: 75.08, y: 33.79, width: 10.83, height: 11.97 },
+      "6": { x: 27.8, y: 55.7, width: 7.2, height: 14.81 },
+      "1": { x: 69.38, y: 55.7, width: 7.18, height: 14.81 },
+      "5": { x: 31.55, y: 70.77, width: 12.58, height: 10.5 },
+      "4": { x: 44.13, y: 70.77, width: 12.58, height: 10.5 },
+      "3": { x: 56.7, y: 70.77, width: 12.58, height: 10.5 },
+      "2": { x: 69.28, y: 70.77, width: 12.6, height: 10.5 },
+    },
   },
 
   // Apartment floor plans. Each entry is matched by EXACT area (no
