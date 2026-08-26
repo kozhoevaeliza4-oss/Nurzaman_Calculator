@@ -251,14 +251,21 @@ async function buildOfferPdf({ input, result, currency, extras }) {
 
     doc.addImage(genplan.dataUrl, "JPEG", gpX, y, gpWidth, gpHeight, undefined, "MEDIUM");
 
-    const rx = gpX + (blockRegion.x / 100) * gpWidth;
-    const ry = y + (blockRegion.y / 100) * gpHeight;
-    const rw = (blockRegion.width / 100) * gpWidth;
-    const rh = (blockRegion.height / 100) * gpHeight;
+    // A small inward inset + thinner stroke than the on-screen CSS
+    // highlight: at this image size a 1mm centered stroke would put a
+    // visible sliver of the line itself past the block's edge, which
+    // reads as "touching the neighbor" even though the rectangle's own
+    // coordinates are correct.
+    const strokeWidth = 0.5;
+    const inset = 0.5;
+    const rx = gpX + (blockRegion.x / 100) * gpWidth + inset;
+    const ry = y + (blockRegion.y / 100) * gpHeight + inset;
+    const rw = (blockRegion.width / 100) * gpWidth - inset * 2;
+    const rh = (blockRegion.height / 100) * gpHeight - inset * 2;
 
     doc.setDrawColor(...PDF_COLORS.gold);
-    doc.setLineWidth(1);
-    doc.roundedRect(rx, ry, rw, rh, 1.5, 1.5, "S");
+    doc.setLineWidth(strokeWidth);
+    doc.roundedRect(rx, ry, rw, rh, 1.2, 1.2, "S");
 
     const labelText = `Блок ${extras.block}`;
     doc.setFont("Roboto", "bold");
