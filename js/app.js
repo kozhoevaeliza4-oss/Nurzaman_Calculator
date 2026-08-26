@@ -40,6 +40,13 @@
     floorplanSection: document.getElementById("floorplan-section"),
     floorplanBody: document.getElementById("floorplan-body"),
 
+    komplectationSection: document.getElementById("komplectation-section"),
+    komplectationList: document.getElementById("komplectation-list"),
+
+    locationSection: document.getElementById("location-section"),
+    locationMapImage: document.getElementById("location-map-image"),
+    locationInfra: document.getElementById("location-infra"),
+
     sendButton: document.getElementById("send-button"),
     sendError: document.getElementById("send-error"),
     sendStatus: document.getElementById("send-status"),
@@ -207,6 +214,55 @@
       els.downPayment.placeholder = `Сунуш: ${suggested} (30%) / Рекомендуем: ${suggested} (30%)`;
     } else {
       els.downPayment.placeholder = "Мисалы, 10 000 / Например, 10 000";
+    }
+  }
+
+  // Project-level info (fit-out checklist, location + nearby infrastructure)
+  // doesn't depend on any form input, so it's rendered once from CONFIG
+  // instead of on every recalculate() — same content already used in the
+  // PDF (see pdf.js), single source of truth stays in config.js.
+  function renderProjectInfo() {
+    const komplectation = CONFIG.project.komplectation;
+    if (komplectation && komplectation.length > 0) {
+      els.komplectationList.innerHTML = "";
+      komplectation.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "komplectation__item";
+        li.innerHTML =
+          '<span class="komplectation__check">✓</span>' +
+          `<span class="komplectation__ky">${item.ky}</span>` +
+          '<span class="field__label-sep">/</span>' +
+          `<span class="komplectation__ru">${item.ru}</span>`;
+        els.komplectationList.appendChild(li);
+      });
+      els.komplectationSection.hidden = false;
+    }
+
+    const locationMap = CONFIG.project.locationMap;
+    const infra = CONFIG.project.infrastructure;
+    const hasLocationContent = Boolean(locationMap) || Boolean(infra);
+    if (hasLocationContent) {
+      if (locationMap) {
+        els.locationMapImage.src = locationMap;
+        els.locationMapImage.hidden = false;
+      }
+      if (infra) {
+        els.locationInfra.innerHTML = "";
+        [infra.parks, infra.schools, infra.markets].filter(Boolean).forEach((category) => {
+          const block = document.createElement("div");
+          block.className = "location__category";
+          const itemsHtml = category.items.map((item) => `<li>${item}</li>`).join("");
+          block.innerHTML =
+            '<div class="location__category-title">' +
+            `<span class="location__category-ky">${category.ky}</span>` +
+            '<span class="field__label-sep">/</span>' +
+            `<span class="location__category-ru">${category.ru}</span>` +
+            "</div>" +
+            `<ul class="location__category-list">${itemsHtml}</ul>`;
+          els.locationInfra.appendChild(block);
+        });
+      }
+      els.locationSection.hidden = false;
     }
   }
 
@@ -425,6 +481,7 @@
 
     updateCurrencyPrefixes();
     recalculate();
+    renderProjectInfo();
     initInstallHint();
     registerServiceWorker();
   }

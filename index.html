@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Калькулятор рассрочки — Nurzaman</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="css/style.css" />
 
   <link rel="manifest" href="manifest.json" />
@@ -17,15 +23,13 @@
 </head>
 <body>
   <div class="page">
-    <header class="brand">
-      <img class="brand__logo" src="assets/logo.png" alt="Nurzaman — курулуш компаниясы" />
-    </header>
-
-    <figure class="project">
-      <img class="project__image" src="assets/render.jpg" alt="Европейский квартал" />
-      <figcaption class="project__caption">
-        <span class="project__hint">Долбоор / Проект</span>
-        <span class="project__name">Европейский квартал</span>
+    <figure class="hero">
+      <img class="hero__image" src="assets/render.jpg" alt="Европейский квартал" />
+      <div class="hero__scrim"></div>
+      <img class="hero__logo" src="assets/logo.png" alt="Nurzaman — курулуш компаниясы" />
+      <figcaption class="hero__caption">
+        <span class="hero__hint">Долбоор / Проект</span>
+        <span class="hero__name">Европейский квартал</span>
       </figcaption>
     </figure>
 
@@ -295,6 +299,25 @@
           <span class="field-section__ru">Планировка</span>
         </div>
         <div class="floorplan__body" id="floorplan-body"></div>
+      </section>
+
+      <section class="komplectation" id="komplectation-section" hidden>
+        <div class="field-section">
+          <span class="field-section__ky">Комплектация</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Комплектация квартиры</span>
+        </div>
+        <ul class="komplectation__list" id="komplectation-list"></ul>
+      </section>
+
+      <section class="location" id="location-section" hidden>
+        <div class="field-section">
+          <span class="field-section__ky">Жайгашуусу</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Расположение и инфраструктура</span>
+        </div>
+        <img class="location__map" id="location-map-image" alt="Расположение Европейский квартал" hidden />
+        <div class="location__infra" id="location-infra"></div>
       </section>
 
       <button type="button" class="send-button" id="send-button" disabled>
