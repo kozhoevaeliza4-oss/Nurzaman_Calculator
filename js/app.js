@@ -32,20 +32,9 @@
     resultRemainder: document.getElementById("result-remainder"),
     resultMonthly: document.getElementById("result-monthly"),
 
-    genplanSection: document.getElementById("genplan-section"),
-    genplanImage: document.getElementById("genplan-image"),
-    genplanHighlight: document.getElementById("genplan-highlight"),
-    genplanLabel: document.getElementById("genplan-label"),
+    floorplanPickerGrid: document.getElementById("floorplan-picker-grid"),
 
-    floorplanSection: document.getElementById("floorplan-section"),
-    floorplanBody: document.getElementById("floorplan-body"),
-
-    komplectationSection: document.getElementById("komplectation-section"),
-    komplectationList: document.getElementById("komplectation-list"),
-
-    locationSection: document.getElementById("location-section"),
-    locationMapImage: document.getElementById("location-map-image"),
-    locationInfra: document.getElementById("location-infra"),
+    saveContactButton: document.getElementById("save-contact-button"),
 
     sendButton: document.getElementById("send-button"),
     sendError: document.getElementById("send-error"),
@@ -140,68 +129,56 @@
     els.resultMonthly.textContent = formatCurrency(0, currency);
   }
 
-  function updateGenplan(block) {
-    if (!hasGenplanImage()) {
-      els.genplanSection.hidden = true;
-      return;
-    }
+  // Visual floor-plan picker: the manager doesn't need to know a unit's
+  // exact area or room count by heart — picking its thumbnail fills area
+  // + rooms in automatically. Manual entry in the fields below still
+  // works untouched for anything not in the catalogue.
+  function buildFloorplanPicker() {
+    const plans = CONFIG.floorPlans || [];
+    els.floorplanPickerGrid.innerHTML = "";
 
-    const region = getBlockRegion(block);
-    if (!region) {
-      // Genplan exists, but either no block was typed yet or this
-      // specific block has no configured position — showing a highlight
-      // in the wrong place would be worse than showing none at all.
-      els.genplanHighlight.hidden = true;
-      els.genplanSection.hidden = false;
-      if (els.genplanImage.src !== CONFIG.genplan.image) {
-        els.genplanImage.src = CONFIG.genplan.image;
-      }
-      return;
-    }
+    plans.forEach((plan, index) => {
+      const blocks = Array.isArray(plan.block) ? plan.block : plan.block ? [plan.block] : [];
 
-    els.genplanSection.hidden = false;
-    if (els.genplanImage.src !== CONFIG.genplan.image) {
-      els.genplanImage.src = CONFIG.genplan.image;
-    }
-    els.genplanHighlight.hidden = false;
-    els.genplanHighlight.style.left = `${region.x}%`;
-    els.genplanHighlight.style.top = `${region.y}%`;
-    els.genplanHighlight.style.width = `${region.width}%`;
-    els.genplanHighlight.style.height = `${region.height}%`;
-    els.genplanLabel.textContent = `Блок ${block}`;
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "floorplan-picker__card";
+      card.dataset.index = String(index);
+      card.innerHTML =
+        `<img class="floorplan-picker__thumb" src="${plan.image}" alt="Планировка ${formatNumber(plan.area)} м²" loading="lazy" />` +
+        '<span class="floorplan-picker__meta">' +
+        `${formatNumber(plan.area)} м² · ${plan.rooms}-комн.` +
+        "</span>" +
+        (blocks.length > 0 ? `<span class="floorplan-picker__blocks">Блок ${blocks.join(", ")}</span>` : "");
+
+      card.addEventListener("click", () => {
+        els.area.value = String(plan.area);
+        els.rooms.value = String(plan.rooms);
+        if (blocks.length === 1 && !els.block.value.trim()) {
+          els.block.value = blocks[0];
+        }
+        recalculate();
+      });
+
+      els.floorplanPickerGrid.appendChild(card);
+    });
   }
 
-  function renderFloorPlanNotFound() {
-    els.floorplanBody.innerHTML = "";
-    const wrap = document.createElement("div");
-    wrap.className = "floorplan__not-found";
-    wrap.innerHTML =
-      '<span class="floorplan__not-found-ky">Планировка табылган жок</span>' +
-      '<span class="field__label-sep">/</span>' +
-      '<span>Планировка не найдена</span>';
-    els.floorplanBody.appendChild(wrap);
-  }
+  // Highlights the picker card matching the currently typed area + rooms
+  // (and block, when the plan is scoped to specific blocks) so manual
+  // edits and picker clicks stay visually in sync.
+  function syncFloorplanPickerSelection(input, extras) {
+    const cards = els.floorplanPickerGrid.querySelectorAll(".floorplan-picker__card");
+    const plans = CONFIG.floorPlans || [];
 
-  function updateFloorPlan(block, area) {
-    if (!Number.isFinite(area)) {
-      els.floorplanSection.hidden = true;
-      return;
-    }
-
-    els.floorplanSection.hidden = false;
-    const plan = findFloorPlan(block, area);
-
-    if (!plan) {
-      renderFloorPlanNotFound();
-      return;
-    }
-
-    els.floorplanBody.innerHTML = "";
-    const img = document.createElement("img");
-    img.className = "floorplan__image";
-    img.src = plan.image;
-    img.alt = `Планировка ${plan.area} м²`;
-    els.floorplanBody.appendChild(img);
+    cards.forEach((card) => {
+      const plan = plans[Number(card.dataset.index)];
+      const blocks = Array.isArray(plan.block) ? plan.block : plan.block ? [plan.block] : [];
+      const roomsMatch = String(plan.rooms) === extras.rooms || !extras.rooms;
+      const blockMatch = blocks.length === 0 || !extras.block || blocks.includes(extras.block);
+      const isMatch = Number.isFinite(input.area) && input.area === plan.area && roomsMatch && blockMatch;
+      card.classList.toggle("floorplan-picker__card--active", isMatch);
+    });
   }
 
   // The suggested amount is only ever shown as a placeholder hint — the
@@ -217,55 +194,6 @@
     }
   }
 
-  // Project-level info (fit-out checklist, location + nearby infrastructure)
-  // doesn't depend on any form input, so it's rendered once from CONFIG
-  // instead of on every recalculate() — same content already used in the
-  // PDF (see pdf.js), single source of truth stays in config.js.
-  function renderProjectInfo() {
-    const komplectation = CONFIG.project.komplectation;
-    if (komplectation && komplectation.length > 0) {
-      els.komplectationList.innerHTML = "";
-      komplectation.forEach((item) => {
-        const li = document.createElement("li");
-        li.className = "komplectation__item";
-        li.innerHTML =
-          '<span class="komplectation__check">✓</span>' +
-          `<span class="komplectation__ky">${item.ky}</span>` +
-          '<span class="field__label-sep">/</span>' +
-          `<span class="komplectation__ru">${item.ru}</span>`;
-        els.komplectationList.appendChild(li);
-      });
-      els.komplectationSection.hidden = false;
-    }
-
-    const locationMap = CONFIG.project.locationMap;
-    const infra = CONFIG.project.infrastructure;
-    const hasLocationContent = Boolean(locationMap) || Boolean(infra);
-    if (hasLocationContent) {
-      if (locationMap) {
-        els.locationMapImage.src = locationMap;
-        els.locationMapImage.hidden = false;
-      }
-      if (infra) {
-        els.locationInfra.innerHTML = "";
-        [infra.parks, infra.schools, infra.markets].filter(Boolean).forEach((category) => {
-          const block = document.createElement("div");
-          block.className = "location__category";
-          const itemsHtml = category.items.map((item) => `<li>${item}</li>`).join("");
-          block.innerHTML =
-            '<div class="location__category-title">' +
-            `<span class="location__category-ky">${category.ky}</span>` +
-            '<span class="field__label-sep">/</span>' +
-            `<span class="location__category-ru">${category.ru}</span>` +
-            "</div>" +
-            `<ul class="location__category-list">${itemsHtml}</ul>`;
-          els.locationInfra.appendChild(block);
-        });
-      }
-      els.locationSection.hidden = false;
-    }
-  }
-
   function recalculate() {
     const input = readInput();
     const extras = readExtras();
@@ -273,9 +201,9 @@
 
     renderErrors(errors);
     hideSendStatus(); // the numbers are changing — any previously generated PDF is now stale
-    updateGenplan(extras.block);
-    updateFloorPlan(extras.block, input.area);
+    syncFloorplanPickerSelection(input, extras);
     updateDownPaymentPlaceholder(input.area, input.pricePerM2);
+    updateSaveContactButtonState();
 
     if (Object.keys(errors).length > 0) {
       renderEmptyResults();
@@ -405,6 +333,51 @@
     triggerDownload(lastGeneratedPdf.blob, lastGeneratedPdf.fileName);
   }
 
+  // --- Save client to contacts ---
+
+  function updateSaveContactButtonState() {
+    const hasName = els.clientName.value.trim() !== "";
+    const hasPhone = els.clientPhone.value.trim() !== "";
+    els.saveContactButton.disabled = !(hasName && hasPhone);
+  }
+
+  function buildVCard(name, phone) {
+    return ["BEGIN:VCARD", "VERSION:3.0", `N:;${name};;;`, `FN:${name}`, `TEL;TYPE=CELL:${phone}`, "END:VCARD"].join(
+      "\r\n"
+    );
+  }
+
+  // Hands the client's name + phone to the phone's own "add contact"
+  // screen instead of saving anything ourselves — the manager still has
+  // to tap save there, so nothing is created without their confirmation.
+  async function handleSaveContactClick() {
+    const name = els.clientName.value.trim();
+    const phone = els.clientPhone.value.trim();
+    if (!name || !phone) return;
+
+    const blob = new Blob([buildVCard(name, phone)], { type: "text/vcard" });
+    const fileName = `${name.replace(/\s+/g, "_")}.vcf`;
+
+    if (isTouchPrimaryDevice() && typeof File !== "undefined" && navigator.share && navigator.canShare) {
+      const file = new File([blob], fileName, { type: "text/vcard" });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          return;
+        } catch (shareErr) {
+          if (shareErr && shareErr.name === "AbortError") return;
+        }
+      }
+    }
+
+    // No file share sheet available — opening the vCard directly (rather
+    // than forcing a download) is what makes the browser/OS present its
+    // native "create contact" screen instead of just saving a .vcf file.
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
   // --- PWA install prompt (Android/Chrome) + manual instructions (iOS) ---
 
   function isRunningStandalone() {
@@ -478,10 +451,11 @@
     els.currency.addEventListener("change", handleCurrencyChange);
     els.sendButton.addEventListener("click", handleSendClick);
     els.sendDownloadButton.addEventListener("click", handleDownloadAgainClick);
+    els.saveContactButton.addEventListener("click", handleSaveContactClick);
 
+    buildFloorplanPicker();
     updateCurrencyPrefixes();
     recalculate();
-    renderProjectInfo();
     initInstallHint();
     registerServiceWorker();
   }

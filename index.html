@@ -53,6 +53,19 @@
           </select>
         </div>
 
+        <section class="floorplan-picker">
+          <div class="field-section">
+            <span class="field-section__ky">Планировка</span>
+            <span class="field__label-sep">/</span>
+            <span class="field-section__ru">Выбор планировки</span>
+          </div>
+          <p class="floorplan-picker__hint">
+            Тандаңыз — аянты жана бөлмө саны өзү толтурулат / Выберите вариант — площадь и число комнат подставятся
+            автоматически. Табылбаса, төмөндө колдонуу менен киргизиңиз / Если нужной нет, введите данные ниже вручную.
+          </p>
+          <div class="floorplan-picker__grid" id="floorplan-picker-grid"></div>
+        </section>
+
         <div class="field">
           <label class="field__label" for="block">
             <span class="field__label-ky">Блок</span>
@@ -213,6 +226,12 @@
           </div>
         </div>
 
+        <button type="button" class="save-contact-button" id="save-contact-button" disabled>
+          <span class="save-contact-button__ky">Байланыштарга сактоо</span>
+          <span class="card__title-sep">/</span>
+          <span class="save-contact-button__ru">Сохранить в контакты</span>
+        </button>
+
         <div class="field-section">
           <span class="field-section__ky">Менеджер</span>
           <span class="field__label-sep">/</span>
@@ -276,48 +295,6 @@
           </span>
           <span class="results__value results__value--big" id="result-monthly">0 $</span>
         </div>
-      </section>
-
-      <section class="genplan" id="genplan-section" hidden>
-        <div class="field-section">
-          <span class="field-section__ky">Генплан</span>
-          <span class="field__label-sep">/</span>
-          <span class="field-section__ru">Генплан</span>
-        </div>
-        <div class="genplan__frame">
-          <img class="genplan__image" id="genplan-image" alt="Генплан Европейский квартал" />
-          <div class="genplan__highlight" id="genplan-highlight" hidden>
-            <span class="genplan__label" id="genplan-label"></span>
-          </div>
-        </div>
-      </section>
-
-      <section class="floorplan" id="floorplan-section" hidden>
-        <div class="field-section">
-          <span class="field-section__ky">Планировка</span>
-          <span class="field__label-sep">/</span>
-          <span class="field-section__ru">Планировка</span>
-        </div>
-        <div class="floorplan__body" id="floorplan-body"></div>
-      </section>
-
-      <section class="komplectation" id="komplectation-section" hidden>
-        <div class="field-section">
-          <span class="field-section__ky">Комплектация</span>
-          <span class="field__label-sep">/</span>
-          <span class="field-section__ru">Комплектация квартиры</span>
-        </div>
-        <ul class="komplectation__list" id="komplectation-list"></ul>
-      </section>
-
-      <section class="location" id="location-section" hidden>
-        <div class="field-section">
-          <span class="field-section__ky">Жайгашуусу</span>
-          <span class="field__label-sep">/</span>
-          <span class="field-section__ru">Расположение и инфраструктура</span>
-        </div>
-        <img class="location__map" id="location-map-image" alt="Расположение Европейский квартал" hidden />
-        <div class="location__infra" id="location-infra"></div>
       </section>
 
       <button type="button" class="send-button" id="send-button" disabled>
