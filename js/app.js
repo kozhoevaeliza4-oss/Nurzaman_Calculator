@@ -296,9 +296,14 @@
    * share" for PDFs) — so desktop always uses direct download instead of
    * trusting feature detection alone.
    */
+  function isIosDevice() {
+    const ua = navigator.userAgent || "";
+    return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+
   function isTouchPrimaryDevice() {
     const ua = navigator.userAgent || "";
-    const isIos = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isIos = isIosDevice();
     const isAndroid = /Android/.test(ua);
     return isIos || isAndroid;
   }
@@ -391,11 +396,33 @@
     els.contactError.textContent = "";
 
     try {
-      const blob = new Blob([buildVCard(name, phone)], { type: "text/vcard" });
+      const vcard = buildVCard(name, phone);
+      const blob = new Blob([vcard], { type: "text/vcard" });
       const safeName = toSafeFileName(name) || "contact";
       const fileName = `${safeName}.vcf`;
 
+      if (isIosDevice()) {
+        // iOS Safari only shows its native "Create New Contact" preview
+        // when IT is the one opening the vCard (a direct navigation it
+        // can intercept) — a vCard handed to navigator.share() instead
+        // just lands in the generic file-sharing sheet with no contact
+        // actions, and a forced download (the `download` attribute)
+        // skips the preview entirely. So on iOS this deliberately opens
+        // the vCard in place rather than sharing or downloading it.
+        const dataUrl = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcard)}`;
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.target = "_blank";
+        link.rel = "noopener";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+      }
+
       if (isTouchPrimaryDevice() && typeof File !== "undefined" && navigator.share && navigator.canShare) {
+        // Android's share sheet commonly lists the Contacts app itself as
+        // a target for a shared .vcf, so this is worth trying there.
         const file = new File([blob], fileName, { type: "text/vcard" });
         if (navigator.canShare({ files: [file] })) {
           try {
@@ -410,13 +437,12 @@
       }
 
       // No (working) share sheet — a downloaded .vcf is the one thing
-      // every platform handles the same way: on desktop (Windows/macOS)
-      // double-clicking it opens the system Contacts/Outlook add-contact
-      // screen; on mobile, opening it from Downloads/notifications does
-      // the same. window.open() on a blob: URL is unreliable here (many
-      // desktop browsers just silently fail to display an unknown MIME
-      // type), so this reuses the same proven download path as the PDF
-      // button instead.
+      // every remaining platform handles the same way: on desktop
+      // (Windows/macOS) double-clicking it opens the system
+      // Contacts/Outlook add-contact screen. window.open() on a blob:
+      // URL is unreliable here (many desktop browsers just silently
+      // fail to display an unknown MIME type), so this reuses the same
+      // proven download path as the PDF button instead.
       triggerDownload(blob, fileName);
     } catch (err) {
       console.error(err);
