@@ -142,18 +142,19 @@ const CONFIG = {
   // so feel free to correct any of these numbers without touching
   // anything else.
   floorPlans: [
+    // Same layout in every block — no `block` key needed.
+    {
+      area: 40.22,
+      rooms: 2,
+      image: "assets/floorplans/40.22-euro.jpg",
+    },
+
     // Blocks 1, 6, 9, 10 have their own apartment catalogue.
     {
       area: 38.34,
       rooms: 1,
       block: ["1", "6", "9", "10"],
       image: "assets/floorplans/38.34-studio.jpg",
-    },
-    {
-      area: 40.22,
-      rooms: 2,
-      block: ["1", "6", "9", "10"],
-      image: "assets/floorplans/40.22-euro.jpg",
     },
     {
       area: 58.37,
