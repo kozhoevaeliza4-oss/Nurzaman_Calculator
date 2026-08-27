@@ -33,6 +33,7 @@
     resultMonthly: document.getElementById("result-monthly"),
 
     floorplanPickerGrid: document.getElementById("floorplan-picker-grid"),
+    blockHint: document.getElementById("block-hint"),
 
     saveContactButton: document.getElementById("save-contact-button"),
 
@@ -181,6 +182,36 @@
     });
   }
 
+  // Tells the manager which blocks a picked (or manually typed) plan
+  // actually exists in, and flags it when the typed block doesn't match —
+  // catches exactly the case of picking e.g. "58,37 м²" (only blocks
+  // 1, 6, 9, 10) while "Блок" still has an unrelated value in it.
+  function updateBlockHint(input, extras) {
+    const plans = CONFIG.floorPlans || [];
+    const matches = plans.filter(
+      (plan) => plan.area === input.area && (!extras.rooms || String(plan.rooms) === extras.rooms)
+    );
+
+    const allowedBlocks = Array.from(
+      new Set(matches.flatMap((plan) => (Array.isArray(plan.block) ? plan.block : plan.block ? [plan.block] : [])))
+    );
+
+    if (!Number.isFinite(input.area) || allowedBlocks.length === 0) {
+      els.blockHint.textContent = "";
+      els.blockHint.classList.remove("field__hint--warning");
+      return;
+    }
+
+    const blocksText = allowedBlocks.join(", ");
+    if (extras.block && !allowedBlocks.includes(extras.block)) {
+      els.blockHint.textContent = `Бул план блок ${extras.block}-до жок / Этой планировки нет в блоке ${extras.block} — доступна в блоках: ${blocksText}`;
+      els.blockHint.classList.add("field__hint--warning");
+    } else {
+      els.blockHint.textContent = `Бул план ушул блокторго гана тиешелүү / Доступна только в блоках: ${blocksText}`;
+      els.blockHint.classList.remove("field__hint--warning");
+    }
+  }
+
   // The suggested amount is only ever shown as a placeholder hint — the
   // manager still types in whatever down payment the client actually
   // agrees to. Falls back to the generic example once area/price aren't
@@ -202,6 +233,7 @@
     renderErrors(errors);
     hideSendStatus(); // the numbers are changing — any previously generated PDF is now stale
     syncFloorplanPickerSelection(input, extras);
+    updateBlockHint(input, extras);
     updateDownPaymentPlaceholder(input.area, input.pricePerM2);
     updateSaveContactButtonState();
 

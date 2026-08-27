@@ -283,6 +283,18 @@ body {
   color: var(--error);
 }
 
+.field__hint {
+  min-height: 16px;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.field__hint--warning {
+  color: var(--error);
+  font-weight: 600;
+}
+
 [hidden] {
   display: none !important;
 }
