@@ -409,14 +409,19 @@
         // actions, and a forced download (the `download` attribute)
         // skips the preview entirely. So on iOS this deliberately opens
         // the vCard in place rather than sharing or downloading it.
-        const dataUrl = `data:text/vcard;charset=utf-8,${encodeURIComponent(vcard)}`;
+        //
+        // Must be a blob: URL, not data: — Safari blocks top-level
+        // navigation to data: URLs outright (a long-standing anti-phishing
+        // restriction), so that version never even opens.
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = dataUrl;
+        link.href = url;
         link.target = "_blank";
         link.rel = "noopener";
         document.body.appendChild(link);
         link.click();
         link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
         return;
       }
 
