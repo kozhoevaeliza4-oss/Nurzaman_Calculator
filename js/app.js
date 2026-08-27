@@ -412,12 +412,14 @@
         //
         // Must be a blob: URL, not data: — Safari blocks top-level
         // navigation to data: URLs outright (a long-standing anti-phishing
-        // restriction), so that version never even opens.
+        // restriction), so that version never even opens. And no
+        // target="_blank": opening a vcf: URL in the SAME tab is what lets
+        // Safari intercept the navigation and show its contact preview as
+        // an overlay; routing it through a new tab is the flaky part in
+        // most reports of this not working.
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener";
         document.body.appendChild(link);
         link.click();
         link.remove();
