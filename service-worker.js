@@ -5,7 +5,7 @@
  * first load. Bump CACHE_NAME whenever a cached file's content changes
  * so clients pick up the new version instead of stale cache.
  */
-const CACHE_NAME = "nurzaman-calculator-v9";
+const CACHE_NAME = "nurzaman-calculator-v10";
 
 const APP_SHELL = [
   "./",
