@@ -272,7 +272,10 @@ function drawPersonalContact(doc, x, y, width, left, right) {
 }
 
 function buildOfferPdfFileName() {
-  return "Nurzaman_EK_Расчет.pdf";
+  // Cyrillic in a dynamically-set <a download> filename gets silently
+  // dropped by Chromium/Edge (the file saves as a plain "download" with
+  // no name or extension) — keep this ASCII-only so the save always works.
+  return "Nurzaman_EK_Raschet.pdf";
 }
 
 function formatCalculationDate() {

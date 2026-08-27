@@ -36,6 +36,7 @@
     blockHint: document.getElementById("block-hint"),
 
     saveContactButton: document.getElementById("save-contact-button"),
+    contactError: document.getElementById("contact-error"),
 
     sendButton: document.getElementById("send-button"),
     sendError: document.getElementById("send-error"),
@@ -387,27 +388,41 @@
     const phone = els.clientPhone.value.trim();
     if (!name || !phone) return;
 
-    const blob = new Blob([buildVCard(name, phone)], { type: "text/vcard" });
-    const fileName = `${name.replace(/\s+/g, "_")}.vcf`;
+    els.contactError.textContent = "";
 
-    if (isTouchPrimaryDevice() && typeof File !== "undefined" && navigator.share && navigator.canShare) {
-      const file = new File([blob], fileName, { type: "text/vcard" });
-      if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] });
-          return;
-        } catch (shareErr) {
-          if (shareErr && shareErr.name === "AbortError") return;
+    try {
+      const blob = new Blob([buildVCard(name, phone)], { type: "text/vcard" });
+      const safeName = toSafeFileName(name) || "contact";
+      const fileName = `${safeName}.vcf`;
+
+      if (isTouchPrimaryDevice() && typeof File !== "undefined" && navigator.share && navigator.canShare) {
+        const file = new File([blob], fileName, { type: "text/vcard" });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file] });
+            return;
+          } catch (shareErr) {
+            if (shareErr && shareErr.name === "AbortError") return;
+            // Share sheet failed for some other reason — fall through to
+            // a plain download below instead of leaving the manager stuck.
+          }
         }
       }
-    }
 
-    // No file share sheet available — opening the vCard directly (rather
-    // than forcing a download) is what makes the browser/OS present its
-    // native "create contact" screen instead of just saving a .vcf file.
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+      // No (working) share sheet — a downloaded .vcf is the one thing
+      // every platform handles the same way: on desktop (Windows/macOS)
+      // double-clicking it opens the system Contacts/Outlook add-contact
+      // screen; on mobile, opening it from Downloads/notifications does
+      // the same. window.open() on a blob: URL is unreliable here (many
+      // desktop browsers just silently fail to display an unknown MIME
+      // type), so this reuses the same proven download path as the PDF
+      // button instead.
+      triggerDownload(blob, fileName);
+    } catch (err) {
+      console.error(err);
+      els.contactError.textContent =
+        "Ката кетти, кайра аракет кылыңыз / Не удалось сохранить контакт, попробуйте ещё раз";
+    }
   }
 
   // --- PWA install prompt (Android/Chrome) + manual instructions (iOS) ---
