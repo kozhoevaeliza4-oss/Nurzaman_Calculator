@@ -1,0 +1,704 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1B2430;
+    --ink-soft:#4B5563;
+    --paper:#F4F5F2;
+    --panel:#FFFFFF;
+    --line:#DEDFDA;
+    --accent:#3E6B5C;
+    --accent-soft:#E7EFEC;
+    --error:#B3432B;
+    --error-soft:#FBEAE5;
+  }
+  *{box-sizing:border-box;}
+  #dealApp{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100%;
+    padding:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  #dealApp .wrap{max-width:920px;margin:0 auto;padding:20px 16px 64px;}
+  #dealApp .topbar{
+    display:flex;align-items:baseline;justify-content:space-between;
+    padding:4px 2px 18px;border-bottom:1px solid var(--line);margin-bottom:22px;
+    flex-wrap:wrap;gap:10px;
+  }
+  #dealApp .brand{display:flex;flex-direction:column;gap:2px;}
+  #dealApp .brand .name{font-size:13px;letter-spacing:.06em;color:var(--ink-soft);font-weight:600;}
+  #dealApp .brand .title{font-size:20px;font-weight:700;}
+  #dealApp .tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px;}
+  #dealApp .tab{
+    border:none;background:transparent;padding:8px 14px;border-radius:6px;font-size:13.5px;
+    font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit;
+  }
+  #dealApp .tab.active{background:var(--accent);color:#fff;}
+
+  #dealApp .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:22px 22px 26px;margin-bottom:16px;
+  }
+  #dealApp .section-title{
+    font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--accent);
+    text-transform:uppercase;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  #dealApp .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+  #dealApp .grid.g3{grid-template-columns:1fr 1fr 1fr;}
+  #dealApp .field{display:flex;flex-direction:column;gap:5px;}
+  #dealApp .field.full{grid-column:1/-1;}
+  #dealApp label{font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+  #dealApp label .req{color:var(--accent);margin-left:2px;}
+  #dealApp input[type=text], #dealApp input[type=number], #dealApp input[type=tel],
+  #dealApp input[type=date], #dealApp select, #dealApp textarea{
+    font-family:inherit;font-size:14px;padding:9px 10px;border:1px solid var(--line);
+    border-radius:6px;background:#fff;color:var(--ink);width:100%;
+  }
+  #dealApp input:focus, #dealApp select:focus, #dealApp textarea:focus{
+    outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent);
+  }
+  #dealApp textarea{resize:vertical;min-height:60px;font-family:inherit;}
+  #dealApp .radio-row, #dealApp .check-row{display:flex;gap:16px;flex-wrap:wrap;padding-top:2px;}
+  #dealApp .radio-opt, #dealApp .check-opt{
+    display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;color:var(--ink);
+  }
+  #dealApp .radio-opt input, #dealApp .check-opt input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+  #dealApp .calc-box{
+    background:var(--accent-soft);border:1px solid var(--line);border-radius:6px;
+    padding:9px 10px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;
+  }
+  #dealApp .hint{font-size:11.5px;color:var(--ink-soft);font-weight:500;}
+  #dealApp .conditional{
+    margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);
+  }
+  #dealApp .btn{
+    font-family:inherit;font-weight:600;font-size:14px;border-radius:7px;padding:11px 20px;
+    cursor:pointer;border:1px solid transparent;
+  }
+  #dealApp .btn-primary{background:var(--accent);color:#fff;}
+  #dealApp .btn-primary:hover{background:#345a4d;}
+  #dealApp .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+  #dealApp .btn-ghost:hover{background:var(--paper);}
+  #dealApp .btn-danger{background:#fff;border-color:var(--error);color:var(--error);}
+  #dealApp .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px;}
+  #dealApp .err-msg{color:var(--error);font-size:12px;font-weight:600;margin-top:8px;}
+  #dealApp .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-size:13.5px;
+    font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:50;
+  }
+
+  #dealApp .list-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  #dealApp .list-toolbar input, #dealApp .list-toolbar select{
+    font-family:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;
+  }
+  #dealApp .list-toolbar .search{flex:1;min-width:160px;}
+  #dealApp .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  #dealApp table{border-collapse:collapse;width:100%;min-width:820px;font-size:13px;}
+  #dealApp th{
+    text-align:left;padding:10px 12px;background:var(--paper);border-bottom:1px solid var(--line);
+    font-weight:700;color:var(--ink-soft);font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;
+    white-space:nowrap;
+  }
+  #dealApp td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap;}
+  #dealApp tr:last-child td{border-bottom:none;}
+  #dealApp tr.row-click{cursor:pointer;}
+  #dealApp tr.row-click:hover{background:var(--accent-soft);}
+  #dealApp .badge{
+    display:inline-block;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700;
+  }
+  #dealApp .badge-bron{background:#F3EAD8;color:#8A5E1D;}
+  #dealApp .badge-dogovor{background:var(--accent-soft);color:var(--accent);}
+  #dealApp .empty-state{padding:48px 20px;text-align:center;color:var(--ink-soft);}
+  #dealApp .empty-state .big{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+  #dealApp .del-link{color:var(--error);font-size:12px;font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit;padding:0;}
+
+  #dealApp .modal-backdrop{
+    position:fixed;inset:0;background:rgba(20,22,20,.45);display:flex;align-items:center;
+    justify-content:center;z-index:60;padding:16px;
+  }
+  #dealApp .modal{
+    background:#fff;border-radius:10px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;
+    padding:24px;
+  }
+  #dealApp .modal h3{margin:0 0 4px;font-size:17px;}
+  #dealApp .modal .code{color:var(--ink-soft);font-size:12.5px;margin-bottom:16px;font-variant-numeric:tabular-nums;}
+  #dealApp .modal-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  #dealApp .modal-row span:first-child{color:var(--ink-soft);}
+  #dealApp .modal-row span:last-child{font-weight:600;text-align:right;}
+  #dealApp .modal-close{position:sticky;top:0;float:right;}
+
+  @media(max-width:640px){
+    #dealApp .grid, #dealApp .grid.g3{grid-template-columns:1fr;}
+    #dealApp .card{padding:16px;}
+  }
+</style>
+
+<div id="dealApp">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <span class="name">NURZAMAN</span>
+        <span class="title">Оформление сделки</span>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tabFormBtn">Новая заявка</button>
+        <button class="tab" id="tabListBtn">Список заявок</button>
+      </div>
+    </div>
+    <div id="formView"></div>
+    <div id="listView" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'zayavki-list';
+  const SOURCES = ['Instagram','Facebook','WhatsApp','Рекомендация','Наружная реклама','Риелтор','Другое'];
+
+  let state = {
+    view: 'form',
+    entries: [],
+    loaded: false,
+    filterStatus: 'all',
+    search: '',
+    modalId: null,
+    formError: ''
+  };
+
+  function fmtMoney(n){
+    if(n === '' || n === null || isNaN(n)) return '—';
+    return Number(n).toLocaleString('ru-RU');
+  }
+  function genCode(){
+    const d = new Date();
+    const y = String(d.getFullYear()).slice(2);
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const rand = Math.floor(1000 + Math.random()*9000);
+    return 'NZ-'+y+m+day+'-'+rand;
+  }
+  function todayISO(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function compressImage(file, maxWidth, quality){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onerror = ()=>reject(new Error('read-failed'));
+      reader.onload = (e)=>{
+        const img = new Image();
+        img.onerror = ()=>reject(new Error('decode-failed'));
+        img.onload = ()=>{
+          let w = img.width, h = img.height;
+          if(w > maxWidth){ h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadEntries(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, true);
+      state.entries = res && res.value ? JSON.parse(res.value) : [];
+    }catch(e){
+      state.entries = [];
+    }
+    state.loaded = true;
+  }
+
+  async function saveEntries(list){
+    await window.storage.set(STORAGE_KEY, JSON.stringify(list), true);
+  }
+
+  function showToast(msg){
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 3200);
+  }
+
+  // ---------- FORM ----------
+  function renderForm(){
+    const el = document.getElementById('formView');
+    el.innerHTML = `
+      <form id="dealForm">
+        <div class="card">
+          <div class="section-title">Данные клиента</div>
+          <div class="grid">
+            <div class="field full">
+              <label>Ф.И.О. клиента<span class="req">*</span></label>
+              <input type="text" name="fio" required>
+            </div>
+            <div class="field">
+              <label>Паспорт / ID №<span class="req">*</span></label>
+              <input type="text" name="passport" required>
+            </div>
+            <div class="field">
+              <label>ИНН (ПИН)</label>
+              <input type="text" name="inn" inputmode="numeric" placeholder="14 цифр">
+            </div>
+            <div class="field">
+              <label>Номер телефона<span class="req">*</span></label>
+              <input type="tel" name="phone" placeholder="+996 ___ ___ ___" required>
+            </div>
+            <div class="field full">
+              <label>Адрес проживания</label>
+              <input type="text" name="address">
+            </div>
+            <div class="field">
+              <label>Дата заявки</label>
+              <input type="date" name="date" value="${todayISO()}">
+            </div>
+            <div class="field full">
+              <label>Фото документа (паспорт / ID)</label>
+              <div class="hint" style="margin-bottom:6px;">
+                Быстрее, чем вбивать номер и ИНН вручную: наведите камеру телефона на документ —
+                на Android это «Google Lens», на iPhone — «Распознать текст» в приложении Камера/Фото —
+                скопируйте цифры и вставьте в поля выше. Само фото прикладывается к заявке как копия
+                документа для того, кто оформляет договор.
+              </div>
+              <input type="file" accept="image/*" capture="environment" id="docPhotoInput">
+              <input type="hidden" name="docPhoto" id="docPhotoData">
+              <div id="docPhotoPreviewWrap" style="display:none;margin-top:8px;">
+                <img id="docPhotoPreview" style="max-width:200px;border:1px solid var(--line);border-radius:6px;display:block;">
+                <button type="button" class="btn btn-ghost" id="docPhotoRemoveBtn" style="margin-top:8px;">Убрать фото</button>
+              </div>
+              <div class="hint" id="docPhotoStatus"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Информация об объекте</div>
+          <div class="grid g3">
+            <div class="field full">
+              <label>Жилой комплекс<span class="req">*</span></label>
+              <input type="text" name="complex" required>
+            </div>
+            <div class="field">
+              <label>Блок<span class="req">*</span></label>
+              <input type="text" name="block" required>
+            </div>
+            <div class="field">
+              <label>Этаж<span class="req">*</span></label>
+              <input type="number" name="floor" required>
+            </div>
+            <div class="field">
+              <label>Площадь, м²<span class="req">*</span></label>
+              <input type="number" step="0.01" name="area" required>
+            </div>
+            <div class="field">
+              <label>Стоимость за 1 м², сом<span class="req">*</span></label>
+              <input type="number" step="0.01" name="pricePerM2" required>
+            </div>
+            <div class="field">
+              <label>Общая стоимость</label>
+              <div class="calc-box" id="totalBox">—</div>
+              <div class="hint">Рассчитано автоматически: площадь × цена за 1 м²</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Условия покупки</div>
+          <div class="field">
+            <label>Форма оплаты<span class="req">*</span></label>
+            <div class="radio-row">
+              <label class="radio-opt"><input type="radio" name="paymentType" value="100%" required> 100% оплата</label>
+              <label class="radio-opt"><input type="radio" name="paymentType" value="Рассрочка"> Рассрочка</label>
+              <label class="radio-opt"><input type="radio" name="paymentType" value="Бартер"> Бартер</label>
+            </div>
+          </div>
+          <div class="grid" style="margin-top:14px;">
+            <div class="field">
+              <label>Первоначальный взнос, сом</label>
+              <input type="number" step="0.01" name="downPayment">
+            </div>
+            <div class="field" id="installmentTermField" style="display:none;">
+              <label>Срок рассрочки</label>
+              <input type="text" name="installmentTerm" placeholder="напр. 12 месяцев">
+            </div>
+          </div>
+          <div class="conditional" id="barterBlock" style="display:none;">
+            <div class="field" style="margin-bottom:12px;">
+              <label>Технический паспорт (объект бартера)</label>
+              <div class="radio-row">
+                <label class="radio-opt"><input type="radio" name="techPassport" value="Предоставлен"> Предоставлен</label>
+                <label class="radio-opt"><input type="radio" name="techPassport" value="Не предоставлен"> Не предоставлен</label>
+              </div>
+            </div>
+            <div class="field">
+              <label>Оценочная стоимость объекта бартера, сом</label>
+              <input type="number" step="0.01" name="barterValue">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Дополнительная информация</div>
+          <div class="grid">
+            <div class="field">
+              <label>Источник обращения<span class="req">*</span></label>
+              <select name="source" required>
+                <option value="">Выбрать...</option>
+                ${SOURCES.map(s=>`<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field" id="sourceOtherField" style="display:none;">
+              <label>Уточнить источник</label>
+              <input type="text" name="sourceOther">
+            </div>
+            <div class="field">
+              <label>Менеджер по продажам<span class="req">*</span></label>
+              <input type="text" name="manager" required>
+            </div>
+            <div class="field">
+              <label>Статус сделки<span class="req">*</span></label>
+              <div class="radio-row">
+                <label class="radio-opt"><input type="radio" name="status" value="Бронь" required> Бронь</label>
+                <label class="radio-opt"><input type="radio" name="status" value="Оформление договора"> Оформление договора</label>
+              </div>
+            </div>
+            <div class="field full">
+              <label>Комментарий</label>
+              <textarea name="comment"></textarea>
+            </div>
+            <div class="field full">
+              <label class="check-opt"><input type="checkbox" name="consent" required> Клиент ознакомлен(а) и согласен(а) с условиями приобретения</label>
+            </div>
+          </div>
+          <div class="err-msg" id="formErr" style="display:none;"></div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="resetBtn">Очистить</button>
+            <button type="submit" class="btn btn-primary">Сохранить заявку</button>
+          </div>
+        </div>
+      </form>
+    `;
+
+    const form = document.getElementById('dealForm');
+    const areaInput = form.area, priceInput = form.pricePerM2, totalBox = document.getElementById('totalBox');
+    function recalcTotal(){
+      const a = parseFloat(areaInput.value), p = parseFloat(priceInput.value);
+      if(!isNaN(a) && !isNaN(p) && a>0 && p>0){
+        totalBox.textContent = fmtMoney(Math.round(a*p)) + ' сом';
+      } else {
+        totalBox.textContent = '—';
+      }
+    }
+    areaInput.addEventListener('input', recalcTotal);
+    priceInput.addEventListener('input', recalcTotal);
+
+    form.querySelectorAll('input[name=paymentType]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        document.getElementById('installmentTermField').style.display = r.value==='Рассрочка' && r.checked ? 'flex' : (form.paymentType.value==='Рассрочка'?'flex':'none');
+        document.getElementById('barterBlock').style.display = form.paymentType.value==='Бартер' ? 'block' : 'none';
+      });
+    });
+
+    form.source.addEventListener('change', ()=>{
+      document.getElementById('sourceOtherField').style.display = form.source.value==='Другое' ? 'flex' : 'none';
+    });
+
+    const photoInput = document.getElementById('docPhotoInput');
+    const photoDataField = document.getElementById('docPhotoData');
+    const photoStatus = document.getElementById('docPhotoStatus');
+    function clearPhoto(){
+      photoDataField.value = '';
+      photoInput.value = '';
+      document.getElementById('docPhotoPreviewWrap').style.display = 'none';
+      photoStatus.textContent = '';
+    }
+    photoInput.addEventListener('change', async ()=>{
+      const file = photoInput.files[0];
+      if(!file) return;
+      photoStatus.textContent = 'Сжимаем фото...';
+      try{
+        const dataUrl = await compressImage(file, 1000, 0.55);
+        const approxKb = Math.round(dataUrl.length * 0.75 / 1024);
+        if(approxKb > 400){
+          photoStatus.textContent = 'Фото получилось тяжёлым (~'+approxKb+' КБ) — попробуйте переснять при более простом освещении/без лишнего фона.';
+        } else {
+          photoStatus.textContent = 'Фото прикреплено (~'+approxKb+' КБ).';
+        }
+        photoDataField.value = dataUrl;
+        document.getElementById('docPhotoPreview').src = dataUrl;
+        document.getElementById('docPhotoPreviewWrap').style.display = 'block';
+      }catch(e){
+        photoStatus.textContent = 'Не удалось обработать фото, попробуйте ещё раз.';
+      }
+    });
+    document.getElementById('docPhotoRemoveBtn').addEventListener('click', clearPhoto);
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      form.reset();
+      recalcTotal();
+      document.getElementById('installmentTermField').style.display='none';
+      document.getElementById('barterBlock').style.display='none';
+      document.getElementById('sourceOtherField').style.display='none';
+      document.getElementById('formErr').style.display='none';
+      clearPhoto();
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const errBox = document.getElementById('formErr');
+      if(!form.paymentType.value){ errBox.textContent='Укажите форму оплаты.'; errBox.style.display='block'; return; }
+      if(!form.status.value){ errBox.textContent='Укажите статус сделки.'; errBox.style.display='block'; return; }
+      if(!form.consent.checked){ errBox.textContent='Требуется согласие клиента с условиями приобретения.'; errBox.style.display='block'; return; }
+      errBox.style.display='none';
+
+      const a = parseFloat(form.area.value), p = parseFloat(form.pricePerM2.value);
+      const entry = {
+        id: 'e'+Date.now()+Math.floor(Math.random()*1000),
+        code: genCode(),
+        createdAt: new Date().toISOString(),
+        date: form.date.value || todayISO(),
+        fio: form.fio.value.trim(),
+        passport: form.passport.value.trim(),
+        inn: form.inn.value.trim(),
+        phone: form.phone.value.trim(),
+        address: form.address.value.trim(),
+        complex: form.complex.value.trim(),
+        block: form.block.value.trim(),
+        floor: form.floor.value,
+        area: form.area.value,
+        pricePerM2: form.pricePerM2.value,
+        total: (!isNaN(a) && !isNaN(p)) ? Math.round(a*p) : '',
+        paymentType: form.paymentType.value,
+        downPayment: form.downPayment.value,
+        installmentTerm: form.installmentTerm.value.trim(),
+        techPassport: form.techPassport ? form.techPassport.value : '',
+        barterValue: form.barterValue.value,
+        source: form.source.value === 'Другое' ? ('Другое: '+(form.sourceOther.value.trim()||'—')) : form.source.value,
+        manager: form.manager.value.trim(),
+        status: form.status.value,
+        comment: form.comment.value.trim(),
+        docPhoto: form.docPhoto.value || ''
+      };
+
+      // re-fetch latest before appending to reduce overwrite risk from concurrent submissions
+      await loadEntries();
+      const projectedSize = JSON.stringify([...state.entries, entry]).length;
+      if(projectedSize > 4.5 * 1024 * 1024 && entry.docPhoto){
+        entry.docPhoto = '';
+        showToast('Хранилище почти заполнено — заявка сохранена без фото документа.');
+      }
+      state.entries.push(entry);
+      await saveEntries(state.entries);
+
+      showToast('Заявка сохранена — № ' + entry.code);
+      form.reset();
+      recalcTotal();
+      document.getElementById('installmentTermField').style.display='none';
+      document.getElementById('barterBlock').style.display='none';
+      document.getElementById('sourceOtherField').style.display='none';
+      document.getElementById('docPhotoData').value='';
+      document.getElementById('docPhotoInput').value='';
+      document.getElementById('docPhotoPreviewWrap').style.display='none';
+      document.getElementById('docPhotoStatus').textContent='';
+    });
+  }
+
+  // ---------- LIST ----------
+  function renderList(){
+    const el = document.getElementById('listView');
+    const entries = [...state.entries].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+    const filtered = entries.filter(e=>{
+      if(state.filterStatus !== 'all' && e.status !== state.filterStatus) return false;
+      if(state.search){
+        const q = state.search.toLowerCase();
+        return (e.fio||'').toLowerCase().includes(q) || (e.phone||'').includes(q) || (e.code||'').toLowerCase().includes(q);
+      }
+      return true;
+    });
+
+    el.innerHTML = `
+      <div class="list-toolbar">
+        <input type="text" class="search" id="searchInput" placeholder="Поиск: ФИО, телефон, № заявки" value="${state.search.replace(/"/g,'&quot;')}">
+        <select id="statusFilter">
+          <option value="all">Все статусы</option>
+          <option value="Бронь">Бронь</option>
+          <option value="Оформление договора">Оформление договора</option>
+        </select>
+        <button class="btn btn-primary" id="exportBtn">Экспорт в Excel</button>
+      </div>
+      <div class="table-wrap">
+        ${filtered.length === 0 ? `
+          <div class="empty-state">
+            <div class="big">Заявок пока нет</div>
+            <div>Заполните форму на вкладке «Новая заявка» — она появится здесь.</div>
+          </div>
+        ` : `
+        <table>
+          <thead><tr>
+            <th>№</th><th>Дата</th><th>ФИО</th><th>Телефон</th><th>ЖК / Блок / Этаж</th>
+            <th>Площадь</th><th>Стоимость</th><th>Оплата</th><th>Статус</th><th>Менеджер</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${filtered.map(e=>`
+              <tr class="row-click" data-id="${e.id}">
+                <td>${e.code}</td>
+                <td>${e.date||'—'}</td>
+                <td>${e.fio||'—'}</td>
+                <td>${e.phone||'—'}</td>
+                <td>${e.complex||'—'} / ${e.block||'—'} / ${e.floor||'—'}</td>
+                <td>${e.area||'—'} м²</td>
+                <td>${fmtMoney(e.total)} сом</td>
+                <td>${e.paymentType||'—'}</td>
+                <td><span class="badge ${e.status==='Бронь'?'badge-bron':'badge-dogovor'}">${e.status||'—'}</span></td>
+                <td>${e.manager||'—'}</td>
+                <td><button class="del-link" data-del="${e.id}">Удалить</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        `}
+      </div>
+    `;
+
+    document.getElementById('searchInput').addEventListener('input', (e)=>{
+      state.search = e.target.value;
+      renderList();
+      document.getElementById('searchInput').focus();
+      const val = document.getElementById('searchInput').value;
+      document.getElementById('searchInput').setSelectionRange(val.length, val.length);
+    });
+    document.getElementById('statusFilter').value = state.filterStatus;
+    document.getElementById('statusFilter').addEventListener('change', (e)=>{
+      state.filterStatus = e.target.value;
+      renderList();
+    });
+    document.getElementById('exportBtn').addEventListener('click', exportExcel);
+
+    el.querySelectorAll('tr.row-click').forEach(tr=>{
+      tr.addEventListener('click', (e)=>{
+        if(e.target.closest('.del-link')) return;
+        state.modalId = tr.getAttribute('data-id');
+        renderModal();
+      });
+    });
+    el.querySelectorAll('.del-link').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = btn.getAttribute('data-del');
+        if(!confirm('Удалить эту заявку без возможности восстановления?')) return;
+        await loadEntries();
+        state.entries = state.entries.filter(x=>x.id !== id);
+        await saveEntries(state.entries);
+        renderList();
+      });
+    });
+  }
+
+  function renderModal(){
+    let backdrop = document.getElementById('modalBackdrop');
+    if(backdrop) backdrop.remove();
+    if(!state.modalId) return;
+    const e = state.entries.find(x=>x.id===state.modalId);
+    if(!e) return;
+
+    const rows = [
+      ['Ф.И.О.', e.fio], ['Паспорт / ID', e.passport], ['ИНН (ПИН)', e.inn], ['Телефон', e.phone], ['Адрес', e.address],
+      ['ЖК', e.complex], ['Блок', e.block], ['Этаж', e.floor], ['Площадь', e.area+' м²'],
+      ['Цена за 1 м²', fmtMoney(e.pricePerM2)+' сом'], ['Общая стоимость', fmtMoney(e.total)+' сом'],
+      ['Форма оплаты', e.paymentType], ['Первоначальный взнос', e.downPayment?fmtMoney(e.downPayment)+' сом':'—'],
+      ['Срок рассрочки', e.installmentTerm||'—'],
+      ['Тех.паспорт (бартер)', e.techPassport||'—'], ['Оценка бартера', e.barterValue?fmtMoney(e.barterValue)+' сом':'—'],
+      ['Источник обращения', e.source], ['Менеджер', e.manager], ['Статус', e.status],
+      ['Комментарий', e.comment||'—']
+    ];
+
+    const div = document.createElement('div');
+    div.id = 'modalBackdrop';
+    div.className = 'modal-backdrop';
+    div.innerHTML = `
+      <div class="modal">
+        <button class="btn btn-ghost modal-close" id="modalCloseBtn">Закрыть</button>
+        <h3>${e.fio||'Без имени'}</h3>
+        <div class="code">№ ${e.code} · заявка от ${e.date}</div>
+        ${e.docPhoto ? `<div style="margin-bottom:14px;"><img src="${e.docPhoto}" style="max-width:100%;border:1px solid var(--line);border-radius:6px;cursor:zoom-in;" id="modalPhotoImg"></div>` : ''}
+        ${rows.map(r=>`<div class="modal-row"><span>${r[0]}</span><span>${r[1]||'—'}</span></div>`).join('')}
+      </div>
+    `;
+    document.body.appendChild(div);
+    document.getElementById('modalCloseBtn').addEventListener('click', ()=>{ state.modalId=null; div.remove(); });
+    div.addEventListener('click', (ev)=>{ if(ev.target===div){ state.modalId=null; div.remove(); } });
+    const modalPhotoImg = document.getElementById('modalPhotoImg');
+    if(modalPhotoImg){
+      modalPhotoImg.addEventListener('click', ()=>{
+        const w = window.open();
+        if(w) w.document.write('<img src="'+e.docPhoto+'" style="max-width:100%;">');
+      });
+    }
+  }
+
+  function exportExcel(){
+    if(typeof XLSX === 'undefined'){ showToast('Библиотека экспорта ещё загружается, попробуйте ещё раз через секунду.'); return; }
+    const rows = state.entries
+      .slice()
+      .sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''))
+      .map(e=>({
+        '№ заявки': e.code,
+        'Дата': e.date,
+        'ФИО': e.fio,
+        'Паспорт / ID': e.passport,
+        'ИНН (ПИН)': e.inn,
+        'Телефон': e.phone,
+        'Адрес': e.address,
+        'ЖК': e.complex,
+        'Блок': e.block,
+        'Этаж': e.floor,
+        'Площадь, м²': e.area,
+        'Цена за 1 м², сом': e.pricePerM2,
+        'Общая стоимость, сом': e.total,
+        'Форма оплаты': e.paymentType,
+        'Первоначальный взнос, сом': e.downPayment,
+        'Срок рассрочки': e.installmentTerm,
+        'Тех.паспорт (бартер)': e.techPassport,
+        'Оценка бартера, сом': e.barterValue,
+        'Источник обращения': e.source,
+        'Менеджер': e.manager,
+        'Статус сделки': e.status,
+        'Комментарий': e.comment
+      }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+    XLSX.writeFile(wb, 'Nurzaman_zayavki_'+todayISO()+'.xlsx');
+  }
+
+  // ---------- TABS / INIT ----------
+  function switchView(view){
+    state.view = view;
+    document.getElementById('tabFormBtn').classList.toggle('active', view==='form');
+    document.getElementById('tabListBtn').classList.toggle('active', view==='list');
+    document.getElementById('formView').style.display = view==='form' ? 'block' : 'none';
+    document.getElementById('listView').style.display = view==='list' ? 'block' : 'none';
+    if(view==='list') renderList();
+  }
+
+  document.getElementById('tabFormBtn').addEventListener('click', ()=>switchView('form'));
+  document.getElementById('tabListBtn').addEventListener('click', async ()=>{
+    await loadEntries();
+    switchView('list');
+  });
+
+  (async function init(){
+    renderForm();
+    await loadEntries();
+  })();
+})();
+</script>
