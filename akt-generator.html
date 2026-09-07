@@ -313,9 +313,11 @@
   body.theme-panther .doc{ background:#fff; } /* печатный акт всегда светлый и чистый */
 
   @media print{
-    .toolbar, .actions{display:none !important;}
+    .toolbar, .actions, .theme-switch{display:none !important;}
     body{padding:0;}
-    .doc{border:none; padding:0;}
+    .doc{border:none; padding:0; max-width:none;}
+    .table-scroll{overflow:visible !important;}
+    table.doc-table{font-size:13px;}
     body.theme-leopard, body.theme-panther{ background:#fff !important; }
   }
 
