@@ -1,696 +1,351 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Акты</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Акты">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#7c2a20">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGFwZXIiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y4ZjFlMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlOGRjYmQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9IndheCIgY3g9IjM4JSIgY3k9IjMyJSIgcj0iNzUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2E4NDAyZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iIzdjMmEyMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0ZjE4MTEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdvbGQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2YzZDk4YSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQ1JSIgc3RvcC1jb2xvcj0iI2I4ODYwYiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM4YTY0MGEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNoZWVuIiBjeD0iMzUlIiBjeT0iMjUlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjAuNTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI3BhcGVyKSIvPgoKICA8IS0tIHdheCBzZWFsIGRyaXBzIC0tPgogIDxnPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSIxNTAiIHI9IjciIGZpbGw9InVybCgjd2F4KSIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTUyIiByPSI2IiBmaWxsPSJ1cmwoI3dheCkiLz4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjE2MCIgcj0iOCIgZmlsbD0idXJsKCN3YXgpIi8+CiAgPC9nPgoKICA8IS0tIG1haW4gc2VhbCBkaXNjIC0tPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9Ijk2IiByPSI2MiIgZmlsbD0idXJsKCN3YXgpIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTYiIHI9IjYyIiBmaWxsPSJ1cmwoI3NoZWVuKSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9Ijk2IiByPSI1NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2dvbGQpIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC45Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTYiIHI9IjYyIiBmaWxsPSJub25lIiBzdHJva2U9IiMzYTEyMGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSBlbmdyYXZlZCBsZXR0ZXIgQSAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjEyOCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZiIgZm9udC1zaXplPSI4MiIKICAgICAgICB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ1cmwoI2dvbGQpIiBmb250LXdlaWdodD0iNzAwIj5BPC90ZXh0PgogIDx0ZXh0IHg9IjEwMCIgeT0iMTI4IiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjgyIgogICAgICAgIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzNhMTIwYyIgc3Ryb2tlLXdpZHRoPSIwLjYiIG9wYWNpdHk9IjAuNCIgZm9udC13ZWlnaHQ9IjcwMCI+QTwvdGV4dD4KCiAgPCEtLSBzbWFsbCBmbG91cmlzaCAtLT4KICA8cGF0aCBkPSJNNzIgMTQyIFExMDAgMTUwIDEyOCAxNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnb2xkKSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjg1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==">
-<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGFwZXIiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2Y4ZjFlMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlOGRjYmQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9IndheCIgY3g9IjM4JSIgY3k9IjMyJSIgcj0iNzUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2E4NDAyZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iIzdjMmEyMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0ZjE4MTEiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdvbGQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2YzZDk4YSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQ1JSIgc3RvcC1jb2xvcj0iI2I4ODYwYiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM4YTY0MGEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNoZWVuIiBjeD0iMzUlIiBjeT0iMjUlIiByPSI2MCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjAuNTUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI2MCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CgogIDxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSJ1cmwoI3BhcGVyKSIvPgoKICA8IS0tIHdheCBzZWFsIGRyaXBzIC0tPgogIDxnPgogICAgPGNpcmNsZSBjeD0iNjMiIGN5PSIxNTAiIHI9IjciIGZpbGw9InVybCgjd2F4KSIvPgogICAgPGNpcmNsZSBjeD0iMTQwIiBjeT0iMTUyIiByPSI2IiBmaWxsPSJ1cmwoI3dheCkiLz4KICAgIDxjaXJjbGUgY3g9IjEwMCIgY3k9IjE2MCIgcj0iOCIgZmlsbD0idXJsKCN3YXgpIi8+CiAgPC9nPgoKICA8IS0tIG1haW4gc2VhbCBkaXNjIC0tPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9Ijk2IiByPSI2MiIgZmlsbD0idXJsKCN3YXgpIi8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTYiIHI9IjYyIiBmaWxsPSJ1cmwoI3NoZWVuKSIvPgogIDxjaXJjbGUgY3g9IjEwMCIgY3k9Ijk2IiByPSI1NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2dvbGQpIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC45Ii8+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iOTYiIHI9IjYyIiBmaWxsPSJub25lIiBzdHJva2U9IiMzYTEyMGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSBlbmdyYXZlZCBsZXR0ZXIgQSAtLT4KICA8dGV4dCB4PSIxMDAiIHk9IjEyOCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsICdUaW1lcyBOZXcgUm9tYW4nLCBzZXJpZiIgZm9udC1zaXplPSI4MiIKICAgICAgICB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ1cmwoI2dvbGQpIiBmb250LXdlaWdodD0iNzAwIj5BPC90ZXh0PgogIDx0ZXh0IHg9IjEwMCIgeT0iMTI4IiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9IjgyIgogICAgICAgIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzNhMTIwYyIgc3Ryb2tlLXdpZHRoPSIwLjYiIG9wYWNpdHk9IjAuNCIgZm9udC13ZWlnaHQ9IjcwMCI+QTwvdGV4dD4KCiAgPCEtLSBzbWFsbCBmbG91cmlzaCAtLT4KICA8cGF0aCBkPSJNNzIgMTQyIFExMDAgMTUwIDEyOCAxNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnb2xkKSIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjg1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==">
-<style>
-  :root{
-    --paper:#f2ecdd;
-    --paper-deep:#eae1cc;
-    --ink:#242019;
-    --ink-soft:#6b6152;
-    --line:#c9bb98;
-    --seal:#7c2a20;
-    --seal-dark:#5c1f18;
-    --gold:#96702c;
-    --ui-font: -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  *{box-sizing:border-box;}
-  body{
-    font-family: "Times New Roman", Georgia, serif;
-    color:var(--ink);
-    margin:0;
-    padding:0 0 40px;
-    background:#fff;
-  }
-  .toolbar{
-    background:var(--paper);
-    border-top:3px solid var(--ink);
-    border-bottom:1px solid var(--line);
-    padding:20px 18px 24px;
-    margin-bottom:26px;
-    font-family: var(--ui-font);
-  }
-  .toolbar .section{
-    padding:16px 0 6px;
-    border-top:1px solid var(--line);
-  }
-  .toolbar .section:first-of-type{
-    border-top:none;
-    padding-top:2px;
-  }
-  .toolbar h2{
-    margin:0 0 14px 0;
-    font-size:14px;
-    font-weight:600;
-    color:var(--ink);
-    display:flex;
-    align-items:baseline;
-    gap:8px;
-  }
-  .toolbar h2 .num{
-    color:var(--seal);
-    font-family: Georgia, serif;
-    font-style:italic;
-  }
-  .row{
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-bottom:10px;
-  }
-  .field{
-    flex:1 1 200px;
-    display:flex;
-    flex-direction:column;
-    font-size:12px;
-    color:var(--ink-soft);
-  }
-  .field input, .field select{
-    font-family: var(--ui-font);
-    font-size:14px;
-    padding:8px 9px;
-    border:none;
-    border-bottom:1.5px solid var(--line);
-    border-radius:0;
-    margin-top:4px;
-    background:transparent;
-    color:var(--ink);
-  }
-  .field input:focus, .field select:focus{
-    outline:none;
-    border-bottom-color:var(--seal);
-  }
-  table.items{
-    width:100%;
-    border-collapse:collapse;
-    font-family: var(--ui-font);
-    font-size:13px;
-    margin-top:10px;
-    background:#fff;
-  }
-  table.items th, table.items td{
-    border:1px solid var(--line);
-    padding:6px;
-  }
-  table.items th{
-    background:var(--paper-deep);
-    font-weight:600;
-    color:var(--ink-soft);
-    text-align:left;
-  }
-  table.items input{
-    width:100%;
-    border:none;
-    background:transparent;
-    font-family: var(--ui-font);
-    font-size:13px;
-    padding:2px;
-    color:var(--ink);
-  }
-  .row-actions{
-    text-align:center;
-  }
-  .btn{
-    font-family: var(--ui-font);
-    font-size:13px;
-    padding:9px 16px;
-    border-radius:3px;
-    border:1px solid var(--seal);
-    background:var(--seal);
-    color:#fdf9ef;
-    cursor:pointer;
-  }
-  .btn:hover{ background:var(--seal-dark); border-color:var(--seal-dark); }
-  .btn.secondary{
-    background:transparent;
-    color:var(--ink);
-    border:1px solid var(--ink);
-  }
-  .btn.secondary:hover{ background:var(--ink); color:#fdf9ef; }
-  .btn.small{
-    padding:4px 9px;
-    font-size:12px;
-  }
-  .btn.danger{
-    background:transparent;
-    border:1px solid var(--ink-soft);
-    color:var(--ink-soft);
-  }
-  .btn.danger:hover{ background:var(--seal); border-color:var(--seal); color:#fff; }
-  .actions{
-    display:flex;
-    gap:10px;
-    margin-top:16px;
-    flex-wrap:wrap;
-  }
-  .chip{
-    font-family: var(--ui-font);
-    font-size:12px;
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--ink-soft);
-    border-radius:2px;
-    padding:5px 8px 5px 10px;
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    cursor:pointer;
-  }
-  .chip:hover{border-color:var(--seal); color:var(--ink);}
-  .chip .x{
-    color:var(--seal);
-    font-weight:bold;
-    padding:0 3px;
-  }
-  .save-hint{
-    font-family: var(--ui-font);
-    font-size:11px;
-    color:var(--ink-soft);
-    margin-top:4px;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Калькулятор рассрочки — Nurzaman</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
 
-  /* ===== ПЕЧАТНЫЙ ДОКУМЕНТ ===== */
-  .doc{
-    max-width:900px;
-    margin:0 auto;
-    border:1px solid #000;
-    padding:18px 22px;
-  }
-  .doc-title{
-    font-weight:bold;
-    font-size:16px;
-    margin-bottom:10px;
-  }
-  .doc-meta{
-    font-size:14px;
-    margin-bottom:4px;
-  }
-  table.doc-table{
-    width:100%;
-    border-collapse:collapse;
-    margin:12px 0;
-    font-size:14px;
-  }
-  table.doc-table th, table.doc-table td{
-    border:1px solid #000;
-    padding:6px 8px;
-  }
-  table.doc-table th{
-    text-align:center;
-  }
-  .num-col{width:40px; text-align:center;}
-  .unit-col{width:90px; text-align:center;}
-  .qty-col{width:70px; text-align:center;}
-  .price-col{width:110px; text-align:right;}
-  .sum-col{width:120px; text-align:right; font-weight:bold;}
-  .total-label{text-align:right; font-weight:bold;}
-  .words-line{
-    font-size:14px;
-    margin:14px 0;
-    padding-top:10px;
-    border-top:1px solid #000;
-  }
-  .sign-block{
-    display:flex;
-    justify-content:space-between;
-    margin-top:36px;
-    font-size:14px;
-  }
-  .sign-block div{width:48%;}
-  .sign-line{
-    margin-top:26px;
-    border-top:1px solid #000;
-    width:80%;
-  }
-
-  .theme-switch{
-    font-family: var(--ui-font);
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:9px 18px;
-    background:var(--ink);
-  }
-  .theme-switch label{font-size:12px; color:#cfc6b4;}
-  .theme-switch select{
-    font-family: var(--ui-font);
-    font-size:13px;
-    padding:5px 8px;
-    border-radius:3px;
-    border:1px solid #555;
-    background:#2a251d;
-    color:#fdf9ef;
-  }
-
-  /* ===== ТЕМА: гламурный леопард (розовый + золото) ===== */
-  body.theme-leopard{
-    background:
-      radial-gradient(circle at 18% 25%, #6b3a24 0 9px, transparent 10px),
-      radial-gradient(circle at 55% 12%, #5c3320 0 7px, transparent 8px),
-      radial-gradient(circle at 82% 40%, #6b3a24 0 10px, transparent 11px),
-      radial-gradient(circle at 32% 60%, #5c3320 0 8px, transparent 9px),
-      radial-gradient(circle at 8% 78%, #6b3a24 0 9px, transparent 10px),
-      radial-gradient(circle at 92% 82%, #5c3320 0 7px, transparent 8px),
-      radial-gradient(circle at 60% 48%, #6b3a24 0 8px, transparent 9px),
-      #dd8ba0;
-    background-size: 130px 130px;
-  }
-  body.theme-leopard .toolbar{
-    background: linear-gradient(135deg, #fdf1ea, #f7ddd0);
-    border-top-color:#b8860b;
-    border-bottom-color:#e3b8c4;
-  }
-  body.theme-leopard .toolbar .section{ border-top-color:#e6c9a8; }
-  body.theme-leopard .toolbar h2{ color:#a15275; }
-  body.theme-leopard .toolbar h2 .num{ color:#b8860b; }
-  body.theme-leopard .field input, body.theme-leopard .field select{ border-bottom-color:#d9a441; color:#4a2e1a; }
-  body.theme-leopard .btn{ background:#b8860b; border-color:#b8860b; color:#3a2405; }
-  body.theme-leopard .btn:hover{ background:#96700a; border-color:#96700a; }
-  body.theme-leopard .btn.secondary{ color:#a15275; border-color:#a15275; }
-  body.theme-leopard .btn.secondary:hover{ background:#a15275; color:#fff; }
-  body.theme-leopard .theme-switch{ background:#6b3a24; }
-  body.theme-leopard .chip{ border-color:#d9a441; color:#7a4a2a; }
-  body.theme-leopard .chip:hover{ border-color:#b8860b; color:#4a2e1a; }
-
-  /* ===== ТЕМА: чёрная пантера (чёрный + серебро/бриллианты) ===== */
-  body.theme-panther{
-    background:#0a0a0a;
-  }
-  body.theme-panther .toolbar{
-    background: linear-gradient(160deg,#161616,#050505);
-    border-top-color:#d9d9de;
-    border-bottom-color:#2a2a2e;
-  }
-  body.theme-panther .toolbar h2{ color:#e8e8ee; }
-  body.theme-panther .toolbar h2 .num{ color:#c7c7d1; }
-  body.theme-panther .toolbar .section{ border-top-color:#2a2a2e; }
-  body.theme-panther .field label{ color:#9a9a9a; }
-  body.theme-panther .field input, body.theme-panther .field select{
-    background:transparent; border-bottom:1.5px solid #3a3a3e; color:#f0f0f4;
-  }
-  body.theme-panther .field input:focus{ border-bottom-color:#d9d9de; }
-  body.theme-panther .btn{ background:#d9d9de; border-color:#d9d9de; color:#0a0a0a; }
-  body.theme-panther .btn:hover{ background:#f5f5fa; border-color:#f5f5fa; }
-  body.theme-panther .btn.secondary{ background:transparent; color:#e8e8ee; border-color:#e8e8ee; }
-  body.theme-panther .btn.secondary:hover{ background:#e8e8ee; color:#0a0a0a; }
-  body.theme-panther table.items th{ background:#1c1c1f; color:#eee; border-color:#333; }
-  body.theme-panther table.items td{ border-color:#333; }
-  body.theme-panther table.items input{ color:#eee; }
-  body.theme-panther .theme-switch{ background:#000; }
-  body.theme-panther .chip{ background:transparent; border-color:#3a3a3e; color:#d9d9de; }
-  body.theme-panther .chip:hover{ border-color:#d9d9de; color:#fff; }
-  body.theme-panther .doc{ background:#fff; } /* печатный акт всегда светлый и чистый */
-
-  @media print{
-    .toolbar, .actions{display:none !important;}
-    body{padding:0;}
-    .doc{border:none; padding:0;}
-    body.theme-leopard, body.theme-panther{ background:#fff !important; }
-  }
-</style>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="icon" href="assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Nurzaman Calculator" />
 </head>
 <body>
+  <div class="page">
+    <figure class="hero">
+      <img class="hero__image" src="assets/render.jpg" alt="Европейский квартал" />
+      <div class="hero__scrim"></div>
+      <img class="hero__logo" src="assets/logo.png" alt="Nurzaman — курулуш компаниясы" />
+      <figcaption class="hero__caption">
+        <span class="hero__hint">Долбоор / Проект</span>
+        <span class="hero__name">Европейский квартал</span>
+      </figcaption>
+    </figure>
 
-<div class="theme-switch">
-  <label for="themeSelect">Тема:</label>
-  <select id="themeSelect" onchange="setTheme(this.value)">
-    <option value="default">Обычная</option>
-    <option value="theme-leopard">🐆 Гламурный леопард</option>
-    <option value="theme-panther">🐈‍⬛ Чёрная пантера</option>
-  </select>
-</div>
+    <main class="card">
+      <h1 class="card__title">
+        <span class="card__title-ky">Бөлүп төлөө калькулятору</span>
+        <span class="card__title-sep">/</span>
+        <span class="card__title-ru">Калькулятор рассрочки</span>
+      </h1>
 
-<div class="toolbar">
+      <form class="form" id="calc-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="currency">
+            <span class="field__label-ky">Эсептөө валютасы</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Валюта расчёта</span>
+          </label>
+          <select class="field__input field__select" id="currency" name="currency">
+            <option value="USD" selected>$ USD — доллар США</option>
+            <option value="KGS">сом / KGS</option>
+          </select>
+        </div>
 
-  <div class="section">
-    <h2><span class="num">I.</span> Стороны и дата</h2>
-    <div class="row">
-      <div class="field">
-        <label>№ акта (можно оставить пустым)</label>
-        <input id="aktNum" type="text" placeholder="__">
-      </div>
-      <div class="field">
-        <label>Дата</label>
-        <input id="aktDate" type="date">
-      </div>
-    </div>
+        <section class="floorplan-picker">
+          <div class="field-section">
+            <span class="field-section__ky">Планировка</span>
+            <span class="field__label-sep">/</span>
+            <span class="field-section__ru">Выбор планировки</span>
+          </div>
+          <p class="floorplan-picker__hint">
+            Тандаңыз — аянты жана бөлмө саны өзү толтурулат / Выберите вариант — площадь и число комнат подставятся
+            автоматически. Табылбаса, төмөндө колдонуу менен киргизиңиз / Если нужной нет, введите данные ниже вручную.
+          </p>
+          <div class="floorplan-picker__grid" id="floorplan-picker-grid"></div>
+        </section>
 
-    <div class="row">
-      <div class="field">
-        <label>Исполнитель (ФИО, без "ИП" — допишется само)</label>
-        <input id="executor" type="text" placeholder="Акматов Нускат" list="execList" autocomplete="off">
-        <datalist id="execList"></datalist>
-      </div>
-    </div>
-    <div class="row" id="execChips" style="gap:6px;"></div>
+        <div class="field">
+          <label class="field__label" for="block">
+            <span class="field__label-ky">Блок</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Блок</span>
+          </label>
+          <input
+            class="field__input"
+            type="text"
+            id="block"
+            name="block"
+            placeholder="Мисалы, 14 / Например, 14"
+            inputmode="text"
+          />
+          <p class="field__hint" id="block-hint"></p>
+        </div>
 
-    <div class="row">
-      <div class="field">
-        <label>Заказчик</label>
-        <input id="customerName" type="text" value="ОсОО СК Нурзаман Юг">
-      </div>
-      <div class="field">
-        <label>ИНН заказчика</label>
-        <input id="customerInn" type="text" value="02701201510021">
-      </div>
-      <div class="field">
-        <label>Директор (заказчик)</label>
-        <input id="customerDirector" type="text" value="Айткулов И.С.">
-      </div>
-    </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="floor">
+              <span class="field__label-ky">Кабат</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Этаж</span>
+            </label>
+            <input
+              class="field__input"
+              type="number"
+              id="floor"
+              name="floor"
+              placeholder="Мисалы, 5 / Например, 5"
+              min="1"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
 
-    <div class="row">
-      <div class="field">
-        <label>Ставка налога, %</label>
-        <input id="taxRate" type="number" value="4" step="0.01">
+          <div class="field">
+            <label class="field__label" for="rooms">
+              <span class="field__label-ky">Бөлмө саны</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Комнат</span>
+            </label>
+            <input
+              class="field__input"
+              type="number"
+              id="rooms"
+              name="rooms"
+              placeholder="Мисалы, 2 / Например, 2"
+              min="1"
+              step="1"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="area">
+            <span class="field__label-ky">Батирдин аянты, м²</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Площадь квартиры, м²</span>
+          </label>
+          <input
+            class="field__input"
+            type="number"
+            id="area"
+            name="area"
+            placeholder="Мисалы, 65 / Например, 65"
+            min="0"
+            step="any"
+            inputmode="decimal"
+          />
+          <p class="field__error" id="area-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="pricePerM2">
+            <span class="field__label-ky">1 м² баасы</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Цена за м²</span>
+          </label>
+          <div class="field__prefixed">
+            <span class="field__prefix" id="pricePerM2-prefix">$</span>
+            <input
+              class="field__input field__input--prefixed"
+              type="number"
+              id="pricePerM2"
+              name="pricePerM2"
+              placeholder="Мисалы, 1050 / Например, 1050"
+              min="0"
+              step="any"
+              inputmode="decimal"
+            />
+          </div>
+          <p class="field__error" id="pricePerM2-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="downPayment">
+            <span class="field__label-ky">Баштапкы төлөм</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Первоначальный взнос</span>
+          </label>
+          <div class="field__prefixed">
+            <span class="field__prefix" id="downPayment-prefix">$</span>
+            <input
+              class="field__input field__input--prefixed"
+              type="number"
+              id="downPayment"
+              name="downPayment"
+              placeholder="Мисалы, 10 000 / Например, 10 000"
+              min="0"
+              step="any"
+              inputmode="decimal"
+            />
+          </div>
+          <p class="field__error" id="downPayment-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="term">
+            <span class="field__label-ky">Бөлүп төлөө мөөнөтү</span>
+            <span class="field__label-sep">/</span>
+            <span class="field__label-ru">Срок рассрочки</span>
+          </label>
+          <select class="field__input field__select" id="term" name="term">
+            <option value="12">12 ай / 12 месяцев</option>
+            <option value="18">18 ай / 18 месяцев</option>
+            <option value="24">24 ай / 24 месяца</option>
+            <option value="30">30 ай / 30 месяцев</option>
+            <option value="36" selected>36 ай / 36 месяцев</option>
+            <option value="48">48 ай / 48 месяцев</option>
+            <option value="60">60 ай / 60 месяцев</option>
+          </select>
+        </div>
+
+        <div class="field-section">
+          <span class="field-section__ky">Кардар</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Клиент</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="clientName">
+              <span class="field__label-ky">Аты</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Имя</span>
+            </label>
+            <input class="field__input" type="text" id="clientName" name="clientName" placeholder="Мисалы, Айбек / Например, Айбек" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="clientPhone">
+              <span class="field__label-ky">Телефону</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Телефон</span>
+            </label>
+            <input class="field__input" type="tel" id="clientPhone" name="clientPhone" placeholder="+996 XXX XXX XXX" />
+          </div>
+        </div>
+
+        <button type="button" class="save-contact-button" id="save-contact-button" disabled>
+          <span class="save-contact-button__ky">Байланыштарга сактоо</span>
+          <span class="card__title-sep">/</span>
+          <span class="save-contact-button__ru">Сохранить в контакты</span>
+        </button>
+        <p class="field__error" id="contact-error"></p>
+
+        <div class="field-section">
+          <span class="field-section__ky">Менеджер</span>
+          <span class="field__label-sep">/</span>
+          <span class="field-section__ru">Менеджер</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="managerName">
+              <span class="field__label-ky">Аты</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Имя</span>
+            </label>
+            <input class="field__input" type="text" id="managerName" name="managerName" placeholder="Мисалы, Элиза / Например, Элиза" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="managerPhone">
+              <span class="field__label-ky">Телефону</span>
+              <span class="field__label-sep">/</span>
+              <span class="field__label-ru">Телефон</span>
+            </label>
+            <input class="field__input" type="tel" id="managerPhone" name="managerPhone" placeholder="+996 XXX XXX XXX" />
+          </div>
+        </div>
+      </form>
+
+      <section class="results" id="results" aria-live="polite">
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Батирдин баасы</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Стоимость квартиры</span>
+          </span>
+          <span class="results__value" id="result-total">0 $</span>
+        </div>
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Баштапкы төлөм</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Первоначальный взнос</span>
+          </span>
+          <span class="results__value" id="result-down">0 $</span>
+        </div>
+        <div class="results__row">
+          <span class="results__label">
+            <span class="results__label-ky">Төлөнө турган калдык</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Остаток к оплате</span>
+          </span>
+          <span class="results__value" id="result-remainder">0 $</span>
+        </div>
+
+        <div class="results__divider"></div>
+
+        <div class="results__row results__row--highlight">
+          <span class="results__label">
+            <span class="results__label-ky">Ай сайынкы төлөм</span>
+            <span class="results__label-sep">/</span>
+            <span class="results__label-ru">Ежемесячный платеж</span>
+          </span>
+          <span class="results__value results__value--big" id="result-monthly">0 $</span>
+        </div>
+      </section>
+
+      <button type="button" class="send-button" id="send-button" disabled>
+        <span class="send-button__text">
+          <span class="send-button__ky">Кардарга жөнөтүү</span>
+          <span class="card__title-sep">/</span>
+          <span class="send-button__ru">Отправить клиенту</span>
+        </span>
+      </button>
+
+      <div class="send-status" id="send-status" hidden>
+        <p class="send-status__text">
+          <span class="send-status__ky">PDF даяр</span>
+          <span class="card__title-sep">/</span>
+          <span class="send-status__ru">PDF готов</span>
+        </p>
+        <button type="button" class="send-status__download" id="send-download-button">
+          <span class="send-button__ky">PDF жүктөө</span>
+          <span class="card__title-sep">/</span>
+          <span class="send-button__ru">Скачать PDF</span>
+        </button>
       </div>
-    </div>
+
+      <p class="send-error" id="send-error"></p>
+    </main>
+
+    <button type="button" class="install-hint" id="install-button" hidden>
+      <span class="install-hint__ky">Колдонмо катары кошуу</span>
+      <span class="card__title-sep">/</span>
+      <span class="install-hint__ru">Установить приложение</span>
+    </button>
+    <p class="install-hint-text" id="install-hint-text" hidden></p>
+
+    <footer class="footer">
+      <span>© Nurzaman, <span id="year"></span></span>
+      <span class="signature">created by Elizka</span>
+    </footer>
   </div>
 
-  <div class="section">
-    <h2><span class="num">II.</span> Услуги</h2>
-    <table class="items" id="itemsTable">
-      <thead>
-        <tr>
-          <th style="width:26px;">№</th>
-          <th>Услуга</th>
-          <th style="width:90px;">Ед. изм.</th>
-          <th style="width:70px;">Кол-во</th>
-          <th style="width:110px;">Цена за ед.</th>
-          <th style="width:30px;"></th>
-        </tr>
-      </thead>
-      <tbody id="itemsBody"></tbody>
-    </table>
-    <div class="actions">
-      <button class="btn secondary small" onclick="addRow()">+ Добавить строку</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2><span class="num">III.</span> Печать</h2>
-    <div class="actions">
-      <button class="btn" onclick="renderDoc()">Сформировать акт</button>
-      <button class="btn secondary" onclick="window.print()">Печать / Сохранить как PDF</button>
-    </div>
-  </div>
-
-</div>
-
-<div class="doc" id="docOutput"></div>
-
-<script>
-let rowCount = 0;
-
-function addRow(service="Консультирование и продажи квартир", unit="услуга", qty=1, price=""){
-  rowCount++;
-  const tbody = document.getElementById("itemsBody");
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
-    <td style="text-align:center;">${rowCount}</td>
-    <td><input type="text" class="f-service" value="${service}"></td>
-    <td><input type="text" class="f-unit" value="${unit}"></td>
-    <td><input type="number" class="f-qty" value="${qty}" step="0.01"></td>
-    <td><input type="number" class="f-price" value="${price}" step="0.01"></td>
-    <td class="row-actions"><button class="btn danger small" onclick="removeRow(this)">✕</button></td>
-  `;
-  tbody.appendChild(tr);
-}
-function removeRow(btn){
-  btn.closest("tr").remove();
-  renumberRows();
-}
-function renumberRows(){
-  const rows = document.querySelectorAll("#itemsBody tr");
-  rows.forEach((r,i)=>{ r.children[0].textContent = i+1; });
-  rowCount = rows.length;
-}
-
-addRow(); // одна строка по умолчанию
-
-// ===== число прописью (сомы) =====
-const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
-const onesF = ["", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
-const teens = ["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
-const tens = ["", "", "двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
-const hundreds = ["", "сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
-
-function triadToWords(n, feminine){
-  let words = [];
-  const h = Math.floor(n/100);
-  const rem = n%100;
-  if(h) words.push(hundreds[h]);
-  if(rem >= 10 && rem < 20){
-    words.push(teens[rem-10]);
-  } else {
-    const t = Math.floor(rem/10);
-    const o = rem%10;
-    if(t) words.push(tens[t]);
-    if(o) words.push(feminine ? onesF[o] : ones[o]);
-  }
-  return words;
-}
-
-function pluralForm(n, forms){
-  const n100 = n % 100;
-  const n10 = n % 10;
-  if(n100 >= 11 && n100 <= 14) return forms[2];
-  if(n10 === 1) return forms[0];
-  if(n10 >= 2 && n10 <= 4) return forms[1];
-  return forms[2];
-}
-
-function numberToWords(num){
-  num = Math.round(num);
-  if(num === 0) return "ноль сом";
-  const millions = Math.floor(num / 1000000);
-  const thousands = Math.floor((num % 1000000) / 1000);
-  const rest = num % 1000;
-
-  let parts = [];
-  if(millions){
-    parts.push(...triadToWords(millions, false));
-    parts.push(pluralForm(millions, ["миллион","миллиона","миллионов"]));
-  }
-  if(thousands){
-    parts.push(...triadToWords(thousands, true));
-    parts.push(pluralForm(thousands, ["тысяча","тысячи","тысяч"]));
-  }
-  if(rest || parts.length === 0){
-    parts.push(...triadToWords(rest, false));
-  }
-  let text = parts.filter(Boolean).join(" ");
-  text = text.charAt(0).toUpperCase() + text.slice(1);
-  const somWord = pluralForm(num, ["сом","сома","сом"]);
-  return `${text} ${somWord}`;
-}
-
-function fmt(n){
-  return Math.round(n).toLocaleString("ru-RU");
-}
-
-function renderDoc(){
-  const aktNum = document.getElementById("aktNum").value.trim();
-  const aktDate = document.getElementById("aktDate").value;
-  const executorName = document.getElementById("executor").value.trim();
-  const executor = executorName ? `ИП ${executorName}` : "";
-  const customerName = document.getElementById("customerName").value.trim();
-  const customerInn = document.getElementById("customerInn").value.trim();
-  const customerDirector = document.getElementById("customerDirector").value.trim();
-  const taxRate = parseFloat(document.getElementById("taxRate").value) || 0;
-
-  const dateStr = aktDate ? new Date(aktDate).toLocaleDateString("ru-RU") : "____________";
-
-  const rows = document.querySelectorAll("#itemsBody tr");
-  let itemsHtml = "";
-  let subtotal = 0;
-  rows.forEach((r, i) => {
-    const service = r.querySelector(".f-service").value;
-    const unit = r.querySelector(".f-unit").value;
-    const qty = parseFloat(r.querySelector(".f-qty").value) || 0;
-    const price = parseFloat(r.querySelector(".f-price").value) || 0;
-    const sum = qty * price;
-    subtotal += sum;
-    itemsHtml += `
-      <tr>
-        <td class="num-col">${i+1}</td>
-        <td>${service}</td>
-        <td class="unit-col">${unit}</td>
-        <td class="qty-col">${qty}</td>
-        <td class="price-col">${fmt(price)}</td>
-        <td class="sum-col">${fmt(sum)}</td>
-      </tr>`;
-  });
-
-  // Налог считается как % от ИТОГОВОЙ суммы (сумма услуг = сумма за вычетом налога),
-  // а не как % от суммы услуг. Итого = Сумма / (1 - ставка).
-  const rate = taxRate / 100;
-  const total = rate < 1 ? subtotal / (1 - rate) : subtotal;
-  const tax = total - subtotal;
-
-  const doc = document.getElementById("docOutput");
-  doc.innerHTML = `
-    <div class="doc-title">Акт выполненных услуг № ${aktNum || "__"} от ${dateStr}</div>
-    <div class="doc-meta">Исполнитель: ${executor || "____________________"}</div>
-    <div class="doc-meta">Заказчик: ${customerName}, ИНН ${customerInn}</div>
-
-    <table class="doc-table">
-      <thead>
-        <tr>
-          <th class="num-col">№</th>
-          <th>Услуга</th>
-          <th class="unit-col">Ед. изм.</th>
-          <th class="qty-col">Кол-во</th>
-          <th class="price-col">Цена за ед.</th>
-          <th class="sum-col">Сумма</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${itemsHtml}
-        <tr>
-          <td colspan="5" class="total-label">Налог, ${taxRate}%</td>
-          <td class="sum-col">${fmt(tax)}</td>
-        </tr>
-        <tr>
-          <td colspan="5" class="total-label">Итого</td>
-          <td class="sum-col">${fmt(total)}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="words-line">Всего оказано услуг на сумму: ${numberToWords(total)}</div>
-
-    <div class="sign-block">
-      <div>
-        Исполнитель: ${executor || "____________________"}
-        <div class="sign-line"></div>
-      </div>
-      <div>
-        Заказчик: ${customerName}<br>директор ${customerDirector}
-        <div class="sign-line"></div>
-      </div>
-    </div>
-  `;
-}
-
-// ===== тема оформления (только для формы, печатный акт всегда чистый) =====
-const LS_THEME = "akt_theme_v1";
-function setTheme(theme){
-  document.body.classList.remove("theme-leopard","theme-panther");
-  if(theme === "theme-leopard" || theme === "theme-panther"){
-    document.body.classList.add(theme);
-  }
-  try{ localStorage.setItem(LS_THEME, theme); }catch(e){}
-}
-(function loadTheme(){
-  let theme = "default";
-  try{ theme = localStorage.getItem(LS_THEME) || "default"; }catch(e){}
-  document.getElementById("themeSelect").value = theme;
-  setTheme(theme);
-})();
-const LS_CUSTOMER = "akt_customer_v1";
-const LS_EXECUTORS = "akt_executors_v1";
-
-function saveCustomerData(){
-  const data = {
-    customerName: document.getElementById("customerName").value.trim(),
-    customerInn: document.getElementById("customerInn").value.trim(),
-    customerDirector: document.getElementById("customerDirector").value.trim(),
-    taxRate: document.getElementById("taxRate").value
-  };
-  try{ localStorage.setItem(LS_CUSTOMER, JSON.stringify(data)); }catch(e){}
-}
-
-function loadCustomerData(){
-  try{
-    const raw = localStorage.getItem(LS_CUSTOMER);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    if(data.customerName) document.getElementById("customerName").value = data.customerName;
-    if(data.customerInn) document.getElementById("customerInn").value = data.customerInn;
-    if(data.customerDirector) document.getElementById("customerDirector").value = data.customerDirector;
-    if(data.taxRate) document.getElementById("taxRate").value = data.taxRate;
-  }catch(e){}
-}
-
-function getExecutorsList(){
-  try{
-    const raw = localStorage.getItem(LS_EXECUTORS);
-    return raw ? JSON.parse(raw) : [];
-  }catch(e){ return []; }
-}
-
-function saveExecutorsList(list){
-  try{ localStorage.setItem(LS_EXECUTORS, JSON.stringify(list)); }catch(e){}
-}
-
-function addExecutorToList(name){
-  if(!name) return;
-  const list = getExecutorsList();
-  if(!list.includes(name)){
-    list.push(name);
-    saveExecutorsList(list);
-  }
-  renderExecutorUI();
-}
-
-function removeExecutorFromList(name){
-  let list = getExecutorsList();
-  list = list.filter(n => n !== name);
-  saveExecutorsList(list);
-  renderExecutorUI();
-}
-
-function renderExecutorUI(){
-  const list = getExecutorsList();
-  // datalist для автодополнения при вводе
-  const dl = document.getElementById("execList");
-  dl.innerHTML = list.map(n => `<option value="${n}">`).join("");
-  // чипы для быстрого выбора одним нажатием
-  const chips = document.getElementById("execChips");
-  chips.innerHTML = list.map(n =>
-    `<span class="chip" onclick="selectExecutor('${n.replace(/'/g,"\\'")}')">${n}<span class="x" onclick="event.stopPropagation(); removeExecutorFromList('${n.replace(/'/g,"\\'")}')">✕</span></span>`
-  ).join("");
-}
-
-function selectExecutor(name){
-  document.getElementById("executor").value = name;
-  renderDoc();
-}
-
-// подключаем автосохранение к существующим полям
-["customerName","customerInn","customerDirector","taxRate"].forEach(id=>{
-  document.getElementById(id).addEventListener("change", saveCustomerData);
-});
-
-const origRenderDoc = renderDoc;
-renderDoc = function(){
-  origRenderDoc();
-  saveCustomerData();
-  const execName = document.getElementById("executor").value.trim();
-  if(execName){ addExecutorToList(execName); }
-};
-
-loadCustomerData();
-renderExecutorUI();
-renderDoc();
-
-// дата по умолчанию — сегодня, но её можно поменять вручную
-(function setDefaultDate(){
-  const d = new Date();
-  const iso = d.toISOString().slice(0,10);
-  document.getElementById("aktDate").value = iso;
-  renderDoc();
-})();
-</script>
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/vendor/roboto-regular-font.js"></script>
+  <script src="js/vendor/roboto-bold-font.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/genplan.js"></script>
+  <script src="js/floorplans.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
