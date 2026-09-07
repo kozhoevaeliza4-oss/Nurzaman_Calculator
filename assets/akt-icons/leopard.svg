@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="pinkBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4a6b8"/>
+      <stop offset="55%" stop-color="#e8829c"/>
+      <stop offset="100%" stop-color="#d96a87"/>
+    </linearGradient>
+    <radialGradient id="goldSeal" cx="38%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#f6e2a0"/>
+      <stop offset="50%" stop-color="#c9992f"/>
+      <stop offset="100%" stop-color="#8a640a"/>
+    </radialGradient>
+    <radialGradient id="sheen" cx="35%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="200" height="200" fill="url(#pinkBg)"/>
+
+  <!-- leopard print spots -->
+  <g fill="#7a4520" opacity="0.55">
+    <ellipse cx="26" cy="24" rx="9" ry="7"/>
+    <ellipse cx="24" cy="60" rx="7" ry="6"/>
+    <ellipse cx="52" cy="18" rx="6" ry="5"/>
+    <ellipse cx="170" cy="30" rx="8" ry="6"/>
+    <ellipse cx="178" cy="65" rx="6" ry="5"/>
+    <ellipse cx="150" cy="20" rx="6" ry="5"/>
+    <ellipse cx="20" cy="150" rx="8" ry="6"/>
+    <ellipse cx="28" cy="180" rx="6" ry="5"/>
+    <ellipse cx="175" cy="150" rx="7" ry="6"/>
+    <ellipse cx="180" cy="182" rx="6" ry="5"/>
+    <ellipse cx="100" cy="14" rx="7" ry="5"/>
+    <ellipse cx="100" cy="188" rx="7" ry="5"/>
+  </g>
+  <g fill="none" stroke="#5c3320" stroke-width="1.5" opacity="0.5">
+    <ellipse cx="26" cy="24" rx="9" ry="7"/>
+    <ellipse cx="170" cy="30" rx="8" ry="6"/>
+    <ellipse cx="20" cy="150" rx="8" ry="6"/>
+    <ellipse cx="175" cy="150" rx="7" ry="6"/>
+  </g>
+
+  <!-- gold seal disc -->
+  <circle cx="100" cy="100" r="66" fill="url(#goldSeal)"/>
+  <circle cx="100" cy="100" r="66" fill="url(#sheen)"/>
+  <circle cx="100" cy="100" r="57" fill="none" stroke="#fff3d6" stroke-width="2.5" opacity="0.85"/>
+  <circle cx="100" cy="100" r="66" fill="none" stroke="#5c3f06" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- engraved letter A -->
+  <text x="100" y="132" font-family="Georgia, 'Times New Roman', serif" font-size="82"
+        text-anchor="middle" fill="#4a3105" font-weight="700">A</text>
+  <text x="100" y="132" font-family="Georgia, 'Times New Roman', serif" font-size="82"
+        text-anchor="middle" fill="none" stroke="#fff3d6" stroke-width="0.8" opacity="0.5" font-weight="700">A</text>
+
+  <!-- small flourish -->
+  <path d="M74 146 Q100 154 126 146" fill="none" stroke="#4a3105" stroke-width="2.5" opacity="0.7" stroke-linecap="round"/>
+</svg>
