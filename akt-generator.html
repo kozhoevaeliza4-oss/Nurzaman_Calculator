@@ -443,7 +443,7 @@
     <h2><span class="num">III.</span> Печать</h2>
     <div class="actions">
       <button class="btn" onclick="renderDoc()">Сформировать акт</button>
-      <button class="btn secondary" onclick="downloadPdf()">Скачать PDF</button>
+      <button class="btn secondary" onclick="downloadPdf(this)">Скачать PDF</button>
       <button class="btn secondary" onclick="window.print()">Печать (через браузер)</button>
     </div>
     <div class="save-hint">«Скачать PDF» — файл без даты/ссылки/номера страницы вверху и внизу. «Печать» — открывает системный диалог печати телефона/компьютера (там браузер сам добавляет такие пометки).</div>
@@ -453,19 +453,51 @@
 
 <div class="doc" id="docOutput"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-function downloadPdf(){
-  const el = document.getElementById("docOutput");
-  const aktNum = document.getElementById("aktNum").value.trim() || "bez-nomera";
-  const opt = {
-    margin: 8,
-    filename: `Akt_${aktNum}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  };
-  html2pdf().set(opt).from(el).save();
+async function downloadPdf(btn){
+  const originalLabel = btn ? btn.textContent : null;
+  if(btn){ btn.disabled = true; btn.textContent = "Готовим PDF..."; }
+  try{
+    const el = document.getElementById("docOutput");
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff"
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+    let heightLeft = imgHeight;
+    let position = margin;
+    pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+    heightLeft -= (pageHeight - margin * 2);
+
+    while(heightLeft > 0){
+      position = margin - (imgHeight - heightLeft);
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+    }
+
+    const aktNum = document.getElementById("aktNum").value.trim() || "bez-nomera";
+    pdf.save(`Akt_${aktNum}.pdf`);
+  }catch(e){
+    alert("Не удалось сформировать PDF: " + e.message + ". Попробуйте кнопку «Печать (через браузер)».");
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel; }
+  }
 }
 </script>
 <script>
