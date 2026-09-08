@@ -255,6 +255,10 @@
   .price-col{width:110px; text-align:right;}
   .sum-col{width:110px; text-align:right; font-weight:bold;}
   .total-label{text-align:right; font-weight:bold;}
+  .words-line{
+    font-size:14px;
+    margin:14px 0 0;
+  }
   .doc-accept-title{
     font-style:italic;
     margin-top:24px;
@@ -763,6 +767,63 @@ function fmt(n){
   return Math.round(n).toLocaleString("ru-RU");
 }
 
+// ===== число прописью (сомы) =====
+const ones = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
+const onesF = ["", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"];
+const teens = ["десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
+const tens = ["", "", "двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
+const hundreds = ["", "сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
+
+function triadToWords(n, feminine){
+  let words = [];
+  const h = Math.floor(n/100);
+  const rem = n%100;
+  if(h) words.push(hundreds[h]);
+  if(rem >= 10 && rem < 20){
+    words.push(teens[rem-10]);
+  } else {
+    const t = Math.floor(rem/10);
+    const o = rem%10;
+    if(t) words.push(tens[t]);
+    if(o) words.push(feminine ? onesF[o] : ones[o]);
+  }
+  return words;
+}
+
+function pluralForm(n, forms){
+  const n100 = n % 100;
+  const n10 = n % 10;
+  if(n100 >= 11 && n100 <= 14) return forms[2];
+  if(n10 === 1) return forms[0];
+  if(n10 >= 2 && n10 <= 4) return forms[1];
+  return forms[2];
+}
+
+function numberToWords(num){
+  num = Math.round(num);
+  if(num === 0) return "ноль сом";
+  const millions = Math.floor(num / 1000000);
+  const thousands = Math.floor((num % 1000000) / 1000);
+  const rest = num % 1000;
+
+  let parts = [];
+  if(millions){
+    parts.push(...triadToWords(millions, false));
+    parts.push(pluralForm(millions, ["миллион","миллиона","миллионов"]));
+  }
+  if(thousands){
+    parts.push(...triadToWords(thousands, true));
+    parts.push(pluralForm(thousands, ["тысяча","тысячи","тысяч"]));
+  }
+  if(rest || parts.length === 0){
+    parts.push(...triadToWords(rest, false));
+  }
+  let text = parts.filter(Boolean).join(" ");
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  const somWord = pluralForm(num, ["сом","сома","сом"]);
+  return `${text} ${somWord}`;
+}
+
 function checkContractNumber(){
   const input = document.getElementById("contractNumber");
   const errEl = document.getElementById("contractNumberError");
@@ -871,6 +932,8 @@ function renderDoc(){
       </tbody>
     </table>
     </div>
+
+    <div class="words-line">Всего выполнено работ на сумму: ${numberToWords(total)}</div>
 
     <div class="doc-accept-title">Работы приняли:</div>
     ${acceptHtml}
