@@ -218,6 +218,8 @@
   .price-col{width:110px; text-align:right;}
   .sum-col{width:120px; text-align:right; font-weight:bold;}
   .total-label{text-align:right; font-weight:bold;}
+  .doc-head-cell{text-align:left;}
+  td.doc-spacer{border:none !important; height:8px; padding:0;}
   .words-line{
     font-size:14px;
     margin:14px 0;
@@ -631,13 +633,13 @@ function renderDoc(){
 
   const doc = document.getElementById("docOutput");
   doc.innerHTML = `
-    <div class="doc-title">Акт выполненных услуг № ${aktNum || "__"} от ${dateStr}</div>
-    <div class="doc-meta">Исполнитель: ${executor || "____________________"}</div>
-    <div class="doc-meta">Заказчик: ${customerName}, ИНН ${customerInn}</div>
-
     <div class="table-scroll">
-    <table class="doc-table">
-      <thead>
+    <table class="doc-table doc-grid">
+      <tbody>
+        <tr><td colspan="6" class="doc-head-cell"><b>Акт выполненных услуг № ${aktNum || "__"} от ${dateStr}</b></td></tr>
+        <tr><td colspan="6" class="doc-head-cell">Исполнитель: ${executor || "____________________"}</td></tr>
+        <tr><td colspan="6" class="doc-head-cell"><b>Заказчик: ${customerName}, ИНН ${customerInn}</b></td></tr>
+        <tr><td colspan="6" class="doc-spacer"></td></tr>
         <tr>
           <th class="num-col">№</th>
           <th>Услуга</th>
@@ -646,34 +648,27 @@ function renderDoc(){
           <th class="price-col">Цена за ед.</th>
           <th class="sum-col">Сумма</th>
         </tr>
-      </thead>
-      <tbody>
         ${itemsHtml}
         <tr>
-          <td colspan="5" class="total-label">Налог, ${taxRate}%</td>
+          <td></td><td></td>
+          <td class="unit-col">налог</td>
+          <td class="qty-col">${taxRate}%</td>
+          <td class="price-col">${fmt(tax)}</td>
           <td class="sum-col">${fmt(tax)}</td>
         </tr>
         <tr>
-          <td colspan="5" class="total-label">Итого</td>
+          <td></td><td></td><td></td><td></td>
+          <td class="total-label">итого</td>
           <td class="sum-col">${fmt(total)}</td>
+        </tr>
+        <tr><td colspan="6">Всего оказано услуг на сумму: ${numberToWords(total)}</td></tr>
+        <tr><td colspan="6" class="doc-spacer"></td></tr>
+        <tr>
+          <td colspan="3">Исполнитель: ${executor || "____________________"}<br>______________________ (подпись)</td>
+          <td colspan="3">Заказчик: ${customerName}<br>______________________ директор ${customerDirector}</td>
         </tr>
       </tbody>
     </table>
-    </div>
-
-    <div class="words-line">Всего оказано услуг на сумму: ${numberToWords(total)}</div>
-
-    <div class="sign-block">
-      <div>
-        Исполнитель: ${executor || "____________________"}
-        <div class="sign-line"></div>
-        <div class="sign-label">(подпись)</div>
-      </div>
-      <div>
-        Заказчик: ${customerName}<br>директор ${customerDirector}
-        <div class="sign-line"></div>
-        <div class="sign-label">(подпись директора)</div>
-      </div>
     </div>
   `;
 }
