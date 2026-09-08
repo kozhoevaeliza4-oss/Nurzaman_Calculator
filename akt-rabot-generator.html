@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Акт работ</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Акт работ">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7c2a20">
+<link rel="apple-touch-icon" href="assets/akt-icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/akt-icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/akt-icons/icon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f2ecdd;
+    --paper-deep:#eae1cc;
+    --ink:#242019;
+    --ink-soft:#6b6152;
+    --line:#c9bb98;
+    --seal:#7c2a20;
+    --seal-dark:#5c1f18;
+    --gold:#96702c;
+    --ui-font: "Montserrat", -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family: "Montserrat", "Times New Roman", Georgia, serif;
+    color:var(--ink);
+    margin:0;
+    padding:0 0 40px;
+    background:#fff;
+  }
+  .toolbar{
+    background:var(--paper);
+    border-top:3px solid var(--ink);
+    border-bottom:1px solid var(--line);
+    padding:20px 18px 24px;
+    margin-bottom:26px;
+    font-family: var(--ui-font);
+  }
+  .toolbar .section{
+    padding:16px 0 6px;
+    border-top:1px solid var(--line);
+  }
+  .toolbar .section:first-of-type{
+    border-top:none;
+    padding-top:2px;
+  }
+  .toolbar h2{
+    margin:0 0 14px 0;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .toolbar h2 .num{
+    color:var(--seal);
+    font-family: Georgia, serif;
+    font-style:italic;
+  }
+  .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .field{
+    flex:1 1 200px;
+    display:flex;
+    flex-direction:column;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .field.full{ flex:1 1 100%; }
+  .field input, .field select, .field textarea{
+    font-family: var(--ui-font);
+    font-size:14px;
+    padding:8px 9px;
+    border:none;
+    border-bottom:1.5px solid var(--line);
+    border-radius:0;
+    margin-top:4px;
+    background:transparent;
+    color:var(--ink);
+    resize:vertical;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;
+    border-bottom-color:var(--seal);
+  }
+  table.items{
+    width:100%;
+    border-collapse:collapse;
+    font-family: var(--ui-font);
+    font-size:13px;
+    margin-top:10px;
+    background:#fff;
+  }
+  table.items th, table.items td{
+    border:1px solid var(--line);
+    padding:6px;
+  }
+  table.items th{
+    background:var(--paper-deep);
+    font-weight:600;
+    color:var(--ink-soft);
+    text-align:left;
+  }
+  table.items input{
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family: var(--ui-font);
+    font-size:13px;
+    padding:2px;
+    color:var(--ink);
+  }
+  .row-actions{
+    text-align:center;
+  }
+  .btn{
+    font-family: var(--ui-font);
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:3px;
+    border:1px solid var(--seal);
+    background:var(--seal);
+    color:#fdf9ef;
+    cursor:pointer;
+  }
+  .btn:hover{ background:var(--seal-dark); border-color:var(--seal-dark); }
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--ink);
+  }
+  .btn.secondary:hover{ background:var(--ink); color:#fdf9ef; }
+  .btn.small{
+    padding:4px 9px;
+    font-size:12px;
+  }
+  .btn.danger{
+    background:transparent;
+    border:1px solid var(--ink-soft);
+    color:var(--ink-soft);
+  }
+  .btn.danger:hover{ background:var(--seal); border-color:var(--seal); color:#fff; }
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .save-hint{
+    font-family: var(--ui-font);
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .search-results{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    z-index:20;
+    background:#fff;
+    border:1px solid var(--line);
+    border-top:none;
+    max-height:280px;
+    overflow-y:auto;
+    box-shadow:0 6px 14px rgba(0,0,0,0.12);
+  }
+  .search-result-item{
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    font-size:12.5px;
+  }
+  .search-result-item:hover{ background:var(--paper); }
+  .search-result-item .r-name{ font-weight:600; color:var(--ink); }
+  .search-result-item .r-work{ color:var(--ink-soft); font-size:11.5px; margin-top:2px; }
+  .search-result-item .r-meta{ color:var(--ink-soft); font-size:11px; margin-top:2px; font-style:italic; }
+
+  /* ===== ПЕЧАТНЫЙ ДОКУМЕНТ ===== */
+  .doc{
+    max-width:900px;
+    margin:0 auto;
+    padding:18px 22px;
+    font-size:14px;
+  }
+  .doc-approve{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:22px;
+  }
+  .doc-approve-box{
+    width:280px;
+  }
+  .doc-approve-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+    font-size:13px;
+  }
+  .doc-approve-role{ color:#333; }
+  .doc-approve-sign{
+    text-align:right;
+    white-space:nowrap;
+  }
+  .doc-approve-line{
+    display:inline-block;
+    border-bottom:1px solid #000;
+    width:90px;
+    margin-right:6px;
+  }
+  .doc-object{
+    text-align:center;
+    font-style:italic;
+    margin-bottom:10px;
+  }
+  .doc-title{
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:6px;
+  }
+  .doc-date{
+    text-align:right;
+    margin-bottom:14px;
+  }
+  table.doc-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:12px 0;
+    font-size:13px;
+  }
+  table.doc-table th, table.doc-table td{
+    border:1px solid #000;
+    padding:6px 8px;
+  }
+  table.doc-table th{
+    text-align:center;
+  }
+  .num-col{width:40px; text-align:center;}
+  .unit-col{width:80px; text-align:center;}
+  .qty-col{width:60px; text-align:center;}
+  .price-col{width:110px; text-align:right;}
+  .sum-col{width:110px; text-align:right; font-weight:bold;}
+  .total-label{text-align:right; font-weight:bold;}
+  .doc-accept-title{
+    font-weight:bold;
+    margin-top:24px;
+    margin-bottom:10px;
+  }
+  .doc-accept-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:16px;
+    font-size:14px;
+  }
+  .doc-accept-role{ white-space:nowrap; }
+  .doc-accept-sign{
+    flex:1;
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    align-items:baseline;
+  }
+  .doc-accept-line{
+    display:inline-block;
+    border-bottom:1px solid #000;
+    width:120px;
+  }
+
+  .theme-switch{
+    font-family: var(--ui-font);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 18px;
+    background:var(--ink);
+  }
+  .theme-switch label{font-size:12px; color:#cfc6b4;}
+  .theme-switch select{
+    font-family: var(--ui-font);
+    font-size:13px;
+    padding:5px 8px;
+    border-radius:3px;
+    border:1px solid #555;
+    background:#2a251d;
+    color:#fdf9ef;
+  }
+
+  @media print{
+    .toolbar, .actions, .theme-switch{display:none !important;}
+    body{padding:0;}
+    .doc{border:none; padding:0; max-width:none;}
+    .table-scroll{overflow:visible !important;}
+    table.doc-table{font-size:12px;}
+  }
+
+  /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+  .table-scroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  @media (max-width:640px){
+    .toolbar{ padding:16px 12px 20px; margin-bottom:18px; }
+    .field{ flex:1 1 100%; }
+    .field input, .field select, .field textarea{ font-size:16px; }
+    .row{ gap:10px; }
+    .theme-switch{ padding:8px 12px; flex-wrap:wrap; }
+    .doc{ padding:14px 12px; max-width:100%; }
+    table.items, table.doc-table{ font-size:12px; }
+    table.items th, table.items td,
+    table.doc-table th, table.doc-table td{ padding:5px; }
+    .unit-col{ width:56px; }
+    .qty-col{ width:48px; }
+    .price-col{ width:80px; }
+    .sum-col{ width:84px; }
+    .doc-approve-box{ width:100%; }
+    .doc-accept-row{ flex-direction:column; align-items:flex-start; gap:6px; }
+    .doc-accept-sign{ width:100%; }
+    .actions{ gap:8px; }
+    .actions .btn{ flex:1 1 auto; }
+    .btn{ font-size:13px; padding:10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+
+  <div class="section">
+    <h2><span class="num">0.</span> Поиск подрядчика (из базы Nurzaman)</h2>
+    <div class="row">
+      <div class="field full" style="position:relative;">
+        <label>Начните вводить ФИО или название компании</label>
+        <input id="execSearch" type="text" placeholder="например: Равшан" autocomplete="off">
+        <div id="execResults" class="search-results" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="save-hint" id="sheetStatus">Загружаем базу подрядчиков…</div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">I.</span> Объект и договор</h2>
+    <div class="row">
+      <div class="field full">
+        <label>Объект (ЖК)</label>
+        <input id="objectName" type="text" value="Европейский квартал">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>№ договора</label>
+        <input id="contractNumber" type="text" value="121">
+      </div>
+      <div class="field">
+        <label>Дата акта</label>
+        <input id="aktDate" type="date">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field full">
+        <label>Описание работ (после слов «Акт выполненных работ»)</label>
+        <textarea id="workDescription" rows="2">на сантехнические работы монтаж чашагена сан.узла рабочих и монтаж временного Водоснабжения для блоков 7 и 8</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">II.</span> Утверждаю</h2>
+    <div class="row">
+      <div class="field">
+        <label>Директор</label>
+        <input id="approveDirector" type="text" value="Айткулов И.С.">
+      </div>
+      <div class="field">
+        <label>Заместитель директора</label>
+        <input id="approveDeputy" type="text" value="Алимбеков А.Т.">
+      </div>
+      <div class="field">
+        <label>Руководитель проекта</label>
+        <input id="approveProjectHead" type="text" value="Убайдилла уулу Р.">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">III.</span> Работы</h2>
+    <div class="table-scroll">
+    <table class="items" id="itemsTable">
+      <thead>
+        <tr>
+          <th style="width:26px;">№</th>
+          <th>Наименование работ</th>
+          <th style="width:80px;">Ед. изм.</th>
+          <th style="width:60px;">Кол-во</th>
+          <th style="width:110px;">Стоимость работы</th>
+          <th style="width:30px;"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+    </div>
+    <div class="actions">
+      <button class="btn secondary small" onclick="addRow()">+ Добавить строку</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">IV.</span> Работы приняли</h2>
+    <div class="table-scroll">
+    <table class="items" id="acceptTable">
+      <thead>
+        <tr>
+          <th>Роль</th>
+          <th>ФИО</th>
+          <th style="width:30px;"></th>
+        </tr>
+      </thead>
+      <tbody id="acceptBody"></tbody>
+    </table>
+    </div>
+    <div class="actions">
+      <button class="btn secondary small" onclick="addAcceptRow()">+ Добавить роль</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">V.</span> Работы сдал</h2>
+    <div class="row">
+      <div class="field">
+        <label>Исполнитель (компания)</label>
+        <input id="executorCompany" type="text" value="ОсОО Инженер Сити">
+      </div>
+      <div class="field">
+        <label>ФИО сдавшего (необязательно)</label>
+        <input id="executorName" type="text" placeholder="">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">VI.</span> Печать</h2>
+    <div class="actions">
+      <button class="btn" onclick="renderDoc()">Сформировать акт</button>
+      <button class="btn secondary" onclick="downloadPdf(this)">Скачать PDF</button>
+      <button class="btn secondary" onclick="window.print()">Печать (через браузер)</button>
+    </div>
+    <div class="save-hint">«Скачать PDF» — файл без даты/ссылки/номера страницы вверху и внизу. «Печать» — открывает системный диалог печати телефона/компьютера (там браузер сам добавляет такие пометки).</div>
+  </div>
+
+</div>
+
+<div class="doc" id="docOutput"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+async function downloadPdf(btn){
+  const originalLabel = btn ? btn.textContent : null;
+  if(btn){ btn.disabled = true; btn.textContent = "Готовим PDF..."; }
+  try{
+    const el = document.getElementById("docOutput");
+    if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff"
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+    let heightLeft = imgHeight;
+    let position = margin;
+    pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+    heightLeft -= (pageHeight - margin * 2);
+
+    while(heightLeft > 0){
+      position = margin - (imgHeight - heightLeft);
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin * 2);
+    }
+
+    const contractNumber = document.getElementById("contractNumber").value.trim() || "bez-nomera";
+    pdf.save(`Akt_rabot_${contractNumber}.pdf`);
+  }catch(e){
+    alert("Не удалось сформировать PDF: " + e.message + ". Попробуйте кнопку «Печать (через браузер)».");
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = originalLabel; }
+  }
+}
+</script>
+<script>
+let rowCount = 0;
+
+function addRow(name="", unit="шт", qty=1, price=""){
+  rowCount++;
+  const tbody = document.getElementById("itemsBody");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td style="text-align:center;">${rowCount}</td>
+    <td><input type="text" class="f-service" value="${name}"></td>
+    <td><input type="text" class="f-unit" value="${unit}"></td>
+    <td><input type="number" class="f-qty" value="${qty}" step="0.01"></td>
+    <td><input type="number" class="f-price" value="${price}" step="0.01"></td>
+    <td class="row-actions"><button class="btn danger small" onclick="removeRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+function removeRow(btn){
+  btn.closest("tr").remove();
+  renumberRows();
+}
+function renumberRows(){
+  const rows = document.querySelectorAll("#itemsBody tr");
+  rows.forEach((r,i)=>{ r.children[0].textContent = i+1; });
+  rowCount = rows.length;
+}
+
+addRow();
+
+function addAcceptRow(role="", name=""){
+  const tbody = document.getElementById("acceptBody");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input type="text" class="a-role" value="${role}"></td>
+    <td><input type="text" class="a-name" value="${name}"></td>
+    <td class="row-actions"><button class="btn danger small" onclick="removeAcceptRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+function removeAcceptRow(btn){
+  btn.closest("tr").remove();
+}
+
+addAcceptRow("Руководитель ПТО", "");
+addAcceptRow("Инженеры ПТО", "");
+addAcceptRow("Прораб", "");
+
+function fmt(n){
+  return Math.round(n).toLocaleString("ru-RU");
+}
+
+function renderDoc(){
+  const objectName = document.getElementById("objectName").value.trim();
+  const contractNumber = document.getElementById("contractNumber").value.trim();
+  const workDescription = document.getElementById("workDescription").value.trim();
+  const aktDate = document.getElementById("aktDate").value;
+  const dateStr = aktDate ? new Date(aktDate).toLocaleDateString("ru-RU") : "____________";
+
+  const approveDirector = document.getElementById("approveDirector").value.trim();
+  const approveDeputy = document.getElementById("approveDeputy").value.trim();
+  const approveProjectHead = document.getElementById("approveProjectHead").value.trim();
+
+  const executorCompany = document.getElementById("executorCompany").value.trim();
+  const executorName = document.getElementById("executorName").value.trim();
+
+  const rows = document.querySelectorAll("#itemsBody tr");
+  let itemsHtml = "";
+  let total = 0;
+  rows.forEach((r, i) => {
+    const name = r.querySelector(".f-service").value;
+    const unit = r.querySelector(".f-unit").value;
+    const qty = parseFloat(r.querySelector(".f-qty").value) || 0;
+    const price = parseFloat(r.querySelector(".f-price").value) || 0;
+    const sum = qty * price;
+    total += sum;
+    itemsHtml += `
+      <tr>
+        <td class="num-col">${i+1}</td>
+        <td>${name}</td>
+        <td class="unit-col">${unit}</td>
+        <td class="qty-col">${qty}</td>
+        <td class="price-col">${fmt(price)}</td>
+        <td class="sum-col">${fmt(sum)}</td>
+      </tr>`;
+  });
+
+  const acceptRows = document.querySelectorAll("#acceptBody tr");
+  let acceptHtml = "";
+  acceptRows.forEach(r => {
+    const role = r.querySelector(".a-role").value;
+    const name = r.querySelector(".a-name").value;
+    if(!role && !name) return;
+    acceptHtml += `
+      <div class="doc-accept-row">
+        <span class="doc-accept-role">${role}</span>
+        <span class="doc-accept-sign"><span class="doc-accept-line"></span> ${name}</span>
+      </div>`;
+  });
+
+  const doc = document.getElementById("docOutput");
+  doc.innerHTML = `
+    <div class="doc-approve">
+      <div class="doc-approve-box">
+        <div style="font-weight:bold; margin-bottom:14px;">Утверждаю</div>
+        <div class="doc-approve-row">
+          <span class="doc-approve-role">Директор</span>
+          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDirector}</span>
+        </div>
+        <div class="doc-approve-row">
+          <span class="doc-approve-role">Заместитель директора</span>
+          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDeputy}</span>
+        </div>
+        <div class="doc-approve-row">
+          <span class="doc-approve-role">Руководитель проекта</span>
+          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveProjectHead}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-object">по объекту: ЖК "${objectName}"</div>
+    <div class="doc-title">Акт выполненных работ ${workDescription} на основании договора №${contractNumber || "__"}</div>
+    <div class="doc-date">${dateStr}</div>
+
+    <div class="table-scroll">
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th class="num-col">№ п/п</th>
+          <th>Наименование работ</th>
+          <th class="unit-col">Ед. изм.</th>
+          <th class="qty-col">Кол-во</th>
+          <th class="price-col">Стоимость работы</th>
+          <th class="sum-col">Итого</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+        <tr>
+          <td colspan="5" class="total-label">Итого</td>
+          <td class="sum-col">${fmt(total)}</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="doc-accept-title">Работы приняли:</div>
+    ${acceptHtml}
+
+    <div class="doc-accept-title">Работы сдал:</div>
+    <div class="doc-accept-row">
+      <span class="doc-accept-role">Исполнитель (${executorCompany})</span>
+      <span class="doc-accept-sign"><span class="doc-accept-line"></span> ${executorName}</span>
+    </div>
+  `;
+}
+
+document.querySelectorAll("#objectName, #contractNumber, #workDescription, #aktDate, #approveDirector, #approveDeputy, #approveProjectHead, #executorCompany, #executorName")
+  .forEach(el => el.addEventListener("change", renderDoc));
+
+renderDoc();
+
+(function setDefaultDate(){
+  const d = new Date();
+  const iso = d.toISOString().slice(0,10);
+  document.getElementById("aktDate").value = iso;
+  renderDoc();
+})();
+
+// ===== база подрядчиков из Google Sheets =====
+const SHEET_ID = "1jUM4OQT9KwZdvsXJjHLaj23qscH8CrynlTQWKYlLiwI";
+let sheetEntries = [];
+
+function onSheetData(data){
+  try{
+    const rows = data.table.rows.map(r => r.c.map(c => (c && (c.f || c.v)) ? String(c.f || c.v).trim() : ""));
+    // первая строка данных в этой таблице на самом деле служит заголовком
+    const body = rows.slice(1);
+    sheetEntries = body
+      .filter(r => r[1]) // есть ФИО/название
+      .map(r => {
+        const comment = r[10] || "";
+        const m = comment.match(/№\s*(\d+)/);
+        return {
+          name: r[1] || "",
+          orgType: r[2] || "",
+          work: r[3] || "",
+          date: r[4] || "",
+          object: r[5] || "",
+          comment: comment,
+          contractNumber: m ? m[1] : ""
+        };
+      });
+    document.getElementById("sheetStatus").textContent =
+      `База загружена: ${sheetEntries.length} записей. Начните вводить ФИО подрядчика выше.`;
+  }catch(e){
+    document.getElementById("sheetStatus").textContent =
+      "Не удалось разобрать базу подрядчиков — заполните поля вручную.";
+  }
+}
+
+(function loadSheet(){
+  const script = document.createElement("script");
+  script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=0&tqx=out:json;responseHandler:onSheetData`;
+  script.onerror = () => {
+    document.getElementById("sheetStatus").textContent =
+      "База подрядчиков недоступна (нет связи с Google Таблицей) — заполните поля вручную.";
+  };
+  document.body.appendChild(script);
+})();
+
+const execSearch = document.getElementById("execSearch");
+const execResults = document.getElementById("execResults");
+
+execSearch.addEventListener("input", () => {
+  const q = execSearch.value.trim().toLowerCase();
+  if(q.length < 2){ execResults.style.display = "none"; return; }
+  const matches = sheetEntries
+    .filter(e => e.name.toLowerCase().includes(q))
+    .slice(0, 20);
+  if(matches.length === 0){
+    execResults.innerHTML = `<div class="search-result-item">Ничего не найдено</div>`;
+    execResults.style.display = "block";
+    return;
+  }
+  execResults.innerHTML = matches.map((e, i) => `
+    <div class="search-result-item" data-idx="${sheetEntries.indexOf(e)}">
+      <div class="r-name">${e.name}</div>
+      <div class="r-work">${e.work || "—"}</div>
+      <div class="r-meta">${[e.object, e.date, e.contractNumber ? "договор №" + e.contractNumber : ""].filter(Boolean).join(" · ") || "—"}</div>
+    </div>
+  `).join("");
+  execResults.style.display = "block";
+});
+
+execResults.addEventListener("click", (ev) => {
+  const item = ev.target.closest(".search-result-item");
+  if(!item || item.dataset.idx === undefined) return;
+  const entry = sheetEntries[Number(item.dataset.idx)];
+  if(!entry) return;
+
+  execSearch.value = entry.name;
+  execResults.style.display = "none";
+
+  document.getElementById("executorCompany").value = entry.name;
+  if(entry.object){ document.getElementById("objectName").value = entry.object; }
+  if(entry.work){
+    const w = entry.work.charAt(0).toLowerCase() + entry.work.slice(1);
+    document.getElementById("workDescription").value = "на " + w;
+  }
+  if(entry.contractNumber){ document.getElementById("contractNumber").value = entry.contractNumber; }
+
+  renderDoc();
+});
+
+document.addEventListener("click", (ev) => {
+  if(!ev.target.closest("#execSearch") && !ev.target.closest("#execResults")){
+    execResults.style.display = "none";
+  }
+});
+</script>
+</body>
+</html>
