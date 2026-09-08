@@ -371,6 +371,7 @@
       <div class="field">
         <label>№ договора</label>
         <input id="contractNumber" type="text" value="121">
+        <span id="contractNumberError" style="display:none; color:#b3261e; font-size:11px; margin-top:4px;">Нет договора — укажите номер</span>
       </div>
       <div class="field">
         <label>Дата акта</label>
@@ -476,6 +477,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 async function downloadPdf(btn){
+  if(!checkContractNumber()){
+    alert("Нет договора — укажите номер договора перед скачиванием PDF.");
+    document.getElementById("contractNumber").focus();
+    return;
+  }
   const originalLabel = btn ? btn.textContent : null;
   if(btn){ btn.disabled = true; btn.textContent = "Готовим PDF..."; }
   try{
@@ -635,7 +641,20 @@ function fmt(n){
   return Math.round(n).toLocaleString("ru-RU");
 }
 
+function checkContractNumber(){
+  const input = document.getElementById("contractNumber");
+  const errEl = document.getElementById("contractNumberError");
+  const ok = input.value.trim().length > 0;
+  errEl.style.display = ok ? "none" : "block";
+  input.style.borderBottomColor = ok ? "" : "#b3261e";
+  return ok;
+}
+
 function renderDoc(){
+  if(!checkContractNumber()){
+    document.getElementById("docOutput").innerHTML = "";
+    return;
+  }
   const objectRaw = document.getElementById("objectName").value.trim();
   const objMatch = objectRaw.match(/^(\S+)\s+(.+)$/);
   const objectLine = objMatch ? `${objMatch[1]} "${objMatch[2]}"` : objectRaw;
@@ -744,6 +763,8 @@ function renderDoc(){
 
 document.querySelectorAll("#objectName, #contractNumber, #workDescription, #aktDate, #approveDirector, #approveDeputy, #approveProjectHead, #executorCompany, #executorName")
   .forEach(el => el.addEventListener("change", renderDoc));
+
+document.getElementById("contractNumber").addEventListener("input", checkContractNumber);
 
 renderDoc();
 
