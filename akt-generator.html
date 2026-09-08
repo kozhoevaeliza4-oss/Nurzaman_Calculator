@@ -440,14 +440,31 @@
     <h2><span class="num">III.</span> Печать</h2>
     <div class="actions">
       <button class="btn" onclick="renderDoc()">Сформировать акт</button>
-      <button class="btn secondary" onclick="window.print()">Печать / Сохранить как PDF</button>
+      <button class="btn secondary" onclick="downloadPdf()">Скачать PDF</button>
+      <button class="btn secondary" onclick="window.print()">Печать (через браузер)</button>
     </div>
+    <div class="save-hint">«Скачать PDF» — файл без даты/ссылки/номера страницы вверху и внизу. «Печать» — открывает системный диалог печати телефона/компьютера (там браузер сам добавляет такие пометки).</div>
   </div>
 
 </div>
 
 <div class="doc" id="docOutput"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function downloadPdf(){
+  const el = document.getElementById("docOutput");
+  const aktNum = document.getElementById("aktNum").value.trim() || "bez-nomera";
+  const opt = {
+    margin: 8,
+    filename: `Akt_${aktNum}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+  html2pdf().set(opt).from(el).save();
+}
+</script>
 <script>
 let rowCount = 0;
 
