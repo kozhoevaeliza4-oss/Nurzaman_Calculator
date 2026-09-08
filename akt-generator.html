@@ -233,6 +233,13 @@
     border-top:1px solid #000;
     width:80%;
   }
+  .sign-label{
+    font-size:11px;
+    color:#444;
+    width:80%;
+    text-align:center;
+    margin-top:3px;
+  }
 
   .theme-switch{
     font-family: var(--ui-font);
@@ -608,10 +615,12 @@ function renderDoc(){
       <div>
         Исполнитель: ${executor || "____________________"}
         <div class="sign-line"></div>
+        <div class="sign-label">(подпись)</div>
       </div>
       <div>
         Заказчик: ${customerName}<br>директор ${customerDirector}
         <div class="sign-line"></div>
+        <div class="sign-label">(подпись директора)</div>
       </div>
     </div>
   `;
