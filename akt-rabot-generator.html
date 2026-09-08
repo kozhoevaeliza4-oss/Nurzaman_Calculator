@@ -564,7 +564,7 @@ function fmt(n){
 }
 
 function renderDoc(){
-  const objectName = document.getElementById("objectName").value.trim();
+  const objectName = document.getElementById("objectName").value.trim().replace(/^ЖК\s+/i, "");
   const contractNumber = document.getElementById("contractNumber").value.trim();
   const workDescription = document.getElementById("workDescription").value.trim();
   const aktDate = document.getElementById("aktDate").value;
@@ -756,7 +756,7 @@ execResults.addEventListener("click", (ev) => {
   execResults.style.display = "none";
 
   document.getElementById("executorCompany").value = entry.name;
-  if(entry.object){ document.getElementById("objectName").value = entry.object; }
+  if(entry.object){ document.getElementById("objectName").value = entry.object.replace(/^ЖК\s+/i, ""); }
   if(entry.work){
     const w = entry.work.charAt(0).toLowerCase() + entry.work.slice(1);
     document.getElementById("workDescription").value = "на " + w;
