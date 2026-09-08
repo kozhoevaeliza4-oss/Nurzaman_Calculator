@@ -545,7 +545,24 @@ function unitLabel(v){
   return found ? found.label : v;
 }
 function unitOptionsHtml(selected){
-  return UNIT_OPTIONS.map(u => `<option value="${u.value}" ${u.value===selected?"selected":""}>${u.label}</option>`).join("");
+  return UNIT_OPTIONS.map(u => `<option value="${u.value}" ${u.value===selected?"selected":""}>${u.label}</option>`).join("")
+    + `<option value="__custom__">Другое...</option>`;
+}
+function unitCellHtml(unit){
+  const isKnown = UNIT_OPTIONS.some(u => u.value === unit);
+  if(unit && !isKnown){
+    return `<input type="text" class="f-unit" value="${unit}">`;
+  }
+  return `<select class="f-unit" onchange="handleCustomSelect(this, 'f-unit', 'ед. изм.')">${unitOptionsHtml(unit)}</select>`;
+}
+function handleCustomSelect(sel, className, placeholder){
+  if(sel.value !== "__custom__") return;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = className;
+  input.placeholder = placeholder;
+  sel.parentNode.replaceChild(input, sel);
+  input.focus();
 }
 
 function addRow(name="", unit="шт", qty=1, price=""){
@@ -555,7 +572,7 @@ function addRow(name="", unit="шт", qty=1, price=""){
   tr.innerHTML = `
     <td style="text-align:center;">${rowCount}</td>
     <td><input type="text" class="f-service" value="${name}"></td>
-    <td><select class="f-unit">${unitOptionsHtml(unit)}</select></td>
+    <td>${unitCellHtml(unit)}</td>
     <td><input type="number" class="f-qty" value="${qty}" step="0.01"></td>
     <td><input type="number" class="f-price" value="${price}" step="0.01"></td>
     <td class="row-actions"><button class="btn danger small" onclick="removeRow(this)">✕</button></td>
@@ -608,8 +625,9 @@ const PRORAB_BY_OBJECT = {
 function prorabFieldHtml(obj){
   const cfg = PRORAB_BY_OBJECT[obj];
   if(cfg && cfg.type === "select"){
-    return `<select class="a-name" id="prorabInput">` +
+    return `<select class="a-name" id="prorabInput" onchange="handleCustomSelect(this, 'a-name', 'ФИО прораба')">` +
       cfg.options.map(o => `<option value="${o}">${o}</option>`).join("") +
+      `<option value="__custom__">Другое...</option>` +
       `</select>`;
   }
   const val = (cfg && cfg.type === "fixed") ? cfg.value : "";
