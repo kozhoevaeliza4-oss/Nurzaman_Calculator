@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Акт работ">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#7c2a20">
+<link rel="manifest" href="assets/akt-icons/manifest-rabot.json">
 <link rel="apple-touch-icon" href="assets/akt-icons/icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/akt-icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/akt-icons/icon-32.png">
@@ -301,6 +302,61 @@
     color:#fdf9ef;
   }
 
+  /* ===== ТЕМА: гламурный леопард (розовый + золото) ===== */
+  body.theme-leopard{
+    background:
+      radial-gradient(circle at 18% 25%, #6b3a24 0 9px, transparent 10px),
+      radial-gradient(circle at 55% 12%, #5c3320 0 7px, transparent 8px),
+      radial-gradient(circle at 82% 40%, #6b3a24 0 10px, transparent 11px),
+      radial-gradient(circle at 32% 60%, #5c3320 0 8px, transparent 9px),
+      radial-gradient(circle at 8% 78%, #6b3a24 0 9px, transparent 10px),
+      radial-gradient(circle at 92% 82%, #5c3320 0 7px, transparent 8px),
+      radial-gradient(circle at 60% 48%, #6b3a24 0 8px, transparent 9px),
+      #dd8ba0;
+    background-size: 130px 130px;
+  }
+  body.theme-leopard .toolbar{
+    background: linear-gradient(135deg, #fdf1ea, #f7ddd0);
+    border-top-color:#b8860b;
+    border-bottom-color:#e3b8c4;
+  }
+  body.theme-leopard .toolbar .section{ border-top-color:#e6c9a8; }
+  body.theme-leopard .toolbar h2{ color:#a15275; }
+  body.theme-leopard .toolbar h2 .num{ color:#b8860b; }
+  body.theme-leopard .field input, body.theme-leopard .field select, body.theme-leopard .field textarea{ border-bottom-color:#d9a441; color:#4a2e1a; }
+  body.theme-leopard .btn{ background:#b8860b; border-color:#b8860b; color:#3a2405; }
+  body.theme-leopard .btn:hover{ background:#96700a; border-color:#96700a; }
+  body.theme-leopard .btn.secondary{ color:#a15275; border-color:#a15275; }
+  body.theme-leopard .btn.secondary:hover{ background:#a15275; color:#fff; }
+  body.theme-leopard .theme-switch{ background:#6b3a24; }
+
+  /* ===== ТЕМА: чёрная пантера (чёрный + серебро/бриллианты) ===== */
+  body.theme-panther{
+    background:#0a0a0a;
+  }
+  body.theme-panther .toolbar{
+    background: linear-gradient(160deg,#161616,#050505);
+    border-top-color:#d9d9de;
+    border-bottom-color:#2a2a2e;
+  }
+  body.theme-panther .toolbar h2{ color:#e8e8ee; }
+  body.theme-panther .toolbar h2 .num{ color:#c7c7d1; }
+  body.theme-panther .toolbar .section{ border-top-color:#2a2a2e; }
+  body.theme-panther .field label{ color:#9a9a9a; }
+  body.theme-panther .field input, body.theme-panther .field select, body.theme-panther .field textarea{
+    background:transparent; border-bottom:1.5px solid #3a3a3e; color:#f0f0f4;
+  }
+  body.theme-panther .field input:focus{ border-bottom-color:#d9d9de; }
+  body.theme-panther .btn{ background:#d9d9de; border-color:#d9d9de; color:#0a0a0a; }
+  body.theme-panther .btn:hover{ background:#f5f5fa; border-color:#f5f5fa; }
+  body.theme-panther .btn.secondary{ background:transparent; color:#e8e8ee; border-color:#e8e8ee; }
+  body.theme-panther .btn.secondary:hover{ background:#e8e8ee; color:#0a0a0a; }
+  body.theme-panther table.items th{ background:#1c1c1f; color:#eee; border-color:#333; }
+  body.theme-panther table.items td{ border-color:#333; }
+  body.theme-panther table.items input, body.theme-panther table.items select{ color:#eee; }
+  body.theme-panther .theme-switch{ background:#000; }
+  body.theme-panther .doc{ background:#fff; } /* печатный акт всегда светлый и чистый */
+
   @media print{
     .toolbar, .actions, .theme-switch{display:none !important;}
     body{padding:0;}
@@ -338,6 +394,15 @@
 </style>
 </head>
 <body>
+
+<div class="theme-switch">
+  <label for="themeSelect">Тема:</label>
+  <select id="themeSelect" onchange="setTheme(this.value)">
+    <option value="default">Обычная</option>
+    <option value="theme-leopard">🐆 Гламурный леопард</option>
+    <option value="theme-panther">🐈‍⬛ Чёрная пантера</option>
+  </select>
+</div>
 
 <div class="toolbar">
 
@@ -920,6 +985,22 @@ document.addEventListener("click", (ev) => {
     execResults.style.display = "none";
   }
 });
+
+// ===== тема оформления (только для формы, печатный акт всегда чистый) =====
+const LS_THEME = "akt_rabot_theme_v1";
+function setTheme(theme){
+  document.body.classList.remove("theme-leopard","theme-panther");
+  if(theme === "theme-leopard" || theme === "theme-panther"){
+    document.body.classList.add(theme);
+  }
+  try{ localStorage.setItem(LS_THEME, theme); }catch(e){}
+}
+(function loadTheme(){
+  let theme = "default";
+  try{ theme = localStorage.getItem(LS_THEME) || "default"; }catch(e){}
+  document.getElementById("themeSelect").value = theme;
+  setTheme(theme);
+})();
 </script>
 </body>
 </html>
