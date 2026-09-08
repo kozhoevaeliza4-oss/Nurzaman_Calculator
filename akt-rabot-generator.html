@@ -365,6 +365,7 @@
           <option value="ЖК Триумф">ЖК Триумф</option>
           <option value="ЖК Раззаков">ЖК Раззаков</option>
         </select>
+        <span id="contractorObjectWarning" style="display:none; color:#b3261e; font-size:11px; margin-top:4px;">Нет договора с этим подрядчиком по этому объекту</span>
       </div>
     </div>
     <div class="row">
@@ -627,15 +628,35 @@ function addProrabRow(obj){
   tbody.appendChild(tr);
 }
 
+function normalizeObjectName(s){
+  return (s || "").trim().replace(/^(ЖК|ТРЦ)\s+/i, "").toLowerCase();
+}
+
+function checkContractorObjectMatch(){
+  const company = document.getElementById("executorCompany").value.trim();
+  const obj = document.getElementById("objectName").value;
+  const warnEl = document.getElementById("contractorObjectWarning");
+  if(!company || !sheetEntries || sheetEntries.length === 0){
+    warnEl.style.display = "none";
+    return;
+  }
+  const hasMatch = sheetEntries.some(e =>
+    e.name.trim() === company && normalizeObjectName(e.object) === normalizeObjectName(obj)
+  );
+  warnEl.style.display = hasMatch ? "none" : "block";
+}
+
 function onObjectChange(){
   const obj = document.getElementById("objectName").value;
   document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[obj] || "";
   document.getElementById("prorabCell").innerHTML = prorabFieldHtml(obj);
+  checkContractorObjectMatch();
   renderDoc();
 }
 
 addProrabRow(document.getElementById("objectName").value);
 document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[document.getElementById("objectName").value] || "";
+document.getElementById("executorCompany").addEventListener("input", checkContractorObjectMatch);
 
 function fmt(n){
   return Math.round(n).toLocaleString("ru-RU");
