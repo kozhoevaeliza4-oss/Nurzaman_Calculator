@@ -356,8 +356,14 @@
     <h2><span class="num">I.</span> Объект и договор</h2>
     <div class="row">
       <div class="field full">
-        <label>Объект (ЖК)</label>
-        <input id="objectName" type="text" value="Европейский квартал">
+        <label>Объект</label>
+        <select id="objectName" onchange="onObjectChange()">
+          <option value="ЖК Европейский квартал">ЖК Европейский квартал</option>
+          <option value="ЖК Residence">ЖК Residence</option>
+          <option value="ТРЦ Nurzaman plaza">ТРЦ Nurzaman plaza</option>
+          <option value="ЖК Триумф">ЖК Триумф</option>
+          <option value="ЖК Раззаков">ЖК Раззаков</option>
+        </select>
       </div>
     </div>
     <div class="row">
@@ -391,7 +397,7 @@
       </div>
       <div class="field">
         <label>Руководитель проекта</label>
-        <input id="approveProjectHead" type="text" value="Убайдилла уулу Р.">
+        <input id="approveProjectHead" type="text" value="Убайдилла уулу Русланбек">
       </div>
     </div>
   </div>
@@ -515,6 +521,22 @@ async function downloadPdf(btn){
 <script>
 let rowCount = 0;
 
+const UNIT_OPTIONS = [
+  { value: "шт", label: "шт" },
+  { value: "м2", label: "м²" },
+  { value: "м3", label: "м³" },
+  { value: "кг", label: "кг" },
+  { value: "комплект", label: "комплект" },
+  { value: "гр", label: "гр" }
+];
+function unitLabel(v){
+  const found = UNIT_OPTIONS.find(u => u.value === v);
+  return found ? found.label : v;
+}
+function unitOptionsHtml(selected){
+  return UNIT_OPTIONS.map(u => `<option value="${u.value}" ${u.value===selected?"selected":""}>${u.label}</option>`).join("");
+}
+
 function addRow(name="", unit="шт", qty=1, price=""){
   rowCount++;
   const tbody = document.getElementById("itemsBody");
@@ -522,7 +544,7 @@ function addRow(name="", unit="шт", qty=1, price=""){
   tr.innerHTML = `
     <td style="text-align:center;">${rowCount}</td>
     <td><input type="text" class="f-service" value="${name}"></td>
-    <td><input type="text" class="f-unit" value="${unit}"></td>
+    <td><select class="f-unit">${unitOptionsHtml(unit)}</select></td>
     <td><input type="number" class="f-qty" value="${qty}" step="0.01"></td>
     <td><input type="number" class="f-price" value="${price}" step="0.01"></td>
     <td class="row-actions"><button class="btn danger small" onclick="removeRow(this)">✕</button></td>
@@ -555,16 +577,64 @@ function removeAcceptRow(btn){
   btn.closest("tr").remove();
 }
 
-addAcceptRow("Руководитель ПТО", "");
-addAcceptRow("Инженеры ПТО", "");
-addAcceptRow("Прораб", "");
+addAcceptRow("Руководитель ПТО", "Дуйшобай уулу Женишбек");
+addAcceptRow("Инженеры ПТО", "Тургунбаев Нурислам");
+
+// ===== Прораб: зависит от объекта =====
+const PROJECT_HEAD_BY_OBJECT = {
+  "ЖК Европейский квартал": "Убайдилла уулу Русланбек",
+  "ЖК Residence": "Макамбаев Элгизбек Маратович"
+};
+const PRORAB_BY_OBJECT = {
+  "ЖК Residence": { type: "fixed", value: "Макамбаев Элгизбек Маратович" },
+  "ТРЦ Nurzaman plaza": { type: "fixed", value: "" },
+  "ЖК Европейский квартал": {
+    type: "select",
+    options: ["Таалай уулу Нурсултан", "Ислам уулу Боогачы", "Алымкул уулу Алманбек", "Осор уулу Адилет"]
+  }
+};
+
+function prorabFieldHtml(obj){
+  const cfg = PRORAB_BY_OBJECT[obj];
+  if(cfg && cfg.type === "select"){
+    return `<select class="a-name" id="prorabInput">` +
+      cfg.options.map(o => `<option value="${o}">${o}</option>`).join("") +
+      `</select>`;
+  }
+  const val = (cfg && cfg.type === "fixed") ? cfg.value : "";
+  return `<input type="text" class="a-name" id="prorabInput" value="${val}">`;
+}
+
+function addProrabRow(obj){
+  const tbody = document.getElementById("acceptBody");
+  const tr = document.createElement("tr");
+  tr.id = "prorabRow";
+  tr.innerHTML = `
+    <td><input type="text" class="a-role" value="Прораб"></td>
+    <td id="prorabCell">${prorabFieldHtml(obj)}</td>
+    <td class="row-actions"></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function onObjectChange(){
+  const obj = document.getElementById("objectName").value;
+  document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[obj] || "";
+  document.getElementById("prorabCell").innerHTML = prorabFieldHtml(obj);
+  renderDoc();
+}
+
+addProrabRow(document.getElementById("objectName").value);
+document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[document.getElementById("objectName").value] || "";
 
 function fmt(n){
   return Math.round(n).toLocaleString("ru-RU");
 }
 
 function renderDoc(){
-  const objectName = document.getElementById("objectName").value.trim().replace(/^ЖК\s+/i, "");
+  const objectRaw = document.getElementById("objectName").value.trim();
+  const objMatch = objectRaw.match(/^(\S+)\s+(.+)$/);
+  const objectLine = objMatch ? `${objMatch[1]} "${objMatch[2]}"` : objectRaw;
   const contractNumber = document.getElementById("contractNumber").value.trim();
   const workDescription = document.getElementById("workDescription").value.trim();
   const aktDate = document.getElementById("aktDate").value;
@@ -582,7 +652,7 @@ function renderDoc(){
   let total = 0;
   rows.forEach((r, i) => {
     const name = r.querySelector(".f-service").value;
-    const unit = r.querySelector(".f-unit").value;
+    const unit = unitLabel(r.querySelector(".f-unit").value);
     const qty = parseFloat(r.querySelector(".f-qty").value) || 0;
     const price = parseFloat(r.querySelector(".f-price").value) || 0;
     const sum = qty * price;
@@ -631,7 +701,7 @@ function renderDoc(){
       </div>
     </div>
 
-    <div class="doc-object">по объекту: ЖК "${objectName}"</div>
+    <div class="doc-object">по объекту: ${objectLine}</div>
     <div class="doc-title">Акт выполненных работ ${workDescription} на основании договора №${contractNumber || "__"}</div>
     <div class="doc-date">${dateStr}</div>
 
@@ -756,14 +826,18 @@ execResults.addEventListener("click", (ev) => {
   execResults.style.display = "none";
 
   document.getElementById("executorCompany").value = entry.name;
-  if(entry.object){ document.getElementById("objectName").value = entry.object.replace(/^ЖК\s+/i, ""); }
+  if(entry.object){
+    const objSelect = document.getElementById("objectName");
+    const hasOption = Array.from(objSelect.options).some(o => o.value === entry.object.trim());
+    if(hasOption){ objSelect.value = entry.object.trim(); }
+  }
   if(entry.work){
     const w = entry.work.charAt(0).toLowerCase() + entry.work.slice(1);
     document.getElementById("workDescription").value = "на " + w;
   }
   if(entry.contractNumber){ document.getElementById("contractNumber").value = entry.contractNumber; }
 
-  renderDoc();
+  onObjectChange();
 });
 
 document.addEventListener("click", (ev) => {
