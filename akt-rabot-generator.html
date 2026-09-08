@@ -255,7 +255,7 @@
   .sum-col{width:110px; text-align:right; font-weight:bold;}
   .total-label{text-align:right; font-weight:bold;}
   .doc-accept-title{
-    font-weight:bold;
+    font-style:italic;
     margin-top:24px;
     margin-bottom:10px;
   }
@@ -267,13 +267,14 @@
     margin-bottom:16px;
     font-size:14px;
   }
-  .doc-accept-role{ white-space:nowrap; }
+  .doc-accept-role{ white-space:nowrap; font-weight:bold; }
   .doc-accept-sign{
     flex:1;
     display:flex;
     justify-content:flex-end;
     gap:8px;
     align-items:baseline;
+    font-weight:bold;
   }
   .doc-accept-line{
     display:inline-block;
@@ -525,6 +526,7 @@ const UNIT_OPTIONS = [
   { value: "шт", label: "шт" },
   { value: "м2", label: "м²" },
   { value: "м3", label: "м³" },
+  { value: "п.м.", label: "п.м." },
   { value: "кг", label: "кг" },
   { value: "комплект", label: "комплект" },
   { value: "гр", label: "гр" }
@@ -762,16 +764,15 @@ function onSheetData(data){
     sheetEntries = body
       .filter(r => r[1]) // есть ФИО/название
       .map(r => {
-        const comment = r[10] || "";
-        const m = comment.match(/№\s*(\d+)/);
         return {
+          idx: r[0] || "",
           name: r[1] || "",
           orgType: r[2] || "",
           work: r[3] || "",
           date: r[4] || "",
           object: r[5] || "",
-          comment: comment,
-          contractNumber: m ? m[1] : ""
+          comment: r[10] || "",
+          contractNumber: r[0] || ""
         };
       });
     document.getElementById("sheetStatus").textContent =
@@ -830,10 +831,6 @@ execResults.addEventListener("click", (ev) => {
     const objSelect = document.getElementById("objectName");
     const hasOption = Array.from(objSelect.options).some(o => o.value === entry.object.trim());
     if(hasOption){ objSelect.value = entry.object.trim(); }
-  }
-  if(entry.work){
-    const w = entry.work.charAt(0).toLowerCase() + entry.work.slice(1);
-    document.getElementById("workDescription").value = "на " + w;
   }
   if(entry.contractNumber){ document.getElementById("contractNumber").value = entry.contractNumber; }
 
