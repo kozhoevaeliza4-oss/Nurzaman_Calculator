@@ -380,7 +380,7 @@
     <div class="row">
       <div class="field full">
         <label>Описание работ (после слов «Акт выполненных работ»)</label>
-        <textarea id="workDescription" rows="2">на сантехнические работы монтаж чашагена сан.узла рабочих и монтаж временного Водоснабжения для блоков 7 и 8</textarea>
+        <textarea id="workDescription" rows="2" placeholder="например: на сантехнические работы..."></textarea>
       </div>
     </div>
   </div>
@@ -510,8 +510,10 @@ async function downloadPdf(btn){
       heightLeft -= (pageHeight - margin * 2);
     }
 
-    const contractNumber = document.getElementById("contractNumber").value.trim() || "bez-nomera";
-    pdf.save(`Akt_rabot_${contractNumber}.pdf`);
+    const contractNumber = document.getElementById("contractNumber").value.trim() || "без номера";
+    const aktDateVal = document.getElementById("aktDate").value;
+    const aktYear = aktDateVal ? aktDateVal.slice(0,4) : new Date().getFullYear();
+    pdf.save(`Акт ${contractNumber}-${aktYear}.pdf`);
   }catch(e){
     alert("Не удалось сформировать PDF: " + e.message + ". Попробуйте кнопку «Печать (через браузер)».");
   }finally{
