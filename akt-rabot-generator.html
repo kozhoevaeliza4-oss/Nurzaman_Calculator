@@ -632,6 +632,13 @@ function normalizeObjectName(s){
   return (s || "").trim().replace(/^(ЖК|ТРЦ)\s+/i, "").toLowerCase();
 }
 
+function findContractorEntry(company, obj){
+  if(!company || !sheetEntries || sheetEntries.length === 0) return null;
+  return sheetEntries.find(e =>
+    e.name.trim() === company && normalizeObjectName(e.object) === normalizeObjectName(obj)
+  ) || null;
+}
+
 function checkContractorObjectMatch(){
   const company = document.getElementById("executorCompany").value.trim();
   const obj = document.getElementById("objectName").value;
@@ -640,16 +647,25 @@ function checkContractorObjectMatch(){
     warnEl.style.display = "none";
     return;
   }
-  const hasMatch = sheetEntries.some(e =>
-    e.name.trim() === company && normalizeObjectName(e.object) === normalizeObjectName(obj)
-  );
+  const hasMatch = !!findContractorEntry(company, obj);
   warnEl.style.display = hasMatch ? "none" : "block";
+}
+
+function updateContractNumberForCurrentContractor(){
+  const company = document.getElementById("executorCompany").value.trim();
+  const obj = document.getElementById("objectName").value;
+  const match = findContractorEntry(company, obj);
+  if(match && match.contractNumber){
+    document.getElementById("contractNumber").value = match.contractNumber;
+    checkContractNumber();
+  }
 }
 
 function onObjectChange(){
   const obj = document.getElementById("objectName").value;
   document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[obj] || "";
   document.getElementById("prorabCell").innerHTML = prorabFieldHtml(obj);
+  updateContractNumberForCurrentContractor();
   checkContractorObjectMatch();
   renderDoc();
 }
