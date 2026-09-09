@@ -6,16 +6,29 @@ import { ChildParent } from './child-parent.entity';
 import { CreateParentDto } from './dto/create-parent.dto';
 import { UpdateParentDto } from './dto/update-parent.dto';
 import { LinkChildDto } from './dto/link-child.dto';
+import { UsersService } from '../users/users.service';
+import { Role } from '../common/roles.enum';
+import { Paginated, paginate } from '../common/pagination.dto';
 
 @Injectable()
 export class ParentsService {
   constructor(
     @InjectRepository(Parent) private readonly parentsRepo: Repository<Parent>,
     @InjectRepository(ChildParent) private readonly linksRepo: Repository<ChildParent>,
+    private readonly usersService: UsersService,
   ) {}
 
   findAll(): Promise<Parent[]> {
     return this.parentsRepo.find({ order: { fullName: 'ASC' } });
+  }
+
+  async findAllPaginated(page: number, pageSize: number): Promise<Paginated<Parent>> {
+    const [items, total] = await this.parentsRepo.findAndCount({
+      order: { fullName: 'ASC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return paginate(items, total, page, pageSize);
   }
 
   async findOne(id: string): Promise<Parent> {
@@ -81,5 +94,23 @@ export class ParentsService {
     if (!parent) return false;
     const link = await this.linksRepo.findOne({ where: { parentId: parent.id, childId } });
     return !!link;
+  }
+
+  // Module 14 gap fix: a Parent record (created by staff) has no login
+  // until this is called — this is how a parent actually gets into the
+  // app for the first time. One login per parent record.
+  async createLogin(parentId: string, email: string, password: string): Promise<Parent> {
+    const parent = await this.findOne(parentId);
+    if (parent.userId) {
+      throw new ConflictException('This parent already has a login');
+    }
+    const user = await this.usersService.createStaff({
+      email,
+      password,
+      fullName: parent.fullName,
+      role: Role.PARENT,
+    });
+    parent.userId = user.id;
+    return this.parentsRepo.save(parent);
   }
 }

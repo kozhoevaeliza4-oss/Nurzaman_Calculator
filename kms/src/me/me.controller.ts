@@ -51,9 +51,9 @@ export class MeController {
         })),
       ),
       this.menuService.findForRange(date, date),
-      this.notificationsService.inboxForParent(parent.id),
+      this.notificationsService.inboxForParent(parent.id, 1, 10),
     ]);
 
-    return { children, todayMenu, notifications: notifications.slice(0, 10) };
+    return { children, todayMenu, notifications: notifications.items };
   }
 }

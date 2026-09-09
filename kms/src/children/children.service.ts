@@ -6,13 +6,36 @@ import { Child } from './child.entity';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { QueryChildrenDto } from './dto/query-children.dto';
+import { Paginated, paginate } from '../common/pagination.dto';
 
 @Injectable()
 export class ChildrenService {
   constructor(@InjectRepository(Child) private readonly repo: Repository<Child>) {}
 
   // scopedGroupId is set for the "teacher" role: they only ever see their own group.
+  // Used internally by other modules (dashboard, menu warnings, charges,
+  // attendance, ...) that need every matching row, not a page of them.
   async findAll(query: QueryChildrenDto, scopedGroupId?: string | null): Promise<Child[]> {
+    return this.buildQuery(query, scopedGroupId).orderBy('child.fullName', 'ASC').getMany();
+  }
+
+  // The list endpoint's version: same filters, but paged — a kindergarten
+  // stays small, but the list only grows over the years the system runs.
+  async findAllPaginated(
+    query: QueryChildrenDto,
+    page: number,
+    pageSize: number,
+    scopedGroupId?: string | null,
+  ): Promise<Paginated<Child>> {
+    const qb = this.buildQuery(query, scopedGroupId).orderBy('child.fullName', 'ASC');
+    const [items, total] = await qb
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .getManyAndCount();
+    return paginate(items, total, page, pageSize);
+  }
+
+  private buildQuery(query: QueryChildrenDto, scopedGroupId?: string | null) {
     const qb = this.repo.createQueryBuilder('child');
 
     const groupId = scopedGroupId ?? query.groupId;
@@ -26,7 +49,7 @@ export class ChildrenService {
       qb.andWhere('child.fullName ILIKE :search', { search: `%${query.search}%` });
     }
 
-    return qb.orderBy('child.fullName', 'ASC').getMany();
+    return qb;
   }
 
   async findOne(id: string): Promise<Child> {

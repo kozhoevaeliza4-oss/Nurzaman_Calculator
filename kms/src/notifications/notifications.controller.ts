@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
@@ -9,6 +9,7 @@ import { AuditService } from '../audit/audit.service';
 import { ParentsService } from '../parents/parents.service';
 import { NotificationsService } from './notifications.service';
 import { BroadcastDto } from './dto/broadcast.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,10 +23,10 @@ export class NotificationsController {
 
   @Roles(Role.PARENT)
   @Get('me')
-  async myInbox(@CurrentUser() user: AuthUser) {
+  async myInbox(@Query() pagination: PaginationQueryDto, @CurrentUser() user: AuthUser) {
     const parent = await this.parentsService.findByUserId(user.userId);
     if (!parent) throw new ForbiddenException('No parent record linked to this account');
-    return this.notificationsService.inboxForParent(parent.id);
+    return this.notificationsService.inboxForParent(parent.id, pagination.page ?? 1, pagination.pageSize ?? 25);
   }
 
   // Module 9: "новости сада" broadcast to every parent.

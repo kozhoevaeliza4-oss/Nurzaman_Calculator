@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,6 +21,8 @@ import { ParentsService } from './parents.service';
 import { CreateParentDto } from './dto/create-parent.dto';
 import { UpdateParentDto } from './dto/update-parent.dto';
 import { LinkChildDto } from './dto/link-child.dto';
+import { CreateLoginDto } from './dto/create-login.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,8 +46,8 @@ export class ParentsController {
 
   @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT, Role.TEACHER)
   @Get()
-  findAll() {
-    return this.parentsService.findAll();
+  findAll(@Query() pagination: PaginationQueryDto) {
+    return this.parentsService.findAllPaginated(pagination.page ?? 1, pagination.pageSize ?? 25);
   }
 
   @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT, Role.TEACHER)
@@ -75,6 +78,16 @@ export class ParentsController {
     await this.parentsService.remove(id);
     await this.auditService.record(user, 'delete', 'parent', id);
     return { success: true };
+  }
+
+  // Module 14 gap fix: provisions the login that lets this parent
+  // actually sign into the app for the first time.
+  @Roles(Role.DIRECTOR, Role.ADMIN)
+  @Post(':id/create-login')
+  async createLogin(@Param('id') id: string, @Body() dto: CreateLoginDto, @CurrentUser() user: AuthUser) {
+    const parent = await this.parentsService.createLogin(id, dto.email, dto.password);
+    await this.auditService.record(user, 'create-login', 'parent', id, { email: dto.email });
+    return parent;
   }
 
   @Roles(Role.DIRECTOR, Role.ADMIN)

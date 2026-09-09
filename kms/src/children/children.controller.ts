@@ -21,6 +21,7 @@ import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { QueryChildrenDto } from './dto/query-children.dto';
+import { PaginationQueryDto } from '../common/pagination.dto';
 
 // Parents access their child's record via /parents/me, not this controller
 // (see section 2 of the TZ: "Родитель — только карточка своего ребёнка").
@@ -35,9 +36,18 @@ export class ChildrenController {
   ) {}
 
   @Get()
-  findAll(@Query() query: QueryChildrenDto, @CurrentUser() user: AuthUser) {
+  findAll(
+    @Query() query: QueryChildrenDto,
+    @Query() pagination: PaginationQueryDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     const scopedGroupId = user.role === Role.TEACHER ? user.groupId : undefined;
-    return this.childrenService.findAll(query, scopedGroupId);
+    return this.childrenService.findAllPaginated(
+      query,
+      pagination.page ?? 1,
+      pagination.pageSize ?? 25,
+      scopedGroupId,
+    );
   }
 
   @Get(':id')

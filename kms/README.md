@@ -33,9 +33,18 @@ here" below for why, and what's needed to add them.
 
 - **Auth & roles** (`src/auth`, `src/users`, `src/common`): JWT login, the
   6 roles from section 2 (`director`, `admin`, `accountant`, `teacher`,
-  `medic`, `parent`), `RolesGuard` + `@Roles()`.
+  `medic`, `parent`), `RolesGuard` + `@Roles()`, `POST /auth/change-password`
+  for any logged-in user. `POST /users` (director/admin) is how every staff
+  account past the seeded director actually gets created — with
+  `PUT /users/:id` and `POST /users/:id/reset-password` alongside it. A
+  parent's login is provisioned separately, once their `Parent` record
+  exists, via `POST /parents/:id/create-login` (see Parents below) —
+  deliberately two steps, since a parent record can exist (a staff member
+  entered a family's details) before that family has ever logged in.
 - **Audit log** (`src/audit`): every mutating endpoint across every module
-  records who did what to which entity.
+  records who did what to which entity — and `GET /audit` (director-only,
+  paginated, filterable by `entityType`/`userId`) is how it's actually
+  read back; writing to a log nobody can read isn't a security control.
 - **Groups** (`src/groups`): kindergarten groups, capacity, assigned
   teacher.
 - **Children** (`src/children`): child records, group assignment, status,
@@ -48,7 +57,9 @@ here" below for why, and what's needed to add them.
   with a relation type. `ParentsService.ownsChild()` is the one shared
   check every other module uses to scope a parent's own login to their
   linked children — finance, attendance, documents, assistant, `/me` all
-  call it instead of re-deriving it.
+  call it instead of re-deriving it. `POST /parents/:id/create-login`
+  provisions the actual login (email + password, role `parent`) once the
+  family record exists.
 - **Finance** (`src/finance`): tariffs (fixed, per group or per child),
   one-time/monthly/discount charges, a bulk monthly-accrual endpoint,
   payments (`bank_qr`/`cash`/`bank_transfer`) that always create a
@@ -228,9 +239,39 @@ protocol — is separate work explained above, not a deployment step.
   protected endpoint becomes clickable/testable from the browser.
 - `GET /health` — `{ status: "ok", db: "ok" }` once Postgres is reachable;
   a 503 otherwise. Safe to leave public; it reveals nothing sensitive.
-- CI (`.github/workflows/kms-ci.yml`) runs `tsc --noEmit` + `npm run
-  build` on every push/PR touching `kms/`, so a broken build shows up on
-  GitHub before it reaches a deploy.
+- CI (`.github/workflows/kms-ci.yml`) runs `tsc --noEmit`, the unit test
+  suite (`npm test`, `src/**/*.spec.ts` — guards, auth, attendance's
+  check-in/out toggle, debt calculation, login provisioning), and
+  `npm run build` on every push/PR touching `kms/`.
+
+## Security hardening
+
+- **Helmet** sets standard security headers on every response
+  (`src/main.ts`).
+- **Rate limiting** (`@nestjs/throttler`): 120 req/min per IP app-wide,
+  10 req/min on `/auth/login` and `/auth/change-password` specifically —
+  those are what brute-force/credential-stuffing attempts target.
+- **A global exception filter** (`src/common/all-exceptions.filter.ts`)
+  normalizes every error response to `{ statusCode, message, path,
+  timestamp }` and logs 5xx errors server-side, so nothing leaks a raw
+  stack trace to the client.
+- **Passwords** are always bcrypt-hashed (`UsersService`); nothing ever
+  returns a `passwordHash` in an API response (`user.presenter.ts` strips
+  it explicitly rather than relying on callers to remember not to select it).
+- **`validateEnv()`** refuses to boot with a placeholder `JWT_SECRET` in
+  `NODE_ENV=production`, and fails fast with a clear message if any
+  required DB/JWT variable is missing, instead of a confusing crash three
+  layers down in TypeORM.
+
+## Pagination
+
+List endpoints likely to grow over years of real use — `GET /children`,
+`GET /parents`, `GET /notifications/me`, `GET /audit` — take `page`
+(default 1) and `pageSize` (default 25, max 200) query params and return
+`{ items, total, page, pageSize }`. Endpoints that other modules consume
+internally in full (e.g. "every active child in a group" for a debt or
+menu-warning calculation) intentionally stay unpaginated — pagination is
+a list-UI concern, not a data-access one.
 
 ## Known open items from the TZ (section 8)
 

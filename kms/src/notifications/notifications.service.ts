@@ -6,6 +6,7 @@ import { Parent } from '../parents/parent.entity';
 import { ParentsService } from '../parents/parents.service';
 import { TelegramAdapter } from './channels/telegram.adapter';
 import { EmailAdapter } from './channels/email.adapter';
+import { Paginated, paginate } from '../common/pagination.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -49,11 +50,14 @@ export class NotificationsService {
     return parents.length;
   }
 
-  inboxForParent(parentId: string): Promise<Notification[]> {
-    return this.repo.find({
+  async inboxForParent(parentId: string, page = 1, pageSize = 25): Promise<Paginated<Notification>> {
+    const [items, total] = await this.repo.findAndCount({
       where: { parentId, channel: NotificationChannel.PUSH },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
+    return paginate(items, total, page, pageSize);
   }
 
   private async logResult(

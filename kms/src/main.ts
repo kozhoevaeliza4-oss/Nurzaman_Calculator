@@ -5,14 +5,18 @@ dotenv.config();
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { validateEnv } from './config/validate-env';
+import { AllExceptionsFilter } from './common/all-exceptions.filter';
 
 async function bootstrap() {
   validateEnv();
 
   const app = await NestFactory.create(AppModule);
+  app.use(helmet());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.enableCors();
 
   const swaggerConfig = new DocumentBuilder()
