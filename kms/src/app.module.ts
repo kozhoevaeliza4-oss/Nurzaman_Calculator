@@ -19,6 +19,7 @@ import { MeModule } from './me/me.module';
 import { OneCModule } from './onec/onec.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     OneCModule,
     AssistantModule,
     AnalyticsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

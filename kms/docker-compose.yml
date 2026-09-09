@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-kms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me}
+      POSTGRES_DB: ${DB_NAME:-asyl_amanat_kms}
+    volumes:
+      - kms_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # One-off: runs the migrations, then exits. `docker compose up migrate`
+  # or `docker compose run --rm migrate` before starting `app`.
+  migrate:
+    build:
+      context: .
+      target: build
+    env_file: .env
+    environment:
+      DB_HOST: postgres
+    command: npm run migration:run
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: production
+    env_file: .env
+    environment:
+      DB_HOST: postgres
+      DOCUMENTS_STORAGE_PATH: /app/storage/documents
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - kms_documents:/app/storage/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  kms_postgres_data:
+  kms_documents:

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
@@ -12,6 +13,7 @@ import { ImportReconciliationDto } from './dto/import-reconciliation.dto';
 // accountant/admin service account — see README for the production note
 // on a dedicated machine-to-machine credential instead of a human JWT.
 @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT)
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('onec')
 export class OneCController {

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
@@ -11,6 +12,7 @@ import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 import { QueryMenuDto } from './dto/query-menu.dto';
 
 // Everyone (including parents) can view the menu — it's not per-child data.
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('menu')
 export class MenuController {

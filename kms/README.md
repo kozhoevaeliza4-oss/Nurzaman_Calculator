@@ -149,6 +149,31 @@ backend repo (an account, a legal sign-off, a second codebase):
 
 ## Getting started
 
+### Option A — Docker (fastest)
+
+```bash
+cp .env.example .env   # fill in a real JWT_SECRET at minimum; DB_HOST is
+                        # overridden to "postgres" by docker-compose already
+docker compose run --rm migrate   # creates the full schema
+docker compose run --rm migrate npm run seed:director   # one-off director account
+docker compose up -d
+```
+
+The app is now on `http://localhost:3000`, with interactive API docs at
+`http://localhost:3000/docs` (click "Authorize" and paste the JWT from
+`POST /auth/login` to try authenticated endpoints) and a health check at
+`http://localhost:3000/health`.
+
+Optionally seed demo data to have something to look at immediately:
+`docker compose run --rm migrate npm run seed:demo` — creates a group, a
+teacher, a parent, a child (with an allergy), a tariff, and today's menu
+(including one dish that deliberately triggers the allergy warning), so
+you can exercise most of the API without manual setup. Login/password for
+the demo accounts are printed by the script; never run it against
+production data.
+
+### Option B — local Node + Postgres
+
 ```bash
 cp .env.example .env   # fill in DB credentials, JWT_SECRET, and (optionally)
                         # the notification/AI provider keys — every one of
@@ -156,35 +181,56 @@ cp .env.example .env   # fill in DB credentials, JWT_SECRET, and (optionally)
 npm install
 npm run migration:run  # creates the full schema
 npm run seed:director  # DIRECTOR_EMAIL=... DIRECTOR_PASSWORD=... npm run seed:director
+npm run seed:demo      # optional demo data, see above
 npm run start:dev
 ```
 
-Then `POST /auth/login` with the director account to get a JWT and start
-creating groups, children, parents, tariffs, menu items, expense
-categories, etc. via the API.
+Either way: `POST /auth/login` with the director account to get a JWT and
+start creating groups, children, parents, tariffs, menu items, expense
+categories, etc. — either via `/docs` (Swagger UI) or any HTTP client.
 
 ## Deployment checklist (what's actually left)
 
 1. Provision PostgreSQL (managed, with disk encryption + automated
    backups — Module 14's "резервное копирование" + the encryption note
-   above) and point `.env` at it.
-2. Run `npm run migration:run`, then `npm run seed:director` once.
-3. Set a real `JWT_SECRET`; put the app behind HTTPS.
-4. Point `DOCUMENTS_STORAGE_PATH` at a persistent volume, or swap
-   `LocalDiskStorage` (`src/documents/storage/local-disk-storage.ts`) for
-   an S3-compatible `StorageAdapter` implementation — the interface is
-   already there, nothing else needs to change.
+   above). `docker-compose.yml` ships a local Postgres container for
+   quick starts; swap it for a managed instance in production by pointing
+   `DB_HOST`/`DB_*` at it instead.
+2. Run migrations (`docker compose run --rm migrate`, or
+   `npm run migration:run`), then seed the director account once.
+3. Set a real `JWT_SECRET` (the app refuses to boot in
+   `NODE_ENV=production` with the placeholder value — see
+   `src/config/validate-env.ts`); put the app behind HTTPS/a reverse proxy.
+4. Point `DOCUMENTS_STORAGE_PATH` at a persistent volume (already wired
+   up in `docker-compose.yml`), or swap `LocalDiskStorage`
+   (`src/documents/storage/local-disk-storage.ts`) for an S3-compatible
+   `StorageAdapter` implementation — the interface is already there,
+   nothing else needs to change.
 5. Fill in whichever notification/AI keys the school actually wants live
    (`TELEGRAM_BOT_TOKEN`, `SMTP_*`, `WHATSAPP_API_TOKEN`/
    `WHATSAPP_PHONE_NUMBER_ID` once that account exists, `OPENAI_API_KEY`)
    — every one is optional at the code level.
 6. Resolve the two remaining open TZ questions that are business/legal
    decisions, not engineering ones (tariff logic, 1C version — see below).
-7. Deploy the NestJS app (`npm run build && npm run start`) behind a
-   process manager/container orchestrator of choice.
+7. Deploy: `docker compose up -d` behind a reverse proxy is the fastest
+   path; `Dockerfile` builds a standalone production image if the target
+   host runs its own orchestrator instead. `GET /health` is what to point
+   a load balancer/orchestrator's health check at (Docker's own
+   `HEALTHCHECK` already does this).
 
 Everything else — the Flutter apps, face recognition, and a real 1C
 protocol — is separate work explained above, not a deployment step.
+
+## Exploring the API without writing a frontend
+
+- `GET /docs` — Swagger UI, generated from the actual DTOs/routes. Click
+  "Authorize", paste a bearer token from `POST /auth/login`, and every
+  protected endpoint becomes clickable/testable from the browser.
+- `GET /health` — `{ status: "ok", db: "ok" }` once Postgres is reachable;
+  a 503 otherwise. Safe to leave public; it reveals nothing sensitive.
+- CI (`.github/workflows/kms-ci.yml`) runs `tsc --noEmit` + `npm run
+  build` on every push/PR touching `kms/`, so a broken build shows up on
+  GitHub before it reaches a deploy.
 
 ## Known open items from the TZ (section 8)
 

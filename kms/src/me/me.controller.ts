@@ -1,5 +1,6 @@
 import { Controller, ForbiddenException, Get, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
@@ -19,6 +20,7 @@ function today(): string {
 // personal cabinet (and, later, the parent mobile app — Module 13 — to
 // call the same endpoint).
 @Roles(Role.PARENT)
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('me')
 export class MeController {

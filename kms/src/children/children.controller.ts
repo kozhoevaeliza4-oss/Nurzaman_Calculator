@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
@@ -24,6 +25,7 @@ import { QueryChildrenDto } from './dto/query-children.dto';
 // Parents access their child's record via /parents/me, not this controller
 // (see section 2 of the TZ: "Родитель — только карточка своего ребёнка").
 @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT, Role.TEACHER, Role.MEDIC)
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('children')
 export class ChildrenController {
