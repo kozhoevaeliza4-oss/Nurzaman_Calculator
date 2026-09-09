@@ -6,9 +6,16 @@ import { AttendanceController } from './attendance.controller';
 import { AuditModule } from '../audit/audit.module';
 import { ChildrenModule } from '../children/children.module';
 import { ParentsModule } from '../parents/parents.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AttendanceRecord]), AuditModule, ChildrenModule, ParentsModule],
+  imports: [
+    TypeOrmModule.forFeature([AttendanceRecord]),
+    AuditModule,
+    ChildrenModule,
+    ParentsModule,
+    NotificationsModule,
+  ],
   providers: [AttendanceService],
   controllers: [AttendanceController],
   exports: [AttendanceService],

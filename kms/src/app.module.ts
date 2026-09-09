@@ -9,6 +9,16 @@ import { ChildrenModule } from './children/children.module';
 import { ParentsModule } from './parents/parents.module';
 import { FinanceModule } from './finance/finance.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { DocumentsModule } from './documents/documents.module';
+import { MenuModule } from './menu/menu.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { MeModule } from './me/me.module';
+import { OneCModule } from './onec/onec.module';
+import { AssistantModule } from './assistant/assistant.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -32,6 +42,16 @@ import { AttendanceModule } from './attendance/attendance.module';
     ParentsModule,
     FinanceModule,
     AttendanceModule,
+    DocumentsModule,
+    MenuModule,
+    ExpensesModule,
+    DashboardModule,
+    ReportsModule,
+    NotificationsModule,
+    MeModule,
+    OneCModule,
+    AssistantModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

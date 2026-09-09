@@ -29,4 +29,12 @@ export class Payment extends BaseEntity {
   // Staff member who recorded the payment (director/admin/accountant).
   @Column({ name: 'recorded_by', type: 'uuid', nullable: true })
   recordedBy: string | null;
+
+  // Module 4 (1C sync): set once 1C confirms this payment reconciles
+  // against its own accounting document.
+  @Column({ name: 'reconciled_at', type: 'timestamptz', nullable: true })
+  reconciledAt: Date | null;
+
+  @Column({ name: 'one_c_document_id', nullable: true })
+  oneCDocumentId: string | null;
 }

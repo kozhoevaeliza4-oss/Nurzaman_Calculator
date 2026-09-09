@@ -13,6 +13,7 @@ import { FinanceController } from './finance.controller';
 import { AuditModule } from '../audit/audit.module';
 import { ChildrenModule } from '../children/children.module';
 import { ParentsModule } from '../parents/parents.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ParentsModule } from '../parents/parents.module';
     AuditModule,
     ChildrenModule,
     ParentsModule,
+    NotificationsModule,
   ],
   providers: [TariffsService, ChargesService, PaymentsService, BalancesService],
   controllers: [TariffsController, FinanceController],

@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Parent } from './parent.entity';
 import { ChildParent } from './child-parent.entity';
 import { CreateParentDto } from './dto/create-parent.dto';
@@ -64,6 +64,14 @@ export class ParentsService {
 
   childrenForParent(parentId: string): Promise<ChildParent[]> {
     return this.linksRepo.find({ where: { parentId }, relations: ['child'] });
+  }
+
+  // Module 9: who to notify about a scenario on this child (arrival/
+  // departure, charge/payment).
+  async parentsForChild(childId: string): Promise<Parent[]> {
+    const links = await this.linksRepo.find({ where: { childId } });
+    if (links.length === 0) return [];
+    return this.parentsRepo.find({ where: { id: In(links.map((l) => l.parentId)) } });
   }
 
   // Shared by every module that scopes a parent's own login to their

@@ -50,4 +50,14 @@ export class ChargesService {
 
     return created;
   }
+
+  // Module 10: total charged in [from, to], for the finance report.
+  async totalForRange(from: string, to: string): Promise<string> {
+    const row = await this.repo
+      .createQueryBuilder('c')
+      .select('COALESCE(SUM(c.amount), 0)', 'sum')
+      .where('c.due_date >= :from AND c.due_date <= :to', { from, to })
+      .getRawOne<{ sum: string }>();
+    return Number(row?.sum ?? 0).toFixed(2);
+  }
 }

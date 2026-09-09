@@ -5,6 +5,7 @@ import { AttendanceRecord, AttendanceEventType } from './attendance-record.entit
 import { ChildrenService } from '../children/children.service';
 import { Child, ChildStatus } from '../children/child.entity';
 import { AuthUser } from '../common/current-user.decorator';
+import { NotificationsService } from '../notifications/notifications.service';
 
 function startOfToday(): Date {
   const now = new Date();
@@ -21,6 +22,7 @@ export class AttendanceService {
   constructor(
     @InjectRepository(AttendanceRecord) private readonly repo: Repository<AttendanceRecord>,
     private readonly childrenService: ChildrenService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   resolveChildByCode(code: string): Promise<Child> {
@@ -42,7 +44,7 @@ export class AttendanceService {
         ? AttendanceEventType.CHECK_OUT
         : AttendanceEventType.CHECK_IN;
 
-    return this.repo.save(
+    const record = await this.repo.save(
       this.repo.create({
         childId,
         eventType,
@@ -51,6 +53,16 @@ export class AttendanceService {
         recordedByRole: actingUser.role,
       }),
     );
+
+    // Module 9 scenario: "ребёнок пришёл/ушёл" — best-effort, never blocks
+    // the scan response on a notification failure.
+    const message =
+      eventType === AttendanceEventType.CHECK_IN
+        ? 'Ваш ребёнок пришёл в детский сад.'
+        : 'Ваш ребёнок ушёл домой из детского сада.';
+    this.notificationsService.notifyParentsOfChild(childId, message, 'attendance').catch(() => undefined);
+
+    return record;
   }
 
   findForChild(childId: string): Promise<AttendanceRecord[]> {
@@ -72,5 +84,27 @@ export class AttendanceService {
       const status = lastEvent?.eventType === AttendanceEventType.CHECK_IN ? 'present' : 'absent';
       return { childId: child.id, fullName: child.fullName, status, lastEvent };
     });
+  }
+
+  // Module 8: "посещаемость" summary tile on the director dashboard.
+  async todaySummary(): Promise<{ present: number; absent: number; total: number }> {
+    const children = await this.childrenService.findAll({ status: ChildStatus.ACTIVE });
+    const todaysRecords = await this.repo.find({
+      where: { occurredAt: Between(startOfToday(), endOfToday()) },
+      order: { occurredAt: 'ASC' },
+    });
+
+    let present = 0;
+    for (const child of children) {
+      const childRecords = todaysRecords.filter((record) => record.childId === child.id);
+      const lastEvent = childRecords[childRecords.length - 1];
+      if (lastEvent?.eventType === AttendanceEventType.CHECK_IN) present += 1;
+    }
+    return { present, absent: children.length - present, total: children.length };
+  }
+
+  // Module 10: raw attendance events in a date range, for the report.
+  findForRange(from: Date, to: Date): Promise<AttendanceRecord[]> {
+    return this.repo.find({ where: { occurredAt: Between(from, to) }, order: { occurredAt: 'ASC' } });
   }
 }
