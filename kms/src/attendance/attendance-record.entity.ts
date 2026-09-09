@@ -24,6 +24,6 @@ export class AttendanceRecord extends BaseEntity {
   @Column({ name: 'recorded_by', type: 'uuid', nullable: true })
   recordedBy: string | null;
 
-  @Column({ name: 'recorded_by_role', nullable: true })
+  @Column({ name: 'recorded_by_role', type: 'varchar', nullable: true })
   recordedByRole: string | null;
 }

@@ -23,7 +23,7 @@ export class Payment extends BaseEntity {
   @Column({ name: 'paid_at', type: 'date' })
   paidAt: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   note: string | null;
 
   // Staff member who recorded the payment (director/admin/accountant).
@@ -35,6 +35,6 @@ export class Payment extends BaseEntity {
   @Column({ name: 'reconciled_at', type: 'timestamptz', nullable: true })
   reconciledAt: Date | null;
 
-  @Column({ name: 'one_c_document_id', nullable: true })
+  @Column({ name: 'one_c_document_id', type: 'varchar', nullable: true })
   oneCDocumentId: string | null;
 }

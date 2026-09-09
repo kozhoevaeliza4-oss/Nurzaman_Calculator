@@ -20,6 +20,6 @@ export class Tariff extends BaseEntity {
   @Column({ type: 'numeric', precision: 12, scale: 2 })
   amount: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description: string | null;
 }

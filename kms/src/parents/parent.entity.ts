@@ -7,10 +7,10 @@ export class Parent extends BaseEntity {
   fullName: string;
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   phone: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   email: string | null;
 
   // Links this parent record to a login account (users table, role=parent).
@@ -21,6 +21,6 @@ export class Parent extends BaseEntity {
 
   // Module 9: Telegram chat id, captured once the parent starts the bot
   // (e.g. via a /start deep link carrying their parent id).
-  @Column({ name: 'telegram_chat_id', nullable: true })
+  @Column({ name: 'telegram_chat_id', type: 'varchar', nullable: true })
   telegramChatId: string | null;
 }

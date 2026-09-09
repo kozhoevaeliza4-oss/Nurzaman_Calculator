@@ -10,7 +10,7 @@ export class AuditLog {
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   userId: string | null;
 
-  @Column({ name: 'user_email', nullable: true })
+  @Column({ name: 'user_email', type: 'varchar', nullable: true })
   userEmail: string | null;
 
   // e.g. "create", "update", "delete"
@@ -23,7 +23,7 @@ export class AuditLog {
   entityType: string;
 
   @Index()
-  @Column({ name: 'entity_id', nullable: true })
+  @Column({ name: 'entity_id', type: 'varchar', nullable: true })
   entityId: string | null;
 
   @Column({ type: 'jsonb', nullable: true })

@@ -34,6 +34,6 @@ export class Notification extends BaseEntity {
   @Column()
   scenario: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   error: string | null;
 }

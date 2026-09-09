@@ -23,9 +23,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = typeof body === 'string' ? body : ((body as { message?: string | string[] }).message ?? exception.message);
     }
 
+    // Set by RequestLoggingMiddleware — lets a reported error be matched
+    // back to its one-line request log (same id in both).
+    const requestId = request.id as string | undefined;
+
     if (!isHttpException || status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(
-        `${request.method} ${request.url} -> ${status}: ${exception instanceof Error ? exception.stack : exception}`,
+        `[${requestId ?? '-'}] ${request.method} ${request.url} -> ${status}: ${exception instanceof Error ? exception.stack : exception}`,
       );
     }
 
@@ -34,6 +38,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message,
       path: request.url,
       timestamp: new Date().toISOString(),
+      ...(requestId ? { requestId } : {}),
     });
   }
 }

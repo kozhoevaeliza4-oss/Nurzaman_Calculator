@@ -29,7 +29,7 @@ export class Child extends BaseEntity {
   @JoinColumn({ name: 'group_id' })
   group?: Group;
 
-  @Column({ name: 'photo_url', nullable: true })
+  @Column({ name: 'photo_url', type: 'varchar', nullable: true })
   photoUrl: string | null;
 
   @Column({ name: 'enrollment_date', type: 'date' })

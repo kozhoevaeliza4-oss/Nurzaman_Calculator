@@ -1,6 +1,21 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  Post,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
@@ -9,6 +24,8 @@ import { AuditService } from '../audit/audit.service';
 import { ParentsService } from '../parents/parents.service';
 import { DocumentsService } from './documents.service';
 import { UploadDocumentDto } from './dto/upload-document.dto';
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // 15 MB — a scanned document/photo, not a video.
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,25 +45,41 @@ export class DocumentsController {
 
   @Roles(Role.DIRECTOR, Role.ADMIN)
   @Post('children/:childId')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD_BYTES } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        type: { type: 'string', enum: ['birth_certificate', 'medical_clearance', 'contract', 'other'] },
+      },
+    },
+  })
   async upload(
     @Param('childId') childId: string,
     @Body() dto: UploadDocumentDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
     @CurrentUser() user: AuthUser,
   ) {
-    const document = await this.documentsService.upload(childId, dto, user.userId);
+    if (!file) throw new BadRequestException('No file was uploaded (expected multipart field "file")');
+
+    const document = await this.documentsService.upload(childId, dto.type, file, user.userId);
     await this.auditService.record(user, 'upload', 'document', document.id, {
       childId,
       type: dto.type,
-      fileName: dto.fileName,
+      fileName: file.originalname,
     });
     return document;
   }
 
   @Roles(Role.DIRECTOR, Role.ADMIN, Role.TEACHER, Role.MEDIC)
   @Get(':id/download')
-  async download(@Param('id') id: string) {
+  async download(@Param('id') id: string, @Res() res: Response) {
     const { document, content } = await this.documentsService.download(id);
-    return { ...document, content: content.toString('base64') };
+    res.setHeader('Content-Type', document.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(document.fileName)}"`);
+    res.send(content);
   }
 
   @Roles(Role.DIRECTOR, Role.ADMIN)

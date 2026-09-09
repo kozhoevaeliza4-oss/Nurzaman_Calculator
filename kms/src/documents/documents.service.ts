@@ -2,9 +2,14 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import { Repository } from 'typeorm';
-import { ChildDocument } from './document.entity';
-import { UploadDocumentDto } from './dto/upload-document.dto';
+import { ChildDocument, DocumentType } from './document.entity';
 import { STORAGE_ADAPTER, StorageAdapter } from './storage/storage.interface';
+
+export interface UploadedFile {
+  originalname: string;
+  mimetype: string;
+  buffer: Buffer;
+}
 
 @Injectable()
 export class DocumentsService {
@@ -17,17 +22,24 @@ export class DocumentsService {
     return this.repo.find({ where: { childId }, order: { createdAt: 'DESC' } });
   }
 
-  async upload(childId: string, dto: UploadDocumentDto, uploadedBy: string | null): Promise<ChildDocument> {
-    const storageKey = `${childId}/${randomUUID()}-${dto.fileName}`;
-    const buffer = Buffer.from(dto.content, 'base64');
-    await this.storage.save(storageKey, buffer, dto.mimeType);
+  // Real multipart upload — the file travels as actual bytes (multer),
+  // not as base64 text inflating a JSON body by ~33% and forcing the
+  // whole file through the JSON parser.
+  async upload(
+    childId: string,
+    type: DocumentType,
+    file: UploadedFile,
+    uploadedBy: string | null,
+  ): Promise<ChildDocument> {
+    const storageKey = `${childId}/${randomUUID()}-${file.originalname}`;
+    await this.storage.save(storageKey, file.buffer, file.mimetype);
 
     return this.repo.save(
       this.repo.create({
         childId,
-        type: dto.type,
-        fileName: dto.fileName,
-        mimeType: dto.mimeType,
+        type,
+        fileName: file.originalname,
+        mimeType: file.mimetype,
         storageKey,
         uploadedBy,
       }),

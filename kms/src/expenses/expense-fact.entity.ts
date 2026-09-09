@@ -14,6 +14,6 @@ export class ExpenseFact extends BaseEntity {
   @Column({ name: 'spent_at', type: 'date' })
   spentAt: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description: string | null;
 }

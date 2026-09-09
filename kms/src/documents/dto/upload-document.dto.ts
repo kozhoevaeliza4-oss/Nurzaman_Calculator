@@ -1,18 +1,10 @@
-import { IsEnum, IsString, MinLength } from 'class-validator';
+import { IsEnum } from 'class-validator';
 import { DocumentType } from '../document.entity';
 
+// The file itself arrives as multipart, not in this DTO — see
+// DocumentsController.upload (FileInterceptor). This only validates the
+// one text field multer passes through alongside it.
 export class UploadDocumentDto {
   @IsEnum(DocumentType)
   type: DocumentType;
-
-  @IsString()
-  fileName: string;
-
-  @IsString()
-  mimeType: string;
-
-  // Base64-encoded file content.
-  @IsString()
-  @MinLength(1)
-  content: string;
 }

@@ -21,7 +21,7 @@ export class Charge extends BaseEntity {
   @Column({ type: 'enum', enum: ChargeType })
   type: ChargeType;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description: string | null;
 
   // Debt is computed "as of the current date" against this date

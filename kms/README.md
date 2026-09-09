@@ -51,8 +51,13 @@ here" below for why, and what's needed to add them.
   enrollment/contract status, `allergies`, an opaque per-child QR code.
   Teachers only ever see their own group.
 - **Documents** (`src/documents`): birth certificate / medical clearance /
-  contract file metadata per child, behind a swappable `StorageAdapter`
-  (`LocalDiskStorage` by default — see the deployment note below).
+  contract files per child, uploaded as real `multipart/form-data`
+  (`POST /documents/children/:id`, a `file` field + a `type` field — try
+  it from `/docs`, Swagger renders a real file picker for it) and
+  downloaded as the original bytes with correct `Content-Type`/
+  `Content-Disposition`, not base64-in-JSON. Storage sits behind a
+  swappable `StorageAdapter` (`LocalDiskStorage` by default — see the
+  deployment note below).
 - **Parents** (`src/parents`): parent/guardian records, multi-parent links
   with a relation type. `ParentsService.ownsChild()` is the one shared
   check every other module uses to scope a parent's own login to their
@@ -196,6 +201,18 @@ npm run seed:demo      # optional demo data, see above
 npm run start:dev
 ```
 
+### Running the e2e suite locally
+
+Point it at any disposable Postgres database — never a database with real
+data, since the suite truncates every table before it runs:
+
+```bash
+createdb asyl_amanat_kms_test   # or: docker run -e POSTGRES_PASSWORD=... postgres:16-alpine
+cp .env.example .env.test       # set DB_NAME=asyl_amanat_kms_test (and matching DB_* creds)
+DB_HOST=localhost DB_NAME=asyl_amanat_kms_test npm run migration:run
+npm run test:e2e
+```
+
 Either way: `POST /auth/login` with the director account to get a JWT and
 start creating groups, children, parents, tariffs, menu items, expense
 categories, etc. — either via `/docs` (Swagger UI) or any HTTP client.
@@ -239,10 +256,39 @@ protocol — is separate work explained above, not a deployment step.
   protected endpoint becomes clickable/testable from the browser.
 - `GET /health` — `{ status: "ok", db: "ok" }` once Postgres is reachable;
   a 503 otherwise. Safe to leave public; it reveals nothing sensitive.
-- CI (`.github/workflows/kms-ci.yml`) runs `tsc --noEmit`, the unit test
-  suite (`npm test`, `src/**/*.spec.ts` — guards, auth, attendance's
-  check-in/out toggle, debt calculation, login provisioning), and
-  `npm run build` on every push/PR touching `kms/`.
+- CI (`.github/workflows/kms-ci.yml`) runs two jobs on every push/PR
+  touching `kms/`: a `build` job (`tsc --noEmit`, the unit suite, `npm run
+  build`) and a separate `e2e` job against a real `postgres:16-alpine`
+  service container (migrations, then the e2e suite below).
+
+## Testing
+
+Two layers, each catching a different class of bug:
+
+- **Unit tests** (`npm test`, `src/**/*.spec.ts`, 42 tests) — pure logic
+  against mocked repositories: the attendance check-in/out toggle, debt
+  calculation, CSV escaping, password hashing, RBAC, login provisioning.
+  Fast, no database needed.
+- **E2E tests** (`npm run test:e2e`, `test/app.e2e-spec.ts`, 20 tests) —
+  real HTTP requests through the fully-wired app (guards, validation
+  pipe, exception filter) against a real PostgreSQL database: login, RBAC
+  rejection, a full group → child → parent → tariff → payment → balance
+  lifecycle, a real multipart document upload/download round-trip, the
+  dashboard, and the audit log. Needs `DB_*` pointed at a real (ideally
+  disposable) Postgres — `.env.test` locally, the CI service container in
+  `e2e` above.
+
+**The e2e layer isn't redundant with unit tests — it already found a real
+bug the mocked tests couldn't:** several entities declared a nullable
+column as `@Column({ nullable: true })` on a TypeScript union type
+(`string | null`). TypeScript's emitted reflection metadata collapses any
+union type to `Object`, and TypeORM refused to boot against a real
+database with `DataTypeNotSupportedError: Data type "Object" ... is not
+supported`. Every unit test mocks the repository, so none of them ever
+touched real entity metadata — only actually running migrations against
+Postgres surfaced it. Fixed by giving all 13 affected columns (across 9
+entities) an explicit `type: 'varchar'`; a mocked test suite alone would
+have shipped this broken.
 
 ## Security hardening
 
@@ -262,6 +308,13 @@ protocol — is separate work explained above, not a deployment step.
   `NODE_ENV=production`, and fails fast with a clear message if any
   required DB/JWT variable is missing, instead of a confusing crash three
   layers down in TypeORM.
+- **Request logging** (`src/common/request-logging.middleware.ts`): every
+  request gets a UUID correlation id, echoed back as the `X-Request-Id`
+  response header and included in error bodies from the exception filter,
+  with one structured JSON log line per request (`{requestId, method,
+  path, status, durationMs}`) — so a user-reported error and its server
+  log line can actually be matched up, and logs stay greppable instead of
+  Nest's default human-formatted console output.
 
 ## Pagination
 
