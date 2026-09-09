@@ -45,4 +45,11 @@ export class Child extends BaseEntity {
   // Module 15 hook: allergies/dietary restrictions, visible to teacher and kitchen.
   @Column({ type: 'text', array: true, default: () => 'ARRAY[]::text[]' })
   allergies: string[];
+
+  // Module 5: "Уникальный QR/штрих-код на каждого ребёнка." An opaque
+  // random token, not the child's id, so a printed badge can't be used to
+  // enumerate/guess other children's ids.
+  @Index({ unique: true })
+  @Column({ name: 'qr_code' })
+  qrCode: string;
 }

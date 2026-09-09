@@ -65,4 +65,13 @@ export class ParentsService {
   childrenForParent(parentId: string): Promise<ChildParent[]> {
     return this.linksRepo.find({ where: { parentId }, relations: ['child'] });
   }
+
+  // Shared by every module that scopes a parent's own login to their
+  // linked children (finance, attendance, ...).
+  async ownsChild(userId: string, childId: string): Promise<boolean> {
+    const parent = await this.findByUserId(userId);
+    if (!parent) return false;
+    const link = await this.linksRepo.findOne({ where: { parentId: parent.id, childId } });
+    return !!link;
+  }
 }

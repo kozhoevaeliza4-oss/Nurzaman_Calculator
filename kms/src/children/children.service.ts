@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
 import { Child } from './child.entity';
 import { CreateChildDto } from './dto/create-child.dto';
@@ -34,8 +35,25 @@ export class ChildrenService {
     return child;
   }
 
+  async findByQrCode(qrCode: string): Promise<Child> {
+    const child = await this.repo.findOne({ where: { qrCode } });
+    if (!child) throw new NotFoundException('Unknown QR code');
+    return child;
+  }
+
   create(dto: CreateChildDto): Promise<Child> {
-    return this.repo.save(this.repo.create(dto));
+    return this.repo.save(this.repo.create({ ...dto, qrCode: this.generateQrCode() }));
+  }
+
+  async regenerateQrCode(id: string): Promise<Child> {
+    const child = await this.findOne(id);
+    child.qrCode = this.generateQrCode();
+    return this.repo.save(child);
+  }
+
+  private generateQrCode(): string {
+    // base64url, ~32 chars — opaque and URL/QR-safe.
+    return randomBytes(24).toString('base64url');
   }
 
   async update(id: string, dto: UpdateChildDto): Promise<Child> {

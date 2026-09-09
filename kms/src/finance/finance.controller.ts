@@ -125,9 +125,7 @@ export class FinanceController {
   }
 
   private async assertOwnChild(user: AuthUser, childId: string): Promise<void> {
-    const parent = await this.parentsService.findByUserId(user.userId);
-    const links = parent ? await this.parentsService.childrenForParent(parent.id) : [];
-    const owns = links.some((link) => link.childId === childId);
+    const owns = await this.parentsService.ownsChild(user.userId, childId);
     if (!owns) {
       throw new ForbiddenException('You do not have access to this child');
     }
