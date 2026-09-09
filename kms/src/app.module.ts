@@ -7,6 +7,7 @@ import { AuditModule } from './audit/audit.module';
 import { GroupsModule } from './groups/groups.module';
 import { ChildrenModule } from './children/children.module';
 import { ParentsModule } from './parents/parents.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ParentsModule } from './parents/parents.module';
     GroupsModule,
     ChildrenModule,
     ParentsModule,
+    FinanceModule,
   ],
 })
 export class AppModule {}
