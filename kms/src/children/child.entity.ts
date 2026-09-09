@@ -1,0 +1,48 @@
+import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { BaseEntity } from '../common/base.entity';
+import { Group } from '../groups/group.entity';
+
+export enum ChildStatus {
+  ACTIVE = 'active',
+  LEFT = 'left',
+  ACADEMIC_LEAVE = 'academic_leave',
+}
+
+export enum ContractStatus {
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+}
+
+@Entity('children')
+export class Child extends BaseEntity {
+  @Column({ name: 'full_name' })
+  fullName: string;
+
+  @Column({ name: 'date_of_birth', type: 'date' })
+  dateOfBirth: string;
+
+  @Index()
+  @Column({ name: 'group_id', type: 'uuid', nullable: true })
+  groupId: string | null;
+
+  @ManyToOne(() => Group, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'group_id' })
+  group?: Group;
+
+  @Column({ name: 'photo_url', nullable: true })
+  photoUrl: string | null;
+
+  @Column({ name: 'enrollment_date', type: 'date' })
+  enrollmentDate: string;
+
+  @Index()
+  @Column({ type: 'enum', enum: ChildStatus, default: ChildStatus.ACTIVE })
+  status: ChildStatus;
+
+  @Column({ name: 'contract_status', type: 'enum', enum: ContractStatus, nullable: true })
+  contractStatus: ContractStatus | null;
+
+  // Module 15 hook: allergies/dietary restrictions, visible to teacher and kitchen.
+  @Column({ type: 'text', array: true, default: () => 'ARRAY[]::text[]' })
+  allergies: string[];
+}
