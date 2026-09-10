@@ -680,7 +680,11 @@ function removeAcceptRow(btn){
 addAcceptRow("Руководитель ПТО", "Дуйшобай уулу Женишбек");
 addAcceptRow("Инженеры ПТО", "Тургунбаев Нурислам");
 
-// ===== Прораб: зависит от объекта =====
+// ===== Директор и руководитель проекта: зависят от объекта =====
+const DEFAULT_DIRECTOR = "Айткулов И.С.";
+const DIRECTOR_BY_OBJECT = {
+  "ТРЦ Nurzaman plaza": "Ариет"
+};
 const PROJECT_HEAD_BY_OBJECT = {
   "ЖК Европейский квартал": "Убайдилла уулу Русланбек",
   "ЖК Residence": "Макамбаев Элгизбек Маратович"
@@ -753,6 +757,7 @@ function updateContractNumberForCurrentContractor(){
 
 function onObjectChange(){
   const obj = document.getElementById("objectName").value;
+  document.getElementById("approveDirector").value = DIRECTOR_BY_OBJECT[obj] || DEFAULT_DIRECTOR;
   document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[obj] || "";
   document.getElementById("prorabCell").innerHTML = prorabFieldHtml(obj);
   updateContractNumberForCurrentContractor();
@@ -761,6 +766,7 @@ function onObjectChange(){
 }
 
 addProrabRow(document.getElementById("objectName").value);
+document.getElementById("approveDirector").value = DIRECTOR_BY_OBJECT[document.getElementById("objectName").value] || DEFAULT_DIRECTOR;
 document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[document.getElementById("objectName").value] || "";
 document.getElementById("executorCompany").addEventListener("input", checkContractorObjectMatch);
 
