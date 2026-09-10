@@ -563,29 +563,36 @@ function pluralForm(n, forms){
   return forms[2];
 }
 
-function numberToWords(num){
-  num = Math.round(num);
-  if(num === 0) return "ноль сом";
+function numberToWords(numFull){
+  const num = Math.floor(numFull);
+  const tyiyn = Math.round((numFull - num) * 100);
   const millions = Math.floor(num / 1000000);
   const thousands = Math.floor((num % 1000000) / 1000);
   const rest = num % 1000;
 
-  let parts = [];
-  if(millions){
-    parts.push(...triadToWords(millions, false));
-    parts.push(pluralForm(millions, ["миллион","миллиона","миллионов"]));
+  let somText;
+  if(num === 0){
+    somText = "ноль сом";
+  } else {
+    let parts = [];
+    if(millions){
+      parts.push(...triadToWords(millions, false));
+      parts.push(pluralForm(millions, ["миллион","миллиона","миллионов"]));
+    }
+    if(thousands){
+      parts.push(...triadToWords(thousands, true));
+      parts.push(pluralForm(thousands, ["тысяча","тысячи","тысяч"]));
+    }
+    if(rest || parts.length === 0){
+      parts.push(...triadToWords(rest, false));
+    }
+    let text = parts.filter(Boolean).join(" ");
+    text = text.charAt(0).toUpperCase() + text.slice(1);
+    const somWord = pluralForm(num, ["сом","сома","сом"]);
+    somText = `${text} ${somWord}`;
   }
-  if(thousands){
-    parts.push(...triadToWords(thousands, true));
-    parts.push(pluralForm(thousands, ["тысяча","тысячи","тысяч"]));
-  }
-  if(rest || parts.length === 0){
-    parts.push(...triadToWords(rest, false));
-  }
-  let text = parts.filter(Boolean).join(" ");
-  text = text.charAt(0).toUpperCase() + text.slice(1);
-  const somWord = pluralForm(num, ["сом","сома","сом"]);
-  return `${text} ${somWord}`;
+  const tyiynStr = String(tyiyn).padStart(2, "0");
+  return `${somText} ${tyiynStr} тыйын`;
 }
 
 function fmt(n){
