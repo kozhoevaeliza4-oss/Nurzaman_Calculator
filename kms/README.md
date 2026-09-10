@@ -5,9 +5,10 @@ Backend for the "Асыл-Аманат" kindergarten management system, per
 a backend implementation here. Stack: NestJS + TypeORM + PostgreSQL, per
 section 5 of the TZ.
 
-**This is the backend only.** No web admin panel, no Flutter mobile apps
-(Module 13) exist in this repo — see "What genuinely can't be finished
-here" below for why, and what's needed to add them.
+Backend-first, but not backend-only: `kms/frontend` is a minimal, real,
+branded web UI (staff panel + parent portal) served straight off this
+same app — see "Web frontend" below. No Flutter mobile apps (Module 13)
+exist in this repo — see "What genuinely can't be finished here" for why.
 
 ## Module-by-module status
 
@@ -18,7 +19,7 @@ here" below for why, and what's needed to add them.
 | 3 | Финансы | Done (fixed tariff) — `src/finance` |
 | 4 | 1С | Done, generic protocol — `src/onec` (needs a real 1C version to finalize the exact format, see below) |
 | 5 | Посещаемость | Done, QR only — `src/attendance` (face recognition deliberately not built, see below) |
-| 6 | Личный кабинет родителя | Done, web/API — `src/me` (the TZ's "React-style" web view itself isn't in this repo; see Module 13 note) |
+| 6 | Личный кабинет родителя | Done, API + a first minimal web view — `src/me`, `frontend/` |
 | 7 | AI-помощник | Done — `src/assistant` |
 | 8 | Dashboard руководителя | Done — `src/dashboard` |
 | 9 | Авто-уведомления | Done — Telegram + Email real, Push (in-app) real, WhatsApp wired but needs a paid account — `src/notifications` |
@@ -216,6 +217,30 @@ npm run test:e2e
 Either way: `POST /auth/login` with the director account to get a JWT and
 start creating groups, children, parents, tariffs, menu items, expense
 categories, etc. — either via `/docs` (Swagger UI) or any HTTP client.
+
+## Web frontend
+
+`kms/frontend` is a small, real, branded web UI — not a mockup — served
+by this same NestJS app (no separate server, no build step: it's plain
+HTML/CSS/JS, wired in via `@nestjs/serve-static` in `app.module.ts`).
+Open the app's root URL in a browser and it's there.
+
+- **Login** (`/`): email/password against `POST /auth/login`, stores the
+  JWT in `localStorage`, routes by the returned role.
+- **Staff view** (director/admin/accountant/teacher/medic): this month's
+  stat tiles (director/admin only — `GET /dashboard/summary`) plus a
+  children table with group, status, and allergy badges
+  (`GET /children`, `GET /groups`).
+- **Parent view**: one call to `GET /me/dashboard` rendered as a card per
+  child — balance, today's attendance, today's menu, recent
+  notifications, allergy badge front and center.
+
+This is deliberately a first cut, not the full Module 6/8 web experience
+the TZ describes (charts, payment history, document upload from the
+browser, etc.) — it exists so staff and parents have something to
+actually click through today, on top of an API that already supports much
+more than the UI surfaces yet. Extending it means adding more views/calls
+to `frontend/app.js`, not new backend work.
 
 ## Deployment checklist (what's actually left)
 

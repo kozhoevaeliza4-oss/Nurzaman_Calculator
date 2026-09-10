@@ -45,6 +45,7 @@ export class MeController {
         links.map(async (link) => ({
           childId: link.childId,
           fullName: link.child?.fullName,
+          allergies: link.child?.allergies ?? [],
           relationType: link.relationType,
           balance: await this.balancesService.getBalance(link.childId),
           recentAttendance: (await this.attendanceService.findForChild(link.childId)).slice(0, 5),

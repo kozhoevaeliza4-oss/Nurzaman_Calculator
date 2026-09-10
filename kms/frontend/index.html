@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Асыл-Аманат</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Login -->
+  <div id="login-screen" class="login-screen">
+    <form id="login-form" class="login-card">
+      <img src="/assets/logo.png" alt="Асыл-Аманат" />
+      <h1>Асыл-Аманат</h1>
+      <div class="sub">Детский сад · KMS</div>
+      <div id="login-error" class="error-banner" hidden></div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+      </div>
+      <button class="btn" type="submit">Войти</button>
+      <div class="hint">Логин выдаёт директор/администратор через API (<code class="mono">POST /users</code> для персонала, <code class="mono">POST /parents/:id/create-login</code> для родителя).</div>
+    </form>
+  </div>
+
+  <!-- App shell -->
+  <div id="app-shell" class="app-shell" hidden>
+    <header class="topbar">
+      <img src="/assets/logo.png" alt="" />
+      <div class="word">АСЫЛ <span>АМАНАТ</span></div>
+      <div class="who">
+        <span id="who-name"></span>
+        <span id="who-role" class="role-pill mono"></span>
+        <button id="logout-btn" type="button">Выйти</button>
+      </div>
+    </header>
+    <main id="main-content">
+      <div class="loading">Загрузка…</div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

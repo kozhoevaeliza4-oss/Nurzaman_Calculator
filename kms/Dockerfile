@@ -14,6 +14,9 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
+# Plain static files (frontend/) — served at runtime via
+# @nestjs/serve-static from process.cwd(), not compiled into dist/.
+COPY frontend ./frontend
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \

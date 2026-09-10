@@ -1,7 +1,9 @@
+import { join } from 'path';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -27,6 +29,34 @@ import { RequestLoggingMiddleware } from './common/request-logging.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // The minimal staff/parent web UI (kms/frontend) — a starting point for
+    // Module 6's web personal cabinet and a staff panel, not a build step,
+    // so it ships as plain static files served straight off the API app.
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'frontend'),
+      exclude: [
+        '/auth*',
+        '/users*',
+        '/audit*',
+        '/groups*',
+        '/children*',
+        '/parents*',
+        '/finance*',
+        '/attendance*',
+        '/documents*',
+        '/menu*',
+        '/expenses*',
+        '/dashboard*',
+        '/reports*',
+        '/notifications*',
+        '/me*',
+        '/onec*',
+        '/assistant*',
+        '/analytics*',
+        '/health*',
+        '/docs*',
+      ],
+    }),
     // Default rate limit for every endpoint; auth applies a stricter
     // per-route limit on top of this (see AuthController).
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
