@@ -206,21 +206,23 @@
     width:340px;
   }
   .doc-approve-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
     margin-bottom:20px;
     font-size:13px;
   }
-  .doc-approve-role{ color:#333; margin-bottom:4px; }
+  .doc-approve-role{ color:#333; white-space:nowrap; }
   .doc-approve-sign{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
     text-align:right;
+    white-space:nowrap;
   }
   .doc-approve-line{
-    display:block;
+    display:inline-block;
     border-bottom:1px solid #000;
-    width:160px;
-    margin-bottom:4px;
+    width:100px;
+    margin-right:6px;
   }
   .doc-object{
     text-align:center;
