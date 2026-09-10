@@ -4,4 +4,6 @@ dist/
 .env.local
 .env.test
 *.log
-storage/
+# Uploaded document files (runtime storage), not the src/documents/storage/
+# code that implements the storage abstraction.
+/storage/
