@@ -94,6 +94,71 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function showToast(message) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+// ---------- Modal helper ----------
+// Renders `bodyHtml` inside a modal and wires up a form submit handler that
+// posts JSON to `path`; on success it closes the modal, toasts, and calls
+// onDone() (typically a re-render of the current view).
+function openModal({ title, bodyHtml, path, buildPayload, onSubmit, onDone, submitLabel = 'Сохранить' }) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>${escapeHtml(title)}</h3>
+      <div class="modal-error" hidden></div>
+      <form>
+        ${bodyHtml}
+        <div class="modal-actions">
+          <button type="submit" class="btn">${escapeHtml(submitLabel)}</button>
+          <button type="button" class="btn secondary" data-close>Отмена</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+  backdrop.querySelector('[data-close]').addEventListener('click', close);
+
+  const form = backdrop.querySelector('form');
+  const errorEl = backdrop.querySelector('.modal-error');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.hidden = true;
+    const submitBtn = form.querySelector('button[type=submit]');
+    submitBtn.disabled = true;
+    try {
+      if (onSubmit) {
+        await onSubmit(new FormData(form));
+      } else {
+        const payload = buildPayload(new FormData(form));
+        await api(path, { method: 'POST', body: JSON.stringify(payload) });
+      }
+      close();
+      showToast('Сохранено');
+      onDone?.();
+    } catch (err) {
+      if (err.message !== 'unauthorized') {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+        submitBtn.disabled = false;
+      }
+    }
+  });
+
+  return backdrop;
+}
+
 // ---------- Login ----------
 
 function showLogin(message) {
@@ -173,14 +238,16 @@ async function renderStaffView(user) {
   mainContent.innerHTML = '<div class="loading">Загрузка…</div>';
 
   const canSeeDashboard = user.role === 'director' || user.role === 'admin';
+  const canManage = user.role === 'director' || user.role === 'admin';
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = today.slice(0, 8) + '01';
 
   try {
-    const [summary, childrenPage, groups] = await Promise.all([
+    const [summary, childrenPage, groups, parentsPage] = await Promise.all([
       canSeeDashboard ? api(`/dashboard/summary?from=${monthStart}&to=${today}`) : Promise.resolve(null),
       api('/children?pageSize=50'),
       api('/groups'),
+      canManage ? api('/parents?pageSize=50') : Promise.resolve(null),
     ]);
 
     const groupNameById = new Map(groups.map((g) => [g.id, g.name]));
@@ -218,10 +285,52 @@ async function renderStaffView(user) {
       })
       .join('');
 
-    mainContent.innerHTML = `
-      ${statsHtml}
+    const groupRows = groups
+      .map(
+        (g) => `
+          <tr>
+            <td>${escapeHtml(g.name)}</td>
+            <td>${g.capacity}</td>
+          </tr>
+        `,
+      )
+      .join('');
+
+    const parentRows = parentsPage
+      ? parentsPage.items
+          .map(
+            (p) => `
+              <tr>
+                <td>${escapeHtml(p.fullName)}</td>
+                <td>${escapeHtml(p.phone || '—')}</td>
+                <td>${escapeHtml(p.email || '—')}</td>
+              </tr>
+            `,
+          )
+          .join('')
+      : '';
+
+    const groupsHtml = `
       <section>
-        <h2 class="section-title">Дети (${childrenPage.total})</h2>
+        <div class="section-header">
+          <h2 class="section-title">Группы (${groups.length})</h2>
+          ${canManage ? '<button class="btn-small" data-action="add-group">+ Добавить группу</button>' : ''}
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Название</th><th>Вместимость</th></tr></thead>
+            <tbody>${groupRows || '<tr><td colspan="2" class="empty-note">Групп пока нет</td></tr>'}</tbody>
+          </table>
+        </div>
+      </section>
+    `;
+
+    const childrenHtml = `
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Дети (${childrenPage.total})</h2>
+          ${canManage ? '<button class="btn-small" data-action="add-child">+ Добавить ребёнка</button>' : ''}
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -234,11 +343,182 @@ async function renderStaffView(user) {
         </div>
       </section>
     `;
+
+    const parentsHtml = parentsPage
+      ? `
+        <section>
+          <div class="section-header">
+            <h2 class="section-title">Родители (${parentsPage.total})</h2>
+            <button class="btn-small" data-action="add-parent">+ Добавить родителя</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ФИО</th><th>Телефон</th><th>Email</th></tr></thead>
+              <tbody>${parentRows || '<tr><td colspan="3" class="empty-note">Родителей пока нет</td></tr>'}</tbody>
+            </table>
+          </div>
+        </section>
+      `
+      : '';
+
+    mainContent.innerHTML = `${statsHtml}${groupsHtml}${childrenHtml}${parentsHtml}`;
+
+    mainContent.querySelector('[data-action="add-group"]')?.addEventListener('click', () => openAddGroupModal(user));
+    mainContent.querySelector('[data-action="add-child"]')?.addEventListener('click', () => openAddChildModal(user, groups));
+    mainContent.querySelector('[data-action="add-parent"]')?.addEventListener('click', () => openAddParentModal(user, childrenPage.items));
   } catch (err) {
     if (err.message !== 'unauthorized') {
       mainContent.innerHTML = `<div class="error-block">Не удалось загрузить данные: ${escapeHtml(err.message)}</div>`;
     }
   }
+}
+
+function openAddGroupModal(user) {
+  openModal({
+    title: 'Новая группа',
+    path: '/groups',
+    submitLabel: 'Создать группу',
+    bodyHtml: `
+      <div class="field">
+        <label>Название группы</label>
+        <input name="name" required placeholder="Например: Ромашка" />
+      </div>
+      <div class="field">
+        <label>Вместимость (мест)</label>
+        <input name="capacity" type="number" min="1" required placeholder="20" />
+      </div>
+    `,
+    buildPayload: (fd) => ({
+      name: fd.get('name').trim(),
+      capacity: Number(fd.get('capacity')),
+    }),
+    onDone: () => renderStaffView(user),
+  });
+}
+
+function openAddChildModal(user, groups) {
+  const groupOptions = groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+  openModal({
+    title: 'Новый ребёнок',
+    path: '/children',
+    submitLabel: 'Добавить ребёнка',
+    bodyHtml: `
+      <div class="field">
+        <label>ФИО ребёнка</label>
+        <input name="fullName" required placeholder="Иванов Алихан Бекович" />
+      </div>
+      <div class="field">
+        <label>Дата рождения</label>
+        <input name="dateOfBirth" type="date" required />
+      </div>
+      <div class="field">
+        <label>Дата зачисления</label>
+        <input name="enrollmentDate" type="date" required value="${new Date().toISOString().slice(0, 10)}" />
+      </div>
+      <div class="field">
+        <label>Группа</label>
+        <select name="groupId">
+          <option value="">— без группы —</option>
+          ${groupOptions}
+        </select>
+      </div>
+      <div class="field">
+        <label>Аллергии (через запятую)</label>
+        <input name="allergies" placeholder="орехи, мёд" />
+        <div class="hint-small">Оставьте пустым, если аллергий нет</div>
+      </div>
+    `,
+    buildPayload: (fd) => {
+      const allergiesRaw = fd.get('allergies').trim();
+      const payload = {
+        fullName: fd.get('fullName').trim(),
+        dateOfBirth: fd.get('dateOfBirth'),
+        enrollmentDate: fd.get('enrollmentDate'),
+        allergies: allergiesRaw ? allergiesRaw.split(',').map((a) => a.trim()).filter(Boolean) : [],
+      };
+      const groupId = fd.get('groupId');
+      if (groupId) payload.groupId = groupId;
+      return payload;
+    },
+    onDone: () => renderStaffView(user),
+  });
+}
+
+const RELATION_LABELS = {
+  mother: 'Мать',
+  father: 'Отец',
+  guardian: 'Опекун',
+  other: 'Другое',
+};
+
+function openAddParentModal(user, children) {
+  const childOptions = children.map((c) => `<option value="${c.id}">${escapeHtml(c.fullName)}</option>`).join('');
+  const relationOptions = Object.entries(RELATION_LABELS)
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join('');
+
+  openModal({
+    title: 'Новый родитель',
+    submitLabel: 'Добавить родителя',
+    bodyHtml: `
+      <div class="field">
+        <label>ФИО родителя</label>
+        <input name="fullName" required placeholder="Иванова Айгуль Сериковна" />
+      </div>
+      <div class="field">
+        <label>Телефон</label>
+        <input name="phone" placeholder="+996 700 000 000" />
+      </div>
+      <div class="field">
+        <label>Email (для входа в личный кабинет)</label>
+        <input name="email" type="email" placeholder="parent@example.com" />
+      </div>
+      <div class="field">
+        <label>Пароль для входа</label>
+        <input name="password" type="password" minlength="8" placeholder="Не менее 8 символов" />
+        <div class="hint-small">Заполните вместе с email, если хотите сразу выдать родителю доступ в личный кабинет</div>
+      </div>
+      <div class="field">
+        <label>Ребёнок</label>
+        <select name="childId">
+          <option value="">— не привязывать сейчас —</option>
+          ${childOptions}
+        </select>
+      </div>
+      <div class="field">
+        <label>Кем приходится ребёнку</label>
+        <select name="relationType">${relationOptions}</select>
+      </div>
+    `,
+    onSubmit: async (fd) => {
+      const parent = await api('/parents', {
+        method: 'POST',
+        body: JSON.stringify({
+          fullName: fd.get('fullName').trim(),
+          phone: fd.get('phone').trim() || undefined,
+          email: fd.get('email').trim() || undefined,
+        }),
+      });
+
+      const childId = fd.get('childId');
+      if (childId) {
+        await api(`/parents/${parent.id}/children`, {
+          method: 'POST',
+          body: JSON.stringify({ childId, relationType: fd.get('relationType') }),
+        });
+      }
+
+      const loginEmail = fd.get('email').trim();
+      const loginPassword = fd.get('password');
+      if (loginEmail && loginPassword) {
+        await api(`/parents/${parent.id}/create-login`, {
+          method: 'POST',
+          body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        });
+      }
+    },
+    onDone: () => renderStaffView(user),
+  });
 }
 
 // ---------- Parent view ----------
