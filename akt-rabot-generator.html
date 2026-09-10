@@ -211,16 +211,18 @@
     margin-left:auto;
   }
   table.doc-approve-table td{
-    padding-bottom:20px;
+    padding:0;
+    vertical-align:bottom;
   }
   table.doc-approve-table td.doc-approve-role{ color:#333; padding-right:10px; white-space:nowrap; }
   table.doc-approve-table td.doc-approve-sign{ text-align:right; }
+  table.doc-approve-table td.doc-approve-spacer{ height:18px; line-height:18px; font-size:1px; padding:0; }
   .doc-approve-line{
     display:inline-block;
     width:90px;
     border-bottom:1px solid #000;
     margin-right:6px;
-    vertical-align:middle;
+    vertical-align:baseline;
   }
   .doc-object{
     text-align:center;
@@ -941,12 +943,14 @@ function renderDoc(){
         <tr>
           <td class="doc-approve-role">Директор</td>
           <td class="doc-approve-sign"><span class="doc-approve-line"></span>${approveDirector}</td>
-        </tr>` : ""}
+        </tr>
+        <tr><td colspan="2" class="doc-approve-spacer"></td></tr>` : ""}
         ${approveDeputy ? `
         <tr>
           <td class="doc-approve-role">Заместитель директора</td>
           <td class="doc-approve-sign"><span class="doc-approve-line"></span>${approveDeputy}</td>
-        </tr>` : ""}
+        </tr>
+        <tr><td colspan="2" class="doc-approve-spacer"></td></tr>` : ""}
         ${approveProjectHead ? `
         <tr>
           <td class="doc-approve-role">Руководитель проекта</td>
