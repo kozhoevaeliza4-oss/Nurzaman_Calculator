@@ -478,11 +478,24 @@ async function renderOverviewTab(user, root) {
       `
       : '';
 
-    root.innerHTML = `${statsHtml}${forecastHtml}${groupsHtml}${childrenHtml}${parentsHtml}`;
+    const staffHtml = canManage
+      ? `
+        <section>
+          <div class="section-header">
+            <h2 class="section-title">Сотрудники</h2>
+            <button class="btn-small" data-action="add-staff">+ Добавить сотрудника</button>
+          </div>
+          <div class="hint-small">Заведите учётные записи для администратора, бухгалтера, воспитателя или медработника, чтобы попробовать вход под разными ролями</div>
+        </section>
+      `
+      : '';
+
+    root.innerHTML = `${statsHtml}${forecastHtml}${groupsHtml}${childrenHtml}${parentsHtml}${staffHtml}`;
 
     root.querySelector('[data-action="add-group"]')?.addEventListener('click', () => openAddGroupModal(user));
     root.querySelector('[data-action="add-child"]')?.addEventListener('click', () => openAddChildModal(user, groups));
     root.querySelector('[data-action="add-parent"]')?.addEventListener('click', () => openAddParentModal(user, childrenPage.items));
+    root.querySelector('[data-action="add-staff"]')?.addEventListener('click', () => openAddStaffModal(user, groups));
     root.querySelectorAll('tr[data-child-id]').forEach((tr) => {
       tr.addEventListener('click', () => {
         state.childId = tr.dataset.childId;
@@ -632,6 +645,55 @@ function openAddParentModal(user, children) {
           body: JSON.stringify({ email: loginEmail, password: loginPassword }),
         });
       }
+    },
+    onDone: () => renderStaffShell(user),
+  });
+}
+
+function openAddStaffModal(user, groups) {
+  const staffRoles = ['admin', 'accountant', 'teacher', 'medic'];
+  const roleOptions = staffRoles.map((r) => `<option value="${r}">${ROLE_LABELS[r]}</option>`).join('');
+  const groupOptions = groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+
+  openModal({
+    title: 'Новый сотрудник',
+    path: '/users',
+    submitLabel: 'Создать учётную запись',
+    bodyHtml: `
+      <div class="field">
+        <label>ФИО</label>
+        <input name="fullName" required placeholder="Асанова Жамиля Токтосуновна" />
+      </div>
+      <div class="field">
+        <label>Роль</label>
+        <select name="role">${roleOptions}</select>
+      </div>
+      <div class="field">
+        <label>Email (логин)</label>
+        <input name="email" type="email" required placeholder="teacher@asyl-amanat.kg" />
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <input name="password" type="password" minlength="8" required placeholder="Не менее 8 символов" />
+      </div>
+      <div class="field">
+        <label>Группа (для воспитателя)</label>
+        <select name="groupId">
+          <option value="">— не привязывать —</option>
+          ${groupOptions}
+        </select>
+      </div>
+    `,
+    buildPayload: (fd) => {
+      const payload = {
+        fullName: fd.get('fullName').trim(),
+        role: fd.get('role'),
+        email: fd.get('email').trim(),
+        password: fd.get('password'),
+      };
+      const groupId = fd.get('groupId');
+      if (groupId) payload.groupId = groupId;
+      return payload;
     },
     onDone: () => renderStaffShell(user),
   });
