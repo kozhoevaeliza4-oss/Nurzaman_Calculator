@@ -589,7 +589,7 @@ function numberToWords(num){
 }
 
 function fmt(n){
-  return Math.round(n).toLocaleString("ru-RU");
+  return n.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function renderDoc(){
