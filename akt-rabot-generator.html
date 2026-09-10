@@ -906,8 +906,10 @@ function renderDoc(){
   const taxAmount = total - subtotal;
   const taxRowHtml = addTax ? `
         <tr>
-          <td colspan="4"></td>
-          <td class="total-label">Единый налог, 4%</td>
+          <td></td><td></td>
+          <td class="unit-col">налог</td>
+          <td class="qty-col">4%</td>
+          <td class="price-col">${fmt(taxAmount)}</td>
           <td class="sum-col">${fmt(taxAmount)}</td>
         </tr>` : "";
 
