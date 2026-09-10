@@ -271,6 +271,32 @@ to `frontend/app.js`, not new backend work.
    a load balancer/orchestrator's health check at (Docker's own
    `HEALTHCHECK` already does this).
 
+### Deploying on a managed platform (Render, Railway, Fly.io, etc.)
+
+The `Dockerfile` is the thing to point any Docker-build-from-GitHub
+platform at — no platform-specific config file is committed here since
+the right one depends on which platform ends up chosen, but every one of
+them asks for the same four things:
+
+- **Repo + branch**: this repo, `claude/new-session-oqeywm` (or wherever
+  it's merged to).
+- **Build context / root directory**: `kms` — the `Dockerfile`,
+  `docker-compose.yml`, and `frontend/` all live under `kms/`, not the
+  repo root (this repo also hosts an unrelated act-generator tool at the
+  root).
+- **Dockerfile path**: `kms/Dockerfile`.
+- **Environment variables**: everything in `kms/.env.example`, at minimum
+  `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` (pointed at
+  whatever Postgres add-on the platform provisions) and a real
+  `JWT_SECRET`. Leave the notification/AI keys blank until wanted — the
+  app degrades gracefully without them.
+
+After the first deploy, run migrations once via the platform's one-off/
+shell command feature: `npm run migration:run`, then
+`npm run seed:director`. Point the platform's health check at `GET
+/health`. Once it's live, the same `/` root serves the web frontend from
+this session's screenshots — no extra step for that.
+
 Everything else — the Flutter apps, face recognition, and a real 1C
 protocol — is separate work explained above, not a deployment step.
 
