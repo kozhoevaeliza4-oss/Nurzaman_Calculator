@@ -211,16 +211,17 @@
     margin-left:auto;
   }
   table.doc-approve-table td{
-    padding:0 0 20px;
-    white-space:nowrap;
-    vertical-align:bottom;
+    padding-bottom:20px;
   }
-  table.doc-approve-table td.doc-approve-role{ color:#333; padding-right:10px; }
-  table.doc-approve-table td.doc-approve-line{
+  table.doc-approve-table td.doc-approve-role{ color:#333; padding-right:10px; white-space:nowrap; }
+  table.doc-approve-table td.doc-approve-sign{ text-align:right; }
+  .doc-approve-line{
+    display:inline-block;
     width:90px;
     border-bottom:1px solid #000;
+    margin-right:6px;
+    vertical-align:middle;
   }
-  table.doc-approve-table td.doc-approve-name{ padding-left:6px; text-align:left; white-space:normal; max-width:180px; }
   .doc-object{
     text-align:center;
     font-style:italic;
@@ -939,20 +940,17 @@ function renderDoc(){
         ${approveDirector ? `
         <tr>
           <td class="doc-approve-role">Директор</td>
-          <td class="doc-approve-line"></td>
-          <td class="doc-approve-name">${approveDirector}</td>
+          <td class="doc-approve-sign"><span class="doc-approve-line"></span>${approveDirector}</td>
         </tr>` : ""}
         ${approveDeputy ? `
         <tr>
           <td class="doc-approve-role">Заместитель директора</td>
-          <td class="doc-approve-line"></td>
-          <td class="doc-approve-name">${approveDeputy}</td>
+          <td class="doc-approve-sign"><span class="doc-approve-line"></span>${approveDeputy}</td>
         </tr>` : ""}
         ${approveProjectHead ? `
         <tr>
           <td class="doc-approve-role">Руководитель проекта</td>
-          <td class="doc-approve-line"></td>
-          <td class="doc-approve-name">${approveProjectHead}</td>
+          <td class="doc-approve-sign"><span class="doc-approve-line"></span>${approveProjectHead}</td>
         </tr>` : ""}
         </tbody></table>
       </div>
