@@ -203,29 +203,24 @@
     margin-bottom:22px;
   }
   .doc-approve-box{
-    width:auto;
     max-width:100%;
   }
-  .doc-approve-row{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:space-between;
-    align-items:baseline;
-    gap:6px 10px;
-    margin-bottom:20px;
+  table.doc-approve-table{
+    border-collapse:collapse;
     font-size:13px;
+    margin-left:auto;
   }
-  .doc-approve-role{ color:#333; white-space:nowrap; }
-  .doc-approve-sign{
-    text-align:right;
+  table.doc-approve-table td{
+    padding:0 0 20px;
     white-space:nowrap;
+    vertical-align:bottom;
   }
-  .doc-approve-line{
-    display:inline-block;
+  table.doc-approve-table td.doc-approve-role{ color:#333; padding-right:10px; }
+  table.doc-approve-table td.doc-approve-line{
+    width:90px;
     border-bottom:1px solid #000;
-    width:100px;
-    margin-right:6px;
   }
+  table.doc-approve-table td.doc-approve-name{ padding-left:6px; text-align:left; white-space:normal; max-width:180px; }
   .doc-object{
     text-align:center;
     font-style:italic;
@@ -392,7 +387,6 @@
     .qty-col{ width:48px; }
     .price-col{ width:80px; }
     .sum-col{ width:84px; }
-    .doc-approve-box{ width:100%; }
     .doc-accept-row{ flex-direction:column; align-items:flex-start; gap:6px; }
     .doc-accept-sign{ width:100%; }
     .actions{ gap:8px; }
@@ -941,21 +935,26 @@ function renderDoc(){
     <div class="doc-approve">
       <div class="doc-approve-box">
         <div style="font-weight:bold; margin-top:40px; margin-bottom:14px;">Утверждаю</div>
+        <table class="doc-approve-table"><tbody>
         ${approveDirector ? `
-        <div class="doc-approve-row">
-          <span class="doc-approve-role">Директор</span>
-          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDirector}</span>
-        </div>` : ""}
+        <tr>
+          <td class="doc-approve-role">Директор</td>
+          <td class="doc-approve-line"></td>
+          <td class="doc-approve-name">${approveDirector}</td>
+        </tr>` : ""}
         ${approveDeputy ? `
-        <div class="doc-approve-row">
-          <span class="doc-approve-role">Заместитель директора</span>
-          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDeputy}</span>
-        </div>` : ""}
+        <tr>
+          <td class="doc-approve-role">Заместитель директора</td>
+          <td class="doc-approve-line"></td>
+          <td class="doc-approve-name">${approveDeputy}</td>
+        </tr>` : ""}
         ${approveProjectHead ? `
-        <div class="doc-approve-row">
-          <span class="doc-approve-role">Руководитель проекта</span>
-          <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveProjectHead}</span>
-        </div>` : ""}
+        <tr>
+          <td class="doc-approve-role">Руководитель проекта</td>
+          <td class="doc-approve-line"></td>
+          <td class="doc-approve-name">${approveProjectHead}</td>
+        </tr>` : ""}
+        </tbody></table>
       </div>
     </div>
 
