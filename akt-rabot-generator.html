@@ -468,8 +468,8 @@
         <input id="approveDeputy" type="text" value="Алимбеков А.Т.">
       </div>
       <div class="field">
-        <label>Начальник участка</label>
-        <input id="approveProjectHead" type="text" value="Убайдилла уулу Русланбек">
+        <label>Руководитель проекта</label>
+        <input id="approveProjectHead" type="text" value="Убайдилла уулу Р.">
       </div>
     </div>
   </div>
@@ -695,7 +695,7 @@ const DEPUTY_BY_OBJECT = {
   "ТРЦ Nurzaman plaza": ""
 };
 const PROJECT_HEAD_BY_OBJECT = {
-  "ЖК Европейский квартал": "Убайдилла уулу Русланбек",
+  "ЖК Европейский квартал": "Убайдилла уулу Р.",
   "ЖК Residence": "Макамбаев Элгизбек Маратович"
 };
 const PRORAB_BY_OBJECT = {
@@ -949,7 +949,7 @@ function renderDoc(){
         </div>` : ""}
         ${approveProjectHead ? `
         <div class="doc-approve-row">
-          <span class="doc-approve-role">Начальник участка</span>
+          <span class="doc-approve-role">Руководитель проекта</span>
           <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveProjectHead}</span>
         </div>` : ""}
       </div>
