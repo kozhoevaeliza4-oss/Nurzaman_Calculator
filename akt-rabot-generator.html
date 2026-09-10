@@ -495,6 +495,12 @@
     <div class="actions">
       <button class="btn secondary small" onclick="addRow()">+ Добавить строку</button>
     </div>
+    <div class="row" style="margin-top:12px; align-items:center;">
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink); cursor:pointer;">
+        <input type="checkbox" id="addTax" onchange="renderDoc()">
+        Добавить единый налог (4%) — сумма делится на 96%
+      </label>
+    </div>
   </div>
 
   <div class="section">
@@ -875,14 +881,14 @@ function renderDoc(){
 
   const rows = document.querySelectorAll("#itemsBody tr");
   let itemsHtml = "";
-  let total = 0;
+  let subtotal = 0;
   rows.forEach((r, i) => {
     const name = r.querySelector(".f-service").value;
     const unit = unitLabel(r.querySelector(".f-unit").value);
     const qty = parseFloat(r.querySelector(".f-qty").value) || 0;
     const price = parseFloat(r.querySelector(".f-price").value) || 0;
     const sum = qty * price;
-    total += sum;
+    subtotal += sum;
     itemsHtml += `
       <tr>
         <td class="num-col">${i+1}</td>
@@ -893,6 +899,17 @@ function renderDoc(){
         <td class="sum-col">${fmt(sum)}</td>
       </tr>`;
   });
+
+  const addTax = document.getElementById("addTax").checked;
+  const taxRate = 0.04;
+  const total = addTax ? subtotal / (1 - taxRate) : subtotal;
+  const taxAmount = total - subtotal;
+  const taxRowHtml = addTax ? `
+        <tr>
+          <td colspan="4"></td>
+          <td class="total-label">Единый налог, 4%</td>
+          <td class="sum-col">${fmt(taxAmount)}</td>
+        </tr>` : "";
 
   const acceptRows = document.querySelectorAll("#acceptBody tr");
   let acceptHtml = "";
@@ -912,18 +929,21 @@ function renderDoc(){
     <div class="doc-approve">
       <div class="doc-approve-box">
         <div style="font-weight:bold; margin-top:40px; margin-bottom:14px;">Утверждаю</div>
+        ${approveDirector ? `
         <div class="doc-approve-row">
           <span class="doc-approve-role">Директор</span>
           <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDirector}</span>
-        </div>
+        </div>` : ""}
+        ${approveDeputy ? `
         <div class="doc-approve-row">
           <span class="doc-approve-role">Заместитель директора</span>
           <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveDeputy}</span>
-        </div>
+        </div>` : ""}
+        ${approveProjectHead ? `
         <div class="doc-approve-row">
           <span class="doc-approve-role">Руководитель проекта</span>
           <span class="doc-approve-sign"><span class="doc-approve-line"></span> ${approveProjectHead}</span>
-        </div>
+        </div>` : ""}
       </div>
     </div>
 
@@ -944,7 +964,7 @@ function renderDoc(){
         </tr>
       </thead>
       <tbody>
-        ${itemsHtml}
+        ${itemsHtml}${taxRowHtml}
         <tr>
           <td colspan="5" class="total-label">Итого</td>
           <td class="sum-col">${fmt(total)}</td>
