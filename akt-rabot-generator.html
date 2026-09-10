@@ -680,10 +680,14 @@ function removeAcceptRow(btn){
 addAcceptRow("Руководитель ПТО", "Дуйшобай уулу Женишбек");
 addAcceptRow("Инженеры ПТО", "Тургунбаев Нурислам");
 
-// ===== Директор и руководитель проекта: зависят от объекта =====
+// ===== Директор, зам. директора и руководитель проекта: зависят от объекта =====
 const DEFAULT_DIRECTOR = "Айткулов И.С.";
 const DIRECTOR_BY_OBJECT = {
   "ТРЦ Nurzaman plaza": "Алимбеков А.Т."
+};
+const DEFAULT_DEPUTY = "Алимбеков А.Т.";
+const DEPUTY_BY_OBJECT = {
+  "ТРЦ Nurzaman plaza": ""
 };
 const PROJECT_HEAD_BY_OBJECT = {
   "ЖК Европейский квартал": "Убайдилла уулу Русланбек",
@@ -755,9 +759,17 @@ function updateContractNumberForCurrentContractor(){
   }
 }
 
+function directorForObject(obj){
+  return (obj in DIRECTOR_BY_OBJECT) ? DIRECTOR_BY_OBJECT[obj] : DEFAULT_DIRECTOR;
+}
+function deputyForObject(obj){
+  return (obj in DEPUTY_BY_OBJECT) ? DEPUTY_BY_OBJECT[obj] : DEFAULT_DEPUTY;
+}
+
 function onObjectChange(){
   const obj = document.getElementById("objectName").value;
-  document.getElementById("approveDirector").value = DIRECTOR_BY_OBJECT[obj] || DEFAULT_DIRECTOR;
+  document.getElementById("approveDirector").value = directorForObject(obj);
+  document.getElementById("approveDeputy").value = deputyForObject(obj);
   document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[obj] || "";
   document.getElementById("prorabCell").innerHTML = prorabFieldHtml(obj);
   updateContractNumberForCurrentContractor();
@@ -766,7 +778,8 @@ function onObjectChange(){
 }
 
 addProrabRow(document.getElementById("objectName").value);
-document.getElementById("approveDirector").value = DIRECTOR_BY_OBJECT[document.getElementById("objectName").value] || DEFAULT_DIRECTOR;
+document.getElementById("approveDirector").value = directorForObject(document.getElementById("objectName").value);
+document.getElementById("approveDeputy").value = deputyForObject(document.getElementById("objectName").value);
 document.getElementById("approveProjectHead").value = PROJECT_HEAD_BY_OBJECT[document.getElementById("objectName").value] || "";
 document.getElementById("executorCompany").addEventListener("input", checkContractorObjectMatch);
 
