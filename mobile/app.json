@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Асыл-Аманат",
+    "slug": "asyl-amanat-kms",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FDFBF7",
+    "scheme": "asylamanat",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Камера нужна, чтобы сканировать QR-код ребёнка для отметки посещаемости."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kg.asyl-amanat.kms",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Камера нужна, чтобы сканировать QR-код ребёнка для отметки посещаемости."
+      }
+    },
+    "android": {
+      "package": "kg.asylamanat.kms",
+      "adaptiveIcon": {
+        "backgroundColor": "#FDFBF7",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["CAMERA"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
