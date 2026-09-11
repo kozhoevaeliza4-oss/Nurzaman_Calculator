@@ -5,6 +5,7 @@ import { Badge, Card, LoadingView, ErrorView, LinkButton, SectionTitle } from '.
 import { colors, MEAL_LABELS, spacing } from '../../theme';
 import { fmtDateTime } from '../../utils/format';
 import { downloadAndShare } from '../../utils/download';
+import DocumentPreviewModal from '../../components/DocumentPreviewModal';
 
 interface Balance {
   charged: string;
@@ -47,6 +48,7 @@ export default function ParentDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<DocItem | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -88,6 +90,7 @@ export default function ParentDashboardScreen() {
   }
 
   return (
+    <>
     <FlatList
       style={styles.screen}
       contentContainerStyle={styles.content}
@@ -147,12 +150,15 @@ export default function ParentDashboardScreen() {
                   <Text style={[styles.rowText, styles.docName]} numberOfLines={1}>
                     {d.fileName}
                   </Text>
-                  <LinkButton
-                    title="Скачать"
-                    onPress={() =>
-                      downloadAndShare(`/documents/${d.id}/download`, d.fileName).catch(() => undefined)
-                    }
-                  />
+                  <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                    <LinkButton title="Просмотр" onPress={() => setPreviewDoc(d)} />
+                    <LinkButton
+                      title="Скачать"
+                      onPress={() =>
+                        downloadAndShare(`/documents/${d.id}/download`, d.fileName).catch(() => undefined)
+                      }
+                    />
+                  </View>
                 </View>
               ))
             ) : (
@@ -173,6 +179,13 @@ export default function ParentDashboardScreen() {
         );
       }}
     />
+    <DocumentPreviewModal
+      visible={!!previewDoc}
+      documentId={previewDoc?.id ?? null}
+      fileName={previewDoc?.fileName ?? ''}
+      onClose={() => setPreviewDoc(null)}
+    />
+    </>
   );
 }
 

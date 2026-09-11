@@ -6,6 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthedApi } from '../../hooks/useAuthedApi';
 import { downloadAndShare } from '../../utils/download';
+import DocumentPreviewModal from '../../components/DocumentPreviewModal';
 import {
   Badge,
   Card,
@@ -53,6 +54,7 @@ export default function ChildDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
 
   const canFinance = user ? FINANCE_ROLES.includes(user.role) : false;
   const canDocsView = user ? DOCS_VIEW_ROLES.includes(user.role) : false;
@@ -262,6 +264,7 @@ export default function ChildDetailScreen() {
                     <Text style={styles.rowMuted}>{DOCUMENT_TYPE_LABELS[d.type] ?? d.type}</Text>
                   </View>
                   <View style={styles.actionRow}>
+                    <LinkButton title="Просмотр" onPress={() => setPreviewDoc(d)} />
                     <LinkButton title="Скачать" onPress={() => downloadAndShare(`/documents/${d.id}/download`, d.fileName).catch(() => undefined)} />
                     {canDocsEdit && <LinkButton title="Удалить" danger onPress={() => deleteDocument(d.id)} />}
                   </View>
@@ -271,6 +274,12 @@ export default function ChildDetailScreen() {
           </Card>
         </View>
       )}
+      <DocumentPreviewModal
+        visible={!!previewDoc}
+        documentId={previewDoc?.id ?? null}
+        fileName={previewDoc?.fileName ?? ''}
+        onClose={() => setPreviewDoc(null)}
+      />
     </ScrollView>
   );
 }
