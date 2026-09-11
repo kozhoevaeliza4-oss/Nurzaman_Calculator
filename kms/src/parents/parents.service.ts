@@ -41,12 +41,20 @@ export class ParentsService {
     return this.parentsRepo.findOne({ where: { userId } });
   }
 
-  create(dto: CreateParentDto): Promise<Parent> {
+  async create(dto: CreateParentDto): Promise<Parent> {
+    if (dto.email) {
+      const existing = await this.parentsRepo.findOne({ where: { email: dto.email } });
+      if (existing) throw new ConflictException('A parent with this email already exists');
+    }
     return this.parentsRepo.save(this.parentsRepo.create(dto));
   }
 
   async update(id: string, dto: UpdateParentDto): Promise<Parent> {
     const parent = await this.findOne(id);
+    if (dto.email && dto.email !== parent.email) {
+      const existing = await this.parentsRepo.findOne({ where: { email: dto.email } });
+      if (existing) throw new ConflictException('A parent with this email already exists');
+    }
     Object.assign(parent, dto);
     return this.parentsRepo.save(parent);
   }

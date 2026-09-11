@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
@@ -64,7 +64,15 @@ export class ChildrenService {
     return child;
   }
 
-  create(dto: CreateChildDto): Promise<Child> {
+  async create(dto: CreateChildDto): Promise<Child> {
+    const duplicate = await this.repo.findOne({
+      where: { fullName: dto.fullName, dateOfBirth: dto.dateOfBirth },
+    });
+    if (duplicate) {
+      throw new ConflictException(
+        'A child with this full name and date of birth already exists',
+      );
+    }
     return this.repo.save(this.repo.create({ ...dto, qrCode: this.generateQrCode() }));
   }
 

@@ -28,11 +28,15 @@ export class GroupsController {
     private readonly auditService: AuditService,
   ) {}
 
+  // Groups carry capacity/teacher assignment info that isn't a parent's
+  // business — only staff roles get to list or look one up.
+  @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT, Role.TEACHER, Role.MEDIC)
   @Get()
   findAll() {
     return this.groupsService.findAll();
   }
 
+  @Roles(Role.DIRECTOR, Role.ADMIN, Role.ACCOUNTANT, Role.TEACHER, Role.MEDIC)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.groupsService.findOne(id);

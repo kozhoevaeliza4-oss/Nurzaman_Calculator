@@ -1,6 +1,7 @@
 export type StaffStackParamList = {
   MainTabs: undefined;
   ChildDetail: { childId: string };
+  EditChild: { childId: string };
   AddGroup: undefined;
   AddChild: undefined;
   AddParent: undefined;

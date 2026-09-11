@@ -4,6 +4,7 @@ import { StaffStackParamList } from './types';
 import { colors } from '../theme';
 import StaffTabs from './StaffTabs';
 import ChildDetailScreen from '../screens/staff/ChildDetailScreen';
+import EditChildScreen from '../screens/staff/EditChildScreen';
 import AddGroupScreen from '../screens/staff/AddGroupScreen';
 import AddChildScreen from '../screens/staff/AddChildScreen';
 import AddParentScreen from '../screens/staff/AddParentScreen';
@@ -23,6 +24,7 @@ export default function StaffNavigator() {
     <Stack.Navigator screenOptions={{ headerTintColor: colors.ink }}>
       <Stack.Screen name="MainTabs" component={StaffTabs} options={{ headerShown: false }} />
       <Stack.Screen name="ChildDetail" component={ChildDetailScreen} options={{ title: 'Карточка ребёнка' }} />
+      <Stack.Screen name="EditChild" component={EditChildScreen} options={{ presentation: 'modal', title: '' }} />
       <Stack.Screen name="AddGroup" component={AddGroupScreen} options={{ presentation: 'modal', title: '' }} />
       <Stack.Screen name="AddChild" component={AddChildScreen} options={{ presentation: 'modal', title: '' }} />
       <Stack.Screen name="AddParent" component={AddParentScreen} options={{ presentation: 'modal', title: '' }} />

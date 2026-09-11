@@ -72,6 +72,7 @@ const TABS = [
 const state = {
   tab: 'overview',
   childId: null,
+  childrenSearch: '',
 };
 
 const loginScreen = document.getElementById('login-screen');
@@ -184,7 +185,7 @@ function showToast(message) {
 // Renders `bodyHtml` inside a modal. Either pass `path` + `buildPayload` for
 // a single JSON POST, or `onSubmit(formData)` for anything more involved
 // (multiple requests, file uploads, etc.).
-function openModal({ title, bodyHtml, path, buildPayload, onSubmit, onDone, submitLabel = 'Сохранить' }) {
+function openModal({ title, bodyHtml, path, method = 'POST', buildPayload, onSubmit, onDone, submitLabel = 'Сохранить' }) {
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   backdrop.innerHTML = `
@@ -220,7 +221,7 @@ function openModal({ title, bodyHtml, path, buildPayload, onSubmit, onDone, subm
         await onSubmit(new FormData(form));
       } else {
         const payload = buildPayload(new FormData(form));
-        await api(path, { method: 'POST', body: JSON.stringify(payload) });
+        await api(path, { method, body: JSON.stringify(payload) });
       }
       close();
       showToast('Сохранено');
@@ -356,9 +357,10 @@ async function renderOverviewTab(user, root) {
   const monthStart = today.slice(0, 8) + '01';
 
   try {
+    const searchParam = state.childrenSearch ? `&search=${encodeURIComponent(state.childrenSearch)}` : '';
     const [summary, childrenPage, groups, parentsPage, forecast] = await Promise.all([
       canSeeDashboard ? api(`/dashboard/summary?from=${monthStart}&to=${today}`) : Promise.resolve(null),
-      api('/children?pageSize=50'),
+      api(`/children?pageSize=50${searchParam}`),
       api('/groups'),
       canManage ? api('/parents?pageSize=50') : Promise.resolve(null),
       user.role === 'director' ? api('/analytics/forecast?months=3').catch(() => null) : Promise.resolve(null),
@@ -447,17 +449,20 @@ async function renderOverviewTab(user, root) {
           <h2 class="section-title">Дети (${childrenPage.total})</h2>
           ${canManage ? '<button class="btn-small" data-action="add-child">+ Добавить ребёнка</button>' : ''}
         </div>
+        <div class="field" style="max-width:320px;margin-bottom:10px">
+          <input id="children-search" type="search" placeholder="Поиск по ФИО…" value="${escapeHtml(state.childrenSearch)}" />
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr><th>ФИО</th><th>Группа</th><th>Дата рождения</th><th>Статус</th><th>Аллергии</th></tr>
             </thead>
             <tbody>
-              ${rows || '<tr><td colspan="5" class="empty-note">Пока нет ни одного ребёнка</td></tr>'}
+              ${rows || `<tr><td colspan="5" class="empty-note">${state.childrenSearch ? 'Ничего не найдено' : 'Пока нет ни одного ребёнка'}</td></tr>`}
             </tbody>
           </table>
         </div>
-        <div class="hint-small" style="margin-top:8px">Нажмите на строку, чтобы открыть карточку ребёнка (оплаты, посещаемость, документы)</div>
+        <div class="hint-small" style="margin-top:8px">Нажмите на строку, чтобы открыть карточку ребёнка (оплаты, посещаемость, документы, редактирование)</div>
       </section>
     `;
 
@@ -501,6 +506,23 @@ async function renderOverviewTab(user, root) {
         state.childId = tr.dataset.childId;
         renderStaffShell(user);
       });
+    });
+
+    const searchInput = root.querySelector('#children-search');
+    searchInput?.addEventListener('input', () => {
+      clearTimeout(state._searchDebounce);
+      const value = searchInput.value;
+      const cursor = searchInput.selectionStart;
+      state._searchDebounce = setTimeout(() => {
+        state.childrenSearch = value;
+        renderOverviewTab(user, root).then(() => {
+          const refocused = root.querySelector('#children-search');
+          if (refocused) {
+            refocused.focus();
+            refocused.setSelectionRange(cursor, cursor);
+          }
+        });
+      }, 350);
     });
   } catch (err) {
     if (err.message !== 'unauthorized') {
@@ -577,6 +599,63 @@ function openAddChildModal(user, groups) {
       return payload;
     },
     onDone: () => renderStaffShell(user),
+  });
+}
+
+// Same fields as "new child", pre-filled and PUT instead of POST — also the
+// place a director marks a child as left/academic leave (archiving) without
+// losing their history, since the backend never hard-deletes via this path.
+function openEditChildModal(user, child, groups, onDone) {
+  const groupOptions = groups
+    .map((g) => `<option value="${g.id}" ${g.id === child.groupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`)
+    .join('');
+  const statusOptions = Object.entries(STATUS_LABELS)
+    .map(([v, l]) => `<option value="${v}" ${v === child.status ? 'selected' : ''}>${l}</option>`)
+    .join('');
+  openModal({
+    title: `Редактировать: ${child.fullName}`,
+    path: `/children/${child.id}`,
+    method: 'PUT',
+    submitLabel: 'Сохранить изменения',
+    bodyHtml: `
+      <div class="field">
+        <label>ФИО ребёнка</label>
+        <input name="fullName" required value="${escapeHtml(child.fullName)}" />
+      </div>
+      <div class="field">
+        <label>Дата рождения</label>
+        <input name="dateOfBirth" type="date" required value="${child.dateOfBirth}" />
+      </div>
+      <div class="field">
+        <label>Группа</label>
+        <select name="groupId">
+          <option value="">— без группы —</option>
+          ${groupOptions}
+        </select>
+      </div>
+      <div class="field">
+        <label>Статус</label>
+        <select name="status">${statusOptions}</select>
+        <div class="hint-small">«Выбыл» или «Академ. отпуск» — это архивирование без потери истории посещений и платежей</div>
+      </div>
+      <div class="field">
+        <label>Аллергии (через запятую)</label>
+        <input name="allergies" value="${escapeHtml((child.allergies || []).join(', '))}" placeholder="орехи, мёд" />
+      </div>
+    `,
+    buildPayload: (fd) => {
+      const allergiesRaw = fd.get('allergies').trim();
+      const payload = {
+        fullName: fd.get('fullName').trim(),
+        dateOfBirth: fd.get('dateOfBirth'),
+        status: fd.get('status'),
+        allergies: allergiesRaw ? allergiesRaw.split(',').map((a) => a.trim()).filter(Boolean) : [],
+      };
+      const groupId = fd.get('groupId');
+      payload.groupId = groupId || null;
+      return payload;
+    },
+    onDone,
   });
 }
 
@@ -713,12 +792,14 @@ async function renderChildDetail(user, root) {
     const canDocsEdit = DOCS_EDIT_ROLES.includes(user.role);
     const canAttendanceView = ATTENDANCE_VIEW_ROLES.includes(user.role);
     const canScan = ATTENDANCE_SCAN_ROLES.includes(user.role);
+    const canManage = user.role === 'director' || user.role === 'admin';
 
-    const [balance, history, attendance, documents] = await Promise.all([
+    const [balance, history, attendance, documents, groups] = await Promise.all([
       canFinance ? api(`/finance/children/${childId}/balance`) : Promise.resolve(null),
       canFinance ? api(`/finance/children/${childId}/history`) : Promise.resolve(null),
       canAttendanceView ? api(`/attendance/children/${childId}/history`) : Promise.resolve(null),
       canDocsView ? api(`/documents/children/${childId}`) : Promise.resolve(null),
+      canManage ? api('/groups') : Promise.resolve([]),
     ]);
 
     const allergyBadges = child.allergies.length
@@ -730,10 +811,13 @@ async function renderChildDetail(user, root) {
       <section>
         <div class="child-head">
           <div>
-            <h2 class="child-title">${escapeHtml(child.fullName)}</h2>
+            <h2 class="child-title">${escapeHtml(child.fullName)} <span class="badge status-${child.status}">${STATUS_LABELS[child.status] || child.status}</span></h2>
             <div class="hint-small">Дата рождения: ${fmtDate(child.dateOfBirth)} · Зачислен: ${fmtDate(child.enrollmentDate)}</div>
           </div>
-          <div>${allergyBadges}</div>
+          <div class="btn-row">
+            ${allergyBadges}
+            ${canManage ? '<button class="btn-small" data-action="edit-child">Редактировать</button>' : ''}
+          </div>
         </div>
       </section>
     `;
@@ -878,6 +962,10 @@ async function renderChildDetail(user, root) {
       state.childId = null;
       renderStaffShell(user);
     });
+
+    root.querySelector('[data-action="edit-child"]')?.addEventListener('click', () =>
+      openEditChildModal(user, child, groups, () => renderChildDetail(user, root)),
+    );
 
     root.querySelector('[data-action="add-charge"]')?.addEventListener('click', () => openAddChargeModal(user, child));
     root.querySelector('[data-action="add-payment"]')?.addEventListener('click', () => openAddPaymentModal(user, child));

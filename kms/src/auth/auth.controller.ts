@@ -7,6 +7,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser, AuthUser } from '../common/current-user.decorator';
 import { UsersService } from '../users/users.service';
+import { AuditService } from '../audit/audit.service';
 
 // Login and password changes get a much stricter rate limit than the
 // app-wide default — these are exactly the endpoints brute-force/
@@ -18,6 +19,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Throttle(AUTH_THROTTLE)
@@ -36,6 +38,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async changePassword(@Body() dto: ChangePasswordDto, @CurrentUser() user: AuthUser) {
     await this.usersService.changeOwnPassword(user.userId, dto.currentPassword, dto.newPassword);
+    await this.auditService.record(user, 'change-password', 'user', user.userId);
     return { success: true };
   }
 }

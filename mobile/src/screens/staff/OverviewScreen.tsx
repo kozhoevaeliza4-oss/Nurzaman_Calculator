@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthedApi } from '../../hooks/useAuthedApi';
-import { Badge, Card, EmptyNote, ErrorView, LoadingView, SecondaryButton, SectionTitle, StatTile } from '../../components/ui';
+import { Badge, Card, EmptyNote, ErrorView, Field, LoadingView, SecondaryButton, SectionTitle, StatTile } from '../../components/ui';
 import { ATTENDANCE_SCAN_ROLES, colors, spacing, STATUS_LABELS, CAN_MANAGE_ROLES } from '../../theme';
 import { StaffStackParamList } from '../../navigation/types';
 import { Child, DashboardSummary, Group, Paginated, Parent } from '../../types';
@@ -25,18 +25,30 @@ export default function OverviewScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const canManage = user ? CAN_MANAGE_ROLES.includes(user.role) : false;
   const canSeeDashboard = user?.role === 'director' || user?.role === 'admin';
+
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [search]);
 
   const load = useCallback(async () => {
     try {
       setError(null);
       const today = todayISO();
       const monthStart = monthStartISO();
+      const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : '';
       const [summaryRes, childrenRes, groupsRes, parentsRes] = await Promise.all([
         canSeeDashboard ? request<DashboardSummary>(`/dashboard/summary?from=${monthStart}&to=${today}`) : Promise.resolve(null),
-        request<Paginated<Child>>('/children?pageSize=50'),
+        request<Paginated<Child>>(`/children?pageSize=50${searchParam}`),
         request<Group[]>('/groups'),
         canManage ? request<Paginated<Parent>>('/parents?pageSize=50') : Promise.resolve(null),
       ]);
@@ -51,7 +63,7 @@ export default function OverviewScreen() {
       setRefreshing(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canManage, canSeeDashboard]);
+  }, [canManage, canSeeDashboard, debouncedSearch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -124,9 +136,12 @@ export default function OverviewScreen() {
         >
           {`Дети (${children.length})`}
         </SectionTitle>
+        <View style={{ marginBottom: spacing.sm }}>
+          <Field label="Поиск" value={search} onChangeText={setSearch} placeholder="ФИО ребёнка…" />
+        </View>
         <Card>
           {children.length === 0 ? (
-            <EmptyNote>Пока нет ни одного ребёнка</EmptyNote>
+            <EmptyNote>{debouncedSearch ? 'Ничего не найдено' : 'Пока нет ни одного ребёнка'}</EmptyNote>
           ) : (
             children.map((c, i) => (
               <Pressable

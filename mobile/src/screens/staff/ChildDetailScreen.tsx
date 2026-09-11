@@ -21,6 +21,7 @@ import {
 import {
   ATTENDANCE_SCAN_ROLES,
   ATTENDANCE_VIEW_ROLES,
+  CAN_MANAGE_ROLES,
   CHARGE_TYPE_LABELS,
   colors,
   DOCS_EDIT_ROLES,
@@ -61,6 +62,7 @@ export default function ChildDetailScreen() {
   const canDocsEdit = user ? DOCS_EDIT_ROLES.includes(user.role) : false;
   const canAttendanceView = user ? ATTENDANCE_VIEW_ROLES.includes(user.role) : false;
   const canScan = user ? ATTENDANCE_SCAN_ROLES.includes(user.role) : false;
+  const canManage = user ? CAN_MANAGE_ROLES.includes(user.role) : false;
 
   const load = useCallback(async () => {
     try {
@@ -160,7 +162,12 @@ export default function ChildDetailScreen() {
             Рождение: {fmtDate(child.dateOfBirth)} · Зачислен: {fmtDate(child.enrollmentDate)}
           </Text>
         </View>
-        <Badge tone={child.status === 'active' ? 'success' : 'default'}>{STATUS_LABELS[child.status] ?? child.status}</Badge>
+        <View style={styles.headActions}>
+          <Badge tone={child.status === 'active' ? 'success' : 'default'}>{STATUS_LABELS[child.status] ?? child.status}</Badge>
+          {canManage && (
+            <SecondaryButton small title="Редактировать" onPress={() => navigation.navigate('EditChild', { childId })} />
+          )}
+        </View>
       </View>
       {child.allergies.length > 0 && (
         <View style={styles.allergyRow}>
@@ -288,6 +295,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginBottom: 6 },
+  headActions: { alignItems: 'flex-end', gap: 6 },
   name: { fontSize: 19, fontWeight: '800', color: colors.ink },
   subtitle: { fontSize: 12, color: colors.inkMuted, marginTop: 3 },
   allergyRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.md },
