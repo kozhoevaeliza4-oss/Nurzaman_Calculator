@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Асыл-Аманат",
+    "slug": "asyl-amanat-kms",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FDFBF7",
+    "scheme": "asylamanat",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kg.asylamanat.kms",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Нужно для прикрепления фото документов ребёнка.",
+        "NSCameraUsageDescription": "Нужно для съёмки фото документов ребёнка."
+      }
+    },
+    "android": {
+      "package": "kg.asylamanat.kms",
+      "adaptiveIcon": {
+        "backgroundColor": "#FDFBF7",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FDFBF7"
+        }
+      ]
+    ]
+  }
+}
