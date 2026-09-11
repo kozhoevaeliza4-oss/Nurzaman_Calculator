@@ -5,7 +5,6 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthedApi } from '../../hooks/useAuthedApi';
-import { API_BASE_URL, getToken } from '../../api';
 import { downloadAndShare } from '../../utils/download';
 import {
   Badge,
@@ -114,14 +113,12 @@ export default function ChildDetailScreen() {
     const file = result.assets[0];
     setUploading(true);
     try {
-      const token = await getToken();
+      // RN's New Architecture FormData no longer accepts the classic
+      // {uri, name, type} object for a file part - it needs a real Blob.
+      const blob = await (await fetch(file.uri)).blob();
       const form = new FormData();
       form.append('type', 'other');
-      form.append('file', {
-        uri: file.uri,
-        name: file.name ?? 'document',
-        type: file.mimeType ?? 'application/octet-stream',
-      } as unknown as Blob);
+      form.append('file', blob, file.name ?? 'document');
       await upload(`/documents/children/${childId}`, form);
       load();
     } catch (err) {
