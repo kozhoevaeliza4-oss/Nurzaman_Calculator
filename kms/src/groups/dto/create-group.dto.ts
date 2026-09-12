@@ -1,4 +1,5 @@
-import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { Direction } from '../../common/direction.enum';
 
 export class CreateGroupDto {
   @IsString()
@@ -11,4 +12,16 @@ export class CreateGroupDto {
   @IsOptional()
   @IsUUID()
   teacherId?: string;
+
+  @IsOptional()
+  @IsEnum(Direction)
+  direction?: Direction;
+
+  @IsOptional()
+  @IsInt()
+  parallel?: number;
+
+  @IsOptional()
+  @IsString()
+  letter?: string;
 }

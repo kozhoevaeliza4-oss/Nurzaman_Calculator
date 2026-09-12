@@ -5,6 +5,8 @@ import { Charge } from './charge.entity';
 import { Payment } from './payment.entity';
 import { ChildrenService } from '../children/children.service';
 import { ChildStatus } from '../children/child.entity';
+import { Direction } from '../common/direction.enum';
+import { QueryChildrenDto } from '../children/dto/query-children.dto';
 
 export interface Balance {
   charged: string;
@@ -42,8 +44,11 @@ export class BalancesService {
     return { charged: charged.toFixed(2), paid: paid.toFixed(2), debt: (charged - paid).toFixed(2) };
   }
 
-  async listDebtors(): Promise<Array<{ childId: string; fullName: string } & Balance>> {
-    const activeChildren = await this.childrenService.findAll({ status: ChildStatus.ACTIVE });
+  async listDebtors(direction?: Direction): Promise<Array<{ childId: string; fullName: string } & Balance>> {
+    const activeChildren = await this.childrenService.findAll({
+      status: ChildStatus.ACTIVE,
+      direction,
+    } as QueryChildrenDto);
     const debtors: Array<{ childId: string; fullName: string } & Balance> = [];
 
     for (const child of activeChildren) {

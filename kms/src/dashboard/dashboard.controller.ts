@@ -4,6 +4,8 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles.enum';
+import { CurrentUser, AuthUser } from '../common/current-user.decorator';
+import { effectiveDirections } from '../common/direction-scope';
 import { DashboardService } from './dashboard.service';
 import { QueryDashboardDto } from './dto/query-dashboard.dto';
 
@@ -15,7 +17,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('summary')
-  summary(@Query() query: QueryDashboardDto) {
-    return this.dashboardService.summary(query.from, query.to);
+  summary(@Query() query: QueryDashboardDto, @CurrentUser() user: AuthUser) {
+    return this.dashboardService.summary(query.from, query.to, effectiveDirections(user));
   }
 }

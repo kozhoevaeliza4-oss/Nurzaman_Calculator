@@ -1,5 +1,6 @@
 import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ChildStatus, ContractStatus } from '../child.entity';
+import { Direction } from '../../common/direction.enum';
 
 export class CreateChildDto {
   @IsString()
@@ -31,4 +32,12 @@ export class CreateChildDto {
   @IsArray()
   @IsString({ each: true })
   allergies?: string[];
+
+  @IsOptional()
+  @IsEnum(Direction)
+  direction?: Direction;
+
+  @IsOptional()
+  @IsUUID()
+  linkedRecordId?: string;
 }

@@ -1,6 +1,7 @@
 import { Column, Entity, Index } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { Role } from '../common/roles.enum';
+import { Direction } from '../common/direction.enum';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -24,4 +25,12 @@ export class User extends BaseEntity {
   // only meaningful for the "teacher" role.
   @Column({ name: 'group_id', type: 'uuid', nullable: true })
   groupId: string | null;
+
+  // ТЗ v3.0 раздел 2: null = доступ к обоим направлениям (директор,
+  // бухгалтер, медработник). Для admin - ограничение по назначению.
+  // Для teacher/deputy_head/homeroom_teacher/subject_teacher значение
+  // всегда выводится из роли (см. FIXED_DIRECTION_ROLES), это поле для
+  // них не используется.
+  @Column({ type: 'enum', enum: Direction, nullable: true })
+  direction: Direction | null;
 }

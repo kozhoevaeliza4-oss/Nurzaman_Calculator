@@ -5,6 +5,7 @@ export interface AuthUser {
   email: string;
   role: string;
   groupId?: string | null;
+  direction?: string | null;
 }
 
 export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionContext): AuthUser => {

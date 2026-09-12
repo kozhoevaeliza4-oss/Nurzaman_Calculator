@@ -24,6 +24,11 @@ import { OneCModule } from './onec/onec.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { HealthModule } from './health/health.module';
+import { SubjectsModule } from './subjects/subjects.module';
+import { GradesModule } from './grades/grades.module';
+import { ScheduleModule } from './schedule/schedule.module';
+import { HomeworkModule } from './homework/homework.module';
+import { PeriodsModule } from './periods/periods.module';
 import { RequestLoggingMiddleware } from './common/request-logging.middleware';
 
 @Module({
@@ -55,6 +60,11 @@ import { RequestLoggingMiddleware } from './common/request-logging.middleware';
         '/analytics*',
         '/health*',
         '/docs*',
+        '/subjects*',
+        '/grades*',
+        '/schedule*',
+        '/homework*',
+        '/periods*',
       ],
     }),
     // Default rate limit for every endpoint; auth applies a stricter
@@ -90,6 +100,11 @@ import { RequestLoggingMiddleware } from './common/request-logging.middleware';
     AssistantModule,
     AnalyticsModule,
     HealthModule,
+    SubjectsModule,
+    GradesModule,
+    ScheduleModule,
+    HomeworkModule,
+    PeriodsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

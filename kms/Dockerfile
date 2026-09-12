@@ -17,6 +17,9 @@ COPY --from=build /app/dist ./dist
 # Plain static files (frontend/) — served at runtime via
 # @nestjs/serve-static from process.cwd(), not compiled into dist/.
 COPY frontend ./frontend
+# Bundled Cyrillic TTF font for server-side PDF generation (module 20
+# transcript export) — read from process.cwd() at runtime, not bundled by tsc.
+COPY assets ./assets
 # Runs migrations (and, if DIRECTOR_EMAIL/DIRECTOR_PASSWORD are set, seeds
 # the first director account) before starting — needed on platforms with
 # no shell/SSH access to run these as separate one-off commands.

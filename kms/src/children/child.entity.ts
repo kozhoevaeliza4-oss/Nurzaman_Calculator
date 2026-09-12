@@ -1,6 +1,7 @@
 import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../common/base.entity';
 import { Group } from '../groups/group.entity';
+import { Direction } from '../common/direction.enum';
 
 export enum ChildStatus {
   ACTIVE = 'active',
@@ -52,4 +53,19 @@ export class Child extends BaseEntity {
   @Index({ unique: true })
   @Column({ name: 'qr_code' })
   qrCode: string;
+
+  // ТЗ v3.0 раздел 1.2: направление, к которому относится карточка -
+  // "ребёнок" (kids) или "ученик" (school). Данные между направлениями
+  // не смешиваются.
+  @Index()
+  @Column({ type: 'enum', enum: Direction, default: Direction.KIDS })
+  direction: Direction;
+
+  // Резерв на будущее (открытый вопрос ТЗ v3.0 раздел 1.2): необязательная
+  // связь с карточкой того же человека в другом направлении, если/когда
+  // появится процесс перевода Кидс -> Школа. Сам перевод не реализован -
+  // это только поле в модели данных, чтобы не мигрировать данные задним
+  // числом.
+  @Column({ name: 'linked_record_id', type: 'uuid', nullable: true })
+  linkedRecordId: string | null;
 }

@@ -1,21 +1,31 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Group } from './group.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { Direction } from '../common/direction.enum';
 
 @Injectable()
 export class GroupsService {
   constructor(@InjectRepository(Group) private readonly repo: Repository<Group>) {}
 
-  findAll(): Promise<Group[]> {
-    return this.repo.find({ order: { name: 'ASC' } });
+  // `allowed` is the caller's effective directions (null = both, from
+  // common/direction-scope.ts); `requested` narrows further within that
+  // when the caller asked for one direction via a query param.
+  findAll(allowed: Direction[] | null, requested?: Direction): Promise<Group[]> {
+    const dirs = requested ? [requested] : allowed;
+    return this.repo.find({
+      where: dirs ? { direction: In(dirs) } : {},
+      order: { name: 'ASC' },
+    });
   }
 
-  async findOne(id: string): Promise<Group> {
+  async findOne(id: string, allowed?: Direction[] | null): Promise<Group> {
     const group = await this.repo.findOne({ where: { id } });
-    if (!group) throw new NotFoundException('Group not found');
+    if (!group || (allowed && !allowed.includes(group.direction))) {
+      throw new NotFoundException('Group not found');
+    }
     return group;
   }
 

@@ -7,6 +7,7 @@ import { ExpenseFact } from './expense-fact.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { SetPlanDto } from './dto/set-plan.dto';
 import { CreateFactDto } from './dto/create-fact.dto';
+import { Direction } from '../common/direction.enum';
 
 export interface PlanVsFactRow {
   categoryId: string;
@@ -85,12 +86,18 @@ export class ExpensesService {
 
   // Module 8: "Расходы ... в реальном времени." — total actual spend in
   // [from, to] across every category.
-  async totalActualForRange(from: string, to: string): Promise<string> {
-    const row = await this.factsRepo
+  async totalActualForRange(from: string, to: string, direction?: Direction): Promise<string> {
+    const qb = this.factsRepo
       .createQueryBuilder('f')
       .select('COALESCE(SUM(f.amount), 0)', 'sum')
-      .where('f.spent_at >= :from AND f.spent_at <= :to', { from, to })
-      .getRawOne<{ sum: string }>();
+      .where('f.spent_at >= :from AND f.spent_at <= :to', { from, to });
+    if (direction) {
+      qb.innerJoin('expense_categories', 'cat', 'cat.id = f.category_id').andWhere(
+        '(cat.direction = :direction OR cat.direction IS NULL)',
+        { direction },
+      );
+    }
+    const row = await qb.getRawOne<{ sum: string }>();
     return Number(row?.sum ?? 0).toFixed(2);
   }
 }

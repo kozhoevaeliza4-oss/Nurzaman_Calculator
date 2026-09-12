@@ -5,6 +5,16 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FIXED_DIRECTION_ROLES, Role } from '../common/roles.enum';
+import { Direction } from '../common/direction.enum';
+
+// A fixed-direction role's `direction` is always derived from the role,
+// never from client input - so a request can't sneak a Школа teacher
+// into Кидс data by passing a mismatched direction field.
+function resolveDirection(role: Role, requested?: Direction | null): Direction | null {
+  const fixed = FIXED_DIRECTION_ROLES[role];
+  return fixed ? (fixed as Direction) : requested ?? null;
+}
 
 @Injectable()
 export class UsersService {
@@ -49,6 +59,7 @@ export class UsersService {
         role: dto.role,
         groupId: dto.groupId ?? null,
         active: dto.active ?? true,
+        direction: resolveDirection(dto.role, dto.direction),
       }),
     );
   }
@@ -56,6 +67,7 @@ export class UsersService {
   async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
     Object.assign(user, dto);
+    user.direction = resolveDirection(user.role, dto.direction ?? user.direction);
     return this.repo.save(user);
   }
 

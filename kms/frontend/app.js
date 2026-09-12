@@ -10,9 +10,21 @@ const ROLE_LABELS = {
   teacher: 'Воспитатель',
   medic: 'Медработник',
   parent: 'Родитель',
+  deputy_head: 'Завуч',
+  homeroom_teacher: 'Классный руководитель',
+  subject_teacher: 'Учитель-предметник',
 };
 
-const STAFF_ROLES = ['director', 'admin', 'accountant', 'teacher', 'medic'];
+const STAFF_ROLES = [
+  'director',
+  'admin',
+  'accountant',
+  'teacher',
+  'medic',
+  'deputy_head',
+  'homeroom_teacher',
+  'subject_teacher',
+];
 const FINANCE_ROLES = ['director', 'admin', 'accountant'];
 const DOCS_VIEW_ROLES = ['director', 'admin', 'teacher', 'medic'];
 const DOCS_EDIT_ROLES = ['director', 'admin'];
@@ -22,6 +34,9 @@ const MENU_EDIT_ROLES = ['director', 'admin', 'medic'];
 const EXPENSES_ROLES = ['director', 'admin', 'accountant'];
 const REPORTS_ROLES = ['director', 'admin', 'accountant'];
 const BROADCAST_ROLES = ['director', 'admin'];
+const SCHOOL_STAFF_ROLES = ['director', 'admin', 'deputy_head', 'homeroom_teacher', 'subject_teacher'];
+const SCHOOL_MANAGER_ROLES = ['director', 'admin', 'deputy_head'];
+const DIRECTION_LABELS = { kids: 'Кидс', school: 'Школа' };
 
 const STATUS_LABELS = {
   active: 'Активен',
@@ -63,6 +78,7 @@ const RELATION_LABELS = {
 
 const TABS = [
   { id: 'overview', label: 'Обзор' },
+  { id: 'school', label: 'Школа', roles: SCHOOL_STAFF_ROLES },
   { id: 'menu', label: 'Меню' },
   { id: 'expenses', label: 'Расходы', roles: EXPENSES_ROLES },
   { id: 'reports', label: 'Отчёты', roles: REPORTS_ROLES },
@@ -73,6 +89,9 @@ const state = {
   tab: 'overview',
   childId: null,
   childrenSearch: '',
+  // '' = сводно (оба направления), 'kids', 'school' — only meaningful for
+  // director/admin/accountant/medic, who span both.
+  direction: '',
 };
 
 const loginScreen = document.getElementById('login-screen');
@@ -339,7 +358,8 @@ function renderStaffShell(user) {
     renderChildDetail(user, tabContent);
     return;
   }
-  if (state.tab === 'menu') renderMenuTab(user, tabContent);
+  if (state.tab === 'school') renderSchoolTab(user, tabContent);
+  else if (state.tab === 'menu') renderMenuTab(user, tabContent);
   else if (state.tab === 'expenses') renderExpensesTab(user, tabContent);
   else if (state.tab === 'reports') renderReportsTab(user, tabContent);
   else if (state.tab === 'notifications') renderNotificationsTab(user, tabContent);
@@ -353,25 +373,71 @@ async function renderOverviewTab(user, root) {
 
   const canSeeDashboard = user.role === 'director' || user.role === 'admin';
   const canManage = user.role === 'director' || user.role === 'admin';
+  const canSwitchDirection = ['director', 'admin', 'accountant', 'medic'].includes(user.role);
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = today.slice(0, 8) + '01';
 
   try {
     const searchParam = state.childrenSearch ? `&search=${encodeURIComponent(state.childrenSearch)}` : '';
+    const dirParam = state.direction ? `&direction=${state.direction}` : '';
     const [summary, childrenPage, groups, parentsPage, forecast] = await Promise.all([
       canSeeDashboard ? api(`/dashboard/summary?from=${monthStart}&to=${today}`) : Promise.resolve(null),
-      api(`/children?pageSize=50${searchParam}`),
-      api('/groups'),
+      api(`/children?pageSize=50${searchParam}${dirParam}`),
+      api(`/groups${state.direction ? `?direction=${state.direction}` : ''}`),
       canManage ? api('/parents?pageSize=50') : Promise.resolve(null),
       user.role === 'director' ? api('/analytics/forecast?months=3').catch(() => null) : Promise.resolve(null),
     ]);
 
+    const isSchoolView = state.direction === 'school';
+    const groupWord = isSchoolView ? 'Классы' : 'Группы';
+    const childWord = isSchoolView ? 'Ученики' : 'Дети';
+    const childWordOne = isSchoolView ? 'ученика' : 'ребёнка';
+
+    const directionSwitcherHtml = canSwitchDirection
+      ? `
+        <div class="btn-row" style="margin-bottom:12px">
+          ${['', 'kids', 'school']
+            .map(
+              (d) => `
+                <button class="btn-small ${state.direction === d ? '' : 'secondary'}" data-action="switch-direction" data-direction="${d}">
+                  ${d ? DIRECTION_LABELS[d] : 'Сводно'}
+                </button>
+              `,
+            )
+            .join('')}
+        </div>
+      `
+      : '';
+
     const groupNameById = new Map(groups.map((g) => [g.id, g.name]));
+
+    const byDirectionHtml =
+      summary && summary.byDirection
+        ? `
+          <div class="two-col" style="margin-top:10px">
+            ${['kids', 'school']
+              .map((d) => {
+                const s = summary.byDirection[d];
+                return `
+                  <div>
+                    <h4 class="mini-title">${DIRECTION_LABELS[d]}</h4>
+                    <div class="stats">
+                      <div class="stat"><div class="n mono">${s.income} сом</div><div class="l">Доходы</div></div>
+                      <div class="stat"><div class="n mono">${s.debt.total} сом</div><div class="l">Задолженность</div></div>
+                      <div class="stat"><div class="n mono">${s.attendance.present}/${s.attendance.total}</div><div class="l">Присутствует</div></div>
+                    </div>
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        `
+        : '';
 
     const statsHtml = summary
       ? `
         <section>
-          <h2 class="section-title">Сводка за месяц</h2>
+          <h2 class="section-title">Сводка за месяц${summary.byDirection ? ' (суммарно)' : ''}</h2>
           <div class="stats">
             <div class="stat"><div class="n mono">${summary.income} сом</div><div class="l">Доходы</div></div>
             <div class="stat"><div class="n mono">${summary.expenses} сом</div><div class="l">Расходы</div></div>
@@ -380,6 +446,7 @@ async function renderOverviewTab(user, root) {
             <div class="stat"><div class="n mono">${summary.attendance.present}/${summary.attendance.total}</div><div class="l">Присутствует сегодня</div></div>
             <div class="stat"><div class="n mono">${summary.freeSpots.reduce((s, g) => s + g.freeSpots, 0)}</div><div class="l">Свободных мест всего</div></div>
           </div>
+          ${byDirectionHtml}
         </section>
       `
       : '';
@@ -411,7 +478,10 @@ async function renderOverviewTab(user, root) {
       .join('');
 
     const groupRows = groups
-      .map((g) => `<tr><td>${escapeHtml(g.name)}</td><td>${g.capacity}</td></tr>`)
+      .map(
+        (g) =>
+          `<tr><td>${escapeHtml(g.name)}</td><td>${g.capacity}</td><td>${DIRECTION_LABELS[g.direction] || g.direction}</td></tr>`,
+      )
       .join('');
 
     const parentRows = parentsPage
@@ -431,13 +501,13 @@ async function renderOverviewTab(user, root) {
     const groupsHtml = `
       <section>
         <div class="section-header">
-          <h2 class="section-title">Группы (${groups.length})</h2>
-          ${canManage ? '<button class="btn-small" data-action="add-group">+ Добавить группу</button>' : ''}
+          <h2 class="section-title">${groupWord} (${groups.length})</h2>
+          ${canManage ? `<button class="btn-small" data-action="add-group">+ Добавить ${isSchoolView ? 'класс' : 'группу'}</button>` : ''}
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Название</th><th>Вместимость</th></tr></thead>
-            <tbody>${groupRows || '<tr><td colspan="2" class="empty-note">Групп пока нет</td></tr>'}</tbody>
+            <thead><tr><th>Название</th><th>Вместимость</th><th>Направление</th></tr></thead>
+            <tbody>${groupRows || `<tr><td colspan="3" class="empty-note">Пока пусто</td></tr>`}</tbody>
           </table>
         </div>
       </section>
@@ -446,8 +516,8 @@ async function renderOverviewTab(user, root) {
     const childrenHtml = `
       <section>
         <div class="section-header">
-          <h2 class="section-title">Дети (${childrenPage.total})</h2>
-          ${canManage ? '<button class="btn-small" data-action="add-child">+ Добавить ребёнка</button>' : ''}
+          <h2 class="section-title">${childWord} (${childrenPage.total})</h2>
+          ${canManage ? `<button class="btn-small" data-action="add-child">+ Добавить ${childWordOne}</button>` : ''}
         </div>
         <div class="field" style="max-width:320px;margin-bottom:10px">
           <input id="children-search" type="search" placeholder="Поиск по ФИО…" value="${escapeHtml(state.childrenSearch)}" />
@@ -455,14 +525,14 @@ async function renderOverviewTab(user, root) {
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>ФИО</th><th>Группа</th><th>Дата рождения</th><th>Статус</th><th>Аллергии</th></tr>
+              <tr><th>ФИО</th><th>${isSchoolView ? 'Класс' : 'Группа'}</th><th>Дата рождения</th><th>Статус</th><th>Аллергии</th></tr>
             </thead>
             <tbody>
-              ${rows || `<tr><td colspan="5" class="empty-note">${state.childrenSearch ? 'Ничего не найдено' : 'Пока нет ни одного ребёнка'}</td></tr>`}
+              ${rows || `<tr><td colspan="5" class="empty-note">${state.childrenSearch ? 'Ничего не найдено' : 'Пока пусто'}</td></tr>`}
             </tbody>
           </table>
         </div>
-        <div class="hint-small" style="margin-top:8px">Нажмите на строку, чтобы открыть карточку ребёнка (оплаты, посещаемость, документы, редактирование)</div>
+        <div class="hint-small" style="margin-top:8px">Нажмите на строку, чтобы открыть карточку (оплаты, посещаемость, документы, редактирование)</div>
       </section>
     `;
 
@@ -495,10 +565,16 @@ async function renderOverviewTab(user, root) {
       `
       : '';
 
-    root.innerHTML = `${statsHtml}${forecastHtml}${groupsHtml}${childrenHtml}${parentsHtml}${staffHtml}`;
+    root.innerHTML = `${directionSwitcherHtml}${statsHtml}${forecastHtml}${groupsHtml}${childrenHtml}${parentsHtml}${staffHtml}`;
 
-    root.querySelector('[data-action="add-group"]')?.addEventListener('click', () => openAddGroupModal(user));
-    root.querySelector('[data-action="add-child"]')?.addEventListener('click', () => openAddChildModal(user, groups));
+    root.querySelectorAll('[data-action="switch-direction"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.direction = btn.dataset.direction;
+        renderOverviewTab(user, root);
+      });
+    });
+    root.querySelector('[data-action="add-group"]')?.addEventListener('click', () => openAddGroupModal(user, state.direction));
+    root.querySelector('[data-action="add-child"]')?.addEventListener('click', () => openAddChildModal(user, groups, state.direction));
     root.querySelector('[data-action="add-parent"]')?.addEventListener('click', () => openAddParentModal(user, childrenPage.items));
     root.querySelector('[data-action="add-staff"]')?.addEventListener('click', () => openAddStaffModal(user, groups));
     root.querySelectorAll('tr[data-child-id]').forEach((tr) => {
@@ -531,38 +607,60 @@ async function renderOverviewTab(user, root) {
   }
 }
 
-function openAddGroupModal(user) {
+function openAddGroupModal(user, direction) {
+  const isSchool = direction === 'school';
   openModal({
-    title: 'Новая группа',
+    title: isSchool ? 'Новый класс' : 'Новая группа',
     path: '/groups',
-    submitLabel: 'Создать группу',
+    submitLabel: isSchool ? 'Создать класс' : 'Создать группу',
     bodyHtml: `
       <div class="field">
-        <label>Название группы</label>
-        <input name="name" required placeholder="Например: Ромашка" />
+        <label>Название</label>
+        <input name="name" required placeholder="${isSchool ? 'Например: 5А' : 'Например: Ромашка'}" />
       </div>
       <div class="field">
         <label>Вместимость (мест)</label>
         <input name="capacity" type="number" min="1" required placeholder="20" />
       </div>
+      <div class="field">
+        <label>Направление</label>
+        <select name="direction">
+          <option value="kids" ${!isSchool ? 'selected' : ''}>Кидс</option>
+          <option value="school" ${isSchool ? 'selected' : ''}>Школа</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Параллель (только для класса)</label>
+        <input name="parallel" type="number" min="1" placeholder="5" />
+      </div>
+      <div class="field">
+        <label>Литера (только для класса)</label>
+        <input name="letter" placeholder="А" />
+      </div>
     `,
-    buildPayload: (fd) => ({
-      name: fd.get('name').trim(),
-      capacity: Number(fd.get('capacity')),
-    }),
+    buildPayload: (fd) => {
+      const payload = { name: fd.get('name').trim(), capacity: Number(fd.get('capacity')), direction: fd.get('direction') };
+      const parallel = fd.get('parallel');
+      if (parallel) payload.parallel = Number(parallel);
+      const letter = fd.get('letter').trim();
+      if (letter) payload.letter = letter;
+      return payload;
+    },
     onDone: () => renderStaffShell(user),
   });
 }
 
-function openAddChildModal(user, groups) {
-  const groupOptions = groups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+function openAddChildModal(user, groups, direction) {
+  const isSchool = direction === 'school';
+  const relevantGroups = direction ? groups.filter((g) => g.direction === direction) : groups;
+  const groupOptions = relevantGroups.map((g) => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
   openModal({
-    title: 'Новый ребёнок',
+    title: isSchool ? 'Новый ученик' : 'Новый ребёнок',
     path: '/children',
-    submitLabel: 'Добавить ребёнка',
+    submitLabel: isSchool ? 'Добавить ученика' : 'Добавить ребёнка',
     bodyHtml: `
       <div class="field">
-        <label>ФИО ребёнка</label>
+        <label>ФИО</label>
         <input name="fullName" required placeholder="Иванов Алихан Бекович" />
       </div>
       <div class="field">
@@ -574,7 +672,14 @@ function openAddChildModal(user, groups) {
         <input name="enrollmentDate" type="date" required value="${new Date().toISOString().slice(0, 10)}" />
       </div>
       <div class="field">
-        <label>Группа</label>
+        <label>Направление</label>
+        <select name="direction">
+          <option value="kids" ${!isSchool ? 'selected' : ''}>Кидс</option>
+          <option value="school" ${isSchool ? 'selected' : ''}>Школа</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>${isSchool ? 'Класс' : 'Группа'}</label>
         <select name="groupId">
           <option value="">— без группы —</option>
           ${groupOptions}
@@ -592,6 +697,7 @@ function openAddChildModal(user, groups) {
         fullName: fd.get('fullName').trim(),
         dateOfBirth: fd.get('dateOfBirth'),
         enrollmentDate: fd.get('enrollmentDate'),
+        direction: fd.get('direction'),
         allergies: allergiesRaw ? allergiesRaw.split(',').map((a) => a.trim()).filter(Boolean) : [],
       };
       const groupId = fd.get('groupId');
@@ -607,6 +713,7 @@ function openAddChildModal(user, groups) {
 // losing their history, since the backend never hard-deletes via this path.
 function openEditChildModal(user, child, groups, onDone) {
   const groupOptions = groups
+    .filter((g) => g.direction === child.direction)
     .map((g) => `<option value="${g.id}" ${g.id === child.groupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`)
     .join('');
   const statusOptions = Object.entries(STATUS_LABELS)
@@ -1384,6 +1491,428 @@ async function renderReportsTab(user, root) {
       if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
     }
   });
+}
+
+// ---------- School tab (modules 16-20) ----------
+
+const schoolState = { classId: '', subjectId: '', periodId: '' };
+
+async function renderSchoolTab(user, root) {
+  root.innerHTML = '<div class="loading">Загрузка…</div>';
+  const canManage = SCHOOL_MANAGER_ROLES.includes(user.role);
+
+  try {
+    const [classes, subjects, periods, staffList] = await Promise.all([
+      api('/groups?direction=school'),
+      api('/subjects'),
+      api('/periods'),
+      canManage ? api('/users').catch(() => []) : Promise.resolve([]),
+    ]);
+
+    if (!schoolState.classId && classes.length) schoolState.classId = classes[0].id;
+    if (!schoolState.subjectId && subjects.length) schoolState.subjectId = subjects[0].id;
+    if (!schoolState.periodId && periods.length) schoolState.periodId = periods[0].id;
+
+    const classOptions = classes.map((c) => `<option value="${c.id}" ${c.id === schoolState.classId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('');
+    const subjectOptions = subjects.map((s) => `<option value="${s.id}" ${s.id === schoolState.subjectId ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+    const periodOptions = periods.map((p) => `<option value="${p.id}" ${p.id === schoolState.periodId ? 'selected' : ''}>${escapeHtml(p.name)} (${escapeHtml(p.academicYear)})</option>`).join('');
+    const teacherOptions = staffList
+      .filter((s) => s.role === 'subject_teacher' || s.role === 'homeroom_teacher')
+      .map((s) => `<option value="${s.id}">${escapeHtml(s.fullName)}</option>`)
+      .join('');
+
+    if (classes.length === 0) {
+      root.innerHTML = `
+        <section>
+          <h2 class="section-title">Школа</h2>
+          <div class="empty-note">Сначала создайте класс на вкладке «Обзор» (переключитесь на направление «Школа» и нажмите «+ Добавить класс»).</div>
+        </section>
+      `;
+      return;
+    }
+
+    const [roster, classSubjects, schedule, homeworkList] = await Promise.all([
+      api(`/children?groupId=${schoolState.classId}&pageSize=100`),
+      api(`/subjects/classes/${schoolState.classId}`),
+      api(`/schedule/class/${schoolState.classId}`),
+      schoolState.subjectId ? api(`/homework/class/${schoolState.classId}?subjectId=${schoolState.subjectId}`) : Promise.resolve([]),
+    ]);
+
+    const grades = schoolState.subjectId
+      ? await api(`/grades/class/${schoolState.classId}?subjectId=${schoolState.subjectId}`)
+      : [];
+
+    const studentNameById = new Map(roster.items.map((c) => [c.id, c.fullName]));
+    const subjectNameById = new Map(subjects.map((s) => [s.id, s.name]));
+
+    const classPickerHtml = `
+      <section>
+        <h2 class="section-title">Школа</h2>
+        <div class="two-col">
+          <div class="field">
+            <label>Класс</label>
+            <select id="school-class-select">${classOptions}</select>
+          </div>
+          <div class="field">
+            <label>Предмет</label>
+            <select id="school-subject-select">
+              <option value="">— выберите предмет —</option>
+              ${subjectOptions}
+            </select>
+          </div>
+        </div>
+      </section>
+    `;
+
+    const subjectsHtml = `
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Предметы (${subjects.length})</h2>
+          ${canManage ? '<button class="btn-small" data-action="add-subject">+ Предмет</button>' : ''}
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Название</th><th>В учебном плане класса</th></tr></thead>
+            <tbody>
+              ${subjects
+                .map((s) => {
+                  const inClass = classSubjects.some((cs) => cs.subjectId === s.id);
+                  return `
+                    <tr>
+                      <td>${escapeHtml(s.name)}</td>
+                      <td>${canManage ? `<button class="btn-link" data-action="toggle-class-subject" data-subject-id="${s.id}" data-in-class="${inClass}">${inClass ? 'убрать из класса' : 'добавить в класс'}</button>` : inClass ? 'да' : '—'}</td>
+                    </tr>
+                  `;
+                })
+                .join('') || '<tr><td colspan="2" class="empty-note">Предметов пока нет</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        ${canManage ? `
+          <div class="hint-small" style="margin-top:10px">Назначить учителя-предметника на выбранный класс+предмет:</div>
+          <form id="assign-teacher-form" class="upload-form">
+            <select name="teacherId" required>
+              <option value="">— учитель —</option>
+              ${teacherOptions}
+            </select>
+            <button type="submit" class="btn-small">Назначить</button>
+          </form>
+        ` : ''}
+      </section>
+    `;
+
+    const scheduleRows = schedule
+      .map(
+        (s) => `
+          <tr>
+            <td>${['', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][s.dayOfWeek]}</td>
+            <td>${s.lessonNumber}</td>
+            <td>${escapeHtml(subjectNameById.get(s.subjectId) || '—')}</td>
+            <td>${escapeHtml(s.room || '—')}</td>
+          </tr>
+        `,
+      )
+      .join('');
+
+    const scheduleHtml = `
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Расписание класса</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>День</th><th>Урок</th><th>Предмет</th><th>Кабинет</th></tr></thead>
+            <tbody>${scheduleRows || '<tr><td colspan="4" class="empty-note">Расписание пока не задано</td></tr>'}</tbody>
+          </table>
+        </div>
+        ${canManage ? `
+          <form id="add-lesson-form" class="upload-form" style="margin-top:10px;flex-wrap:wrap">
+            <select name="dayOfWeek" required>
+              ${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((d, i) => `<option value="${i + 1}">${d}</option>`).join('')}
+            </select>
+            <input name="lessonNumber" type="number" min="1" placeholder="№ урока" required style="width:100px" />
+            <select name="subjectId" required>
+              <option value="">— предмет —</option>
+              ${subjectOptions}
+            </select>
+            <select name="teacherId" required>
+              <option value="">— учитель —</option>
+              ${teacherOptions}
+            </select>
+            <input name="room" placeholder="Кабинет" style="width:120px" />
+            <button type="submit" class="btn-small">Добавить урок</button>
+          </form>
+        ` : ''}
+      </section>
+    `;
+
+    const homeworkHtml = `
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Домашние задания</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Срок</th><th>Задание</th></tr></thead>
+            <tbody>
+              ${homeworkList.map((h) => `<tr><td>${fmtDate(h.dueDate)}</td><td>${escapeHtml(h.description)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty-note">Заданий пока нет</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        ${schoolState.subjectId ? `
+          <form id="add-homework-form" class="upload-form" style="margin-top:10px">
+            <input name="dueDate" type="date" required />
+            <input name="description" placeholder="Что задано" required style="flex:1" />
+            <button type="submit" class="btn-small">Задать</button>
+          </form>
+        ` : '<div class="hint-small">Выберите предмет, чтобы добавить задание</div>'}
+      </section>
+    `;
+
+    const gradeRows = roster.items
+      .map((c) => {
+        const studentGrades = grades.filter((g) => g.studentId === c.id);
+        const gradesStr = studentGrades.map((g) => g.value).join(', ') || '—';
+        return `
+          <tr>
+            <td>${escapeHtml(c.fullName)}</td>
+            <td>${gradesStr}</td>
+            <td>
+              <form class="upload-form add-grade-form" data-student-id="${c.id}">
+                <input name="date" type="date" required value="${new Date().toISOString().slice(0, 10)}" style="width:140px" />
+                <input name="value" type="number" min="1" max="10" placeholder="1-10" required style="width:70px" />
+                <button type="submit" class="btn-small">+</button>
+              </form>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    const gradebookHtml = `
+      <section>
+        <h2 class="section-title">Электронный дневник</h2>
+        ${schoolState.subjectId ? `
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ученик</th><th>Оценки</th><th>Поставить оценку</th></tr></thead>
+              <tbody>${gradeRows || '<tr><td colspan="3" class="empty-note">В классе пока нет учеников</td></tr>'}</tbody>
+            </table>
+          </div>
+        ` : '<div class="empty-note">Выберите предмет выше, чтобы увидеть и выставлять оценки</div>'}
+      </section>
+    `;
+
+    const periodsHtml = `
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Четверти и табели</h2>
+          ${canManage ? '<button class="btn-small" data-action="add-period">+ Период</button>' : ''}
+        </div>
+        ${periods.length ? `
+          <div class="field" style="max-width:320px">
+            <label>Период</label>
+            <select id="school-period-select">${periodOptions}</select>
+          </div>
+          ${schoolState.subjectId && canManage ? `<button class="btn-small" data-action="recalculate-period" style="margin-top:8px">Пересчитать итоговые оценки по выбранному предмету</button>` : ''}
+          <div class="hint-small" style="margin-top:10px">Табель ученика (PDF):</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ученик</th><th></th></tr></thead>
+              <tbody>
+                ${roster.items
+                  .map(
+                    (c) =>
+                      `<tr><td>${escapeHtml(c.fullName)}</td><td><button class="btn-link" data-action="download-transcript" data-student-id="${c.id}">скачать табель</button></td></tr>`,
+                  )
+                  .join('') || '<tr><td colspan="2" class="empty-note">Пусто</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        ` : '<div class="empty-note">Периоды пока не заданы</div>'}
+      </section>
+    `;
+
+    root.innerHTML = `${classPickerHtml}${subjectsHtml}${scheduleHtml}${homeworkHtml}${gradebookHtml}${periodsHtml}`;
+
+    root.querySelector('#school-class-select').addEventListener('change', (e) => {
+      schoolState.classId = e.target.value;
+      renderSchoolTab(user, root);
+    });
+    root.querySelector('#school-subject-select').addEventListener('change', (e) => {
+      schoolState.subjectId = e.target.value;
+      renderSchoolTab(user, root);
+    });
+    root.querySelector('#school-period-select')?.addEventListener('change', (e) => {
+      schoolState.periodId = e.target.value;
+      renderSchoolTab(user, root);
+    });
+
+    root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
+      openModal({
+        title: 'Новый предмет',
+        path: '/subjects',
+        submitLabel: 'Создать',
+        bodyHtml: `<div class="field"><label>Название</label><input name="name" required placeholder="Математика" /></div>`,
+        buildPayload: (fd) => ({ name: fd.get('name').trim() }),
+        onDone: () => renderSchoolTab(user, root),
+      });
+    });
+
+    root.querySelectorAll('[data-action="toggle-class-subject"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const subjectId = btn.dataset.subjectId;
+        const inClass = btn.dataset.inClass === 'true';
+        try {
+          if (inClass) {
+            await api(`/subjects/classes/${schoolState.classId}/${subjectId}`, { method: 'DELETE' });
+          } else {
+            await api(`/subjects/classes/${schoolState.classId}/${subjectId}`, { method: 'POST' });
+          }
+          renderSchoolTab(user, root);
+        } catch (err) {
+          if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+        }
+      });
+    });
+
+    root.querySelector('#assign-teacher-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const teacherId = new FormData(e.target).get('teacherId');
+      if (!teacherId || !schoolState.subjectId) {
+        showToast('Сначала выберите предмет');
+        return;
+      }
+      try {
+        await api('/subjects/assignments', {
+          method: 'POST',
+          body: JSON.stringify({ teacherId, subjectId: schoolState.subjectId, groupId: schoolState.classId }),
+        });
+        showToast('Назначено');
+        renderSchoolTab(user, root);
+      } catch (err) {
+        if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+      }
+    });
+
+    root.querySelector('#add-lesson-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await api('/schedule', {
+          method: 'POST',
+          body: JSON.stringify({
+            groupId: schoolState.classId,
+            dayOfWeek: Number(fd.get('dayOfWeek')),
+            lessonNumber: Number(fd.get('lessonNumber')),
+            subjectId: fd.get('subjectId'),
+            teacherId: fd.get('teacherId'),
+            room: fd.get('room') || undefined,
+          }),
+        });
+        showToast('Урок добавлен');
+        renderSchoolTab(user, root);
+      } catch (err) {
+        if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+      }
+    });
+
+    root.querySelector('#add-homework-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await api('/homework', {
+          method: 'POST',
+          body: JSON.stringify({
+            groupId: schoolState.classId,
+            subjectId: schoolState.subjectId,
+            dueDate: fd.get('dueDate'),
+            description: fd.get('description').trim(),
+          }),
+        });
+        showToast('Задание добавлено');
+        renderSchoolTab(user, root);
+      } catch (err) {
+        if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+      }
+    });
+
+    root.querySelectorAll('.add-grade-form').forEach((form) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        try {
+          await api('/grades', {
+            method: 'POST',
+            body: JSON.stringify({
+              studentId: form.dataset.studentId,
+              subjectId: schoolState.subjectId,
+              groupId: schoolState.classId,
+              date: fd.get('date'),
+              value: Number(fd.get('value')),
+            }),
+          });
+          showToast('Оценка выставлена');
+          renderSchoolTab(user, root);
+        } catch (err) {
+          if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+        }
+      });
+    });
+
+    root.querySelector('[data-action="add-period"]')?.addEventListener('click', () => {
+      openModal({
+        title: 'Новый учебный период',
+        path: '/periods',
+        submitLabel: 'Создать',
+        bodyHtml: `
+          <div class="field"><label>Название</label><input name="name" required placeholder="1 четверть" /></div>
+          <div class="field"><label>Начало</label><input name="startDate" type="date" required /></div>
+          <div class="field"><label>Конец</label><input name="endDate" type="date" required /></div>
+          <div class="field"><label>Учебный год</label><input name="academicYear" required placeholder="2026/2027" /></div>
+        `,
+        buildPayload: (fd) => ({
+          name: fd.get('name').trim(),
+          startDate: fd.get('startDate'),
+          endDate: fd.get('endDate'),
+          academicYear: fd.get('academicYear').trim(),
+        }),
+        onDone: () => renderSchoolTab(user, root),
+      });
+    });
+
+    root.querySelector('[data-action="recalculate-period"]')?.addEventListener('click', async () => {
+      try {
+        await api(`/periods/${schoolState.periodId}/recalculate/${schoolState.classId}/${schoolState.subjectId}`, {
+          method: 'POST',
+        });
+        showToast('Итоговые оценки пересчитаны');
+      } catch (err) {
+        if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+      }
+    });
+
+    root.querySelectorAll('[data-action="download-transcript"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!schoolState.periodId) {
+          showToast('Сначала создайте учебный период');
+          return;
+        }
+        try {
+          await downloadFile(
+            `/periods/${schoolState.periodId}/transcript/${btn.dataset.studentId}`,
+            `transcript-${btn.dataset.studentId}.pdf`,
+          );
+        } catch (err) {
+          if (err.message !== 'unauthorized') showToast(`Ошибка: ${err.message}`);
+        }
+      });
+    });
+  } catch (err) {
+    if (err.message !== 'unauthorized') {
+      root.innerHTML = `<div class="error-block">Не удалось загрузить школьный блок: ${escapeHtml(err.message)}</div>`;
+    }
+  }
 }
 
 // ---------- Notifications tab ----------

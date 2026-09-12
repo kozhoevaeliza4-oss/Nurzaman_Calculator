@@ -5,6 +5,8 @@ import { AttendanceRecord, AttendanceEventType } from './attendance-record.entit
 import { ChildrenService } from '../children/children.service';
 import { Child, ChildStatus } from '../children/child.entity';
 import { AuthUser } from '../common/current-user.decorator';
+import { Direction } from '../common/direction.enum';
+import { QueryChildrenDto } from '../children/dto/query-children.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
 function startOfToday(): Date {
@@ -87,8 +89,11 @@ export class AttendanceService {
   }
 
   // Module 8: "посещаемость" summary tile on the director dashboard.
-  async todaySummary(): Promise<{ present: number; absent: number; total: number }> {
-    const children = await this.childrenService.findAll({ status: ChildStatus.ACTIVE });
+  async todaySummary(direction?: Direction): Promise<{ present: number; absent: number; total: number }> {
+    const children = await this.childrenService.findAll({
+      status: ChildStatus.ACTIVE,
+      direction,
+    } as QueryChildrenDto);
     const todaysRecords = await this.repo.find({
       where: { occurredAt: Between(startOfToday(), endOfToday()) },
       order: { occurredAt: 'ASC' },

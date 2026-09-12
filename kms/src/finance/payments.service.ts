@@ -6,6 +6,7 @@ import { Receipt } from './receipt.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { ChildrenService } from '../children/children.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Direction } from '../common/direction.enum';
 
 @Injectable()
 export class PaymentsService {
@@ -78,12 +79,15 @@ export class PaymentsService {
 
   // Module 8: "Доходы ... в реальном времени." — total payments received
   // in [from, to].
-  async totalForRange(from: string, to: string): Promise<string> {
-    const row = await this.paymentsRepo
+  async totalForRange(from: string, to: string, direction?: Direction): Promise<string> {
+    const qb = this.paymentsRepo
       .createQueryBuilder('p')
       .select('COALESCE(SUM(p.amount), 0)', 'sum')
-      .where('p.paid_at >= :from AND p.paid_at <= :to', { from, to })
-      .getRawOne<{ sum: string }>();
+      .where('p.paid_at >= :from AND p.paid_at <= :to', { from, to });
+    if (direction) {
+      qb.innerJoin('children', 'c', 'c.id = p.child_id').andWhere('c.direction = :direction', { direction });
+    }
+    const row = await qb.getRawOne<{ sum: string }>();
     return Number(row?.sum ?? 0).toFixed(2);
   }
 
