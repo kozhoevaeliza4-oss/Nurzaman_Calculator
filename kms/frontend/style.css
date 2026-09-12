@@ -458,6 +458,11 @@ tr:last-child td {
 .btn-small:hover {
   filter: brightness(0.97);
 }
+.btn-small.secondary {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
 
 /* ---------- modal ---------- */
 .modal-backdrop {

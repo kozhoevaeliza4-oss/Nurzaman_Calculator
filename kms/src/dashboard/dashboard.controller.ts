@@ -18,6 +18,9 @@ export class DashboardController {
 
   @Get('summary')
   summary(@Query() query: QueryDashboardDto, @CurrentUser() user: AuthUser) {
-    return this.dashboardService.summary(query.from, query.to, effectiveDirections(user));
+    const allowed = effectiveDirections(user);
+    const requestedIsAllowed = !query.direction || !allowed || allowed.includes(query.direction);
+    const narrowed = query.direction && requestedIsAllowed ? [query.direction] : allowed;
+    return this.dashboardService.summary(query.from, query.to, narrowed);
   }
 }

@@ -381,7 +381,7 @@ async function renderOverviewTab(user, root) {
     const searchParam = state.childrenSearch ? `&search=${encodeURIComponent(state.childrenSearch)}` : '';
     const dirParam = state.direction ? `&direction=${state.direction}` : '';
     const [summary, childrenPage, groups, parentsPage, forecast] = await Promise.all([
-      canSeeDashboard ? api(`/dashboard/summary?from=${monthStart}&to=${today}`) : Promise.resolve(null),
+      canSeeDashboard ? api(`/dashboard/summary?from=${monthStart}&to=${today}${dirParam}`) : Promise.resolve(null),
       api(`/children?pageSize=50${searchParam}${dirParam}`),
       api(`/groups${state.direction ? `?direction=${state.direction}` : ''}`),
       canManage ? api('/parents?pageSize=50') : Promise.resolve(null),
