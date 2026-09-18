@@ -32,8 +32,11 @@ npm run start:dev      # http://localhost:4000
 ## Deploying as a new, separate Render service
 
 Per the project decision, this MVP runs on its **own** Render web service
-and its **own** Postgres database — not a path on the existing
-`asyl-amanat-kms` service.
+— not a path on the existing `asyl-amanat-kms` service. The database can
+be either a dedicated Postgres instance, or (Render's free tier allows
+only one free database per account) the **same** Postgres instance as
+`kms`, kept isolated via a separate schema (`DB_SCHEMA`, see step 4) —
+its tables never mix with `kms`'s tables either way.
 
 ### 1. Push this branch
 
@@ -41,13 +44,19 @@ The `mvp/` folder is already committed on `claude/new-session-oqeywm` in
 this repository. Render can build directly from that branch (or merge it
 to your default branch first, whichever you prefer).
 
-### 2. Create a new Postgres database
+### 2. Database
 
-In the Render dashboard: **New → PostgreSQL**.
-- Name: e.g. `asyl-amanat-finance-mvp-db`
-- Note the **Internal Database URL** after it's created — you'll need the
-  host/port/user/password/database pieces for step 3 (or just the full
-  connection string, see the note below).
+**Option A — reuse the existing free Postgres instance** (recommended if
+you're already on the free tier and it's hosting `kms`): use that
+instance's own Hostname/Port/Database/Username/Password in step 4, and
+additionally set `DB_SCHEMA=finance_mvp`. On first boot, `start.sh` creates
+that schema automatically (`src/scripts/ensure-schema.ts`) and every table
+this app creates lives inside it — completely separate from `kms`'s tables
+in the `public` schema of the same database.
+
+**Option B — a dedicated database**: **New → PostgreSQL** in the Render
+dashboard, name it e.g. `asyl-amanat-finance-mvp-db`. Use its own
+connection info in step 4 and leave `DB_SCHEMA` unset.
 
 ### 3. Create a new Web Service
 
@@ -67,6 +76,7 @@ Set these on the web service (Render → your service → Environment):
 | `DB_USER` | from the Postgres instance |
 | `DB_PASSWORD` | from the Postgres instance |
 | `DB_NAME` | from the Postgres instance |
+| `DB_SCHEMA` | only when reusing an existing instance (Option A above) — e.g. `finance_mvp`. Leave unset for a dedicated database. |
 | `JWT_SECRET` | any long random string |
 | `JWT_EXPIRES_IN` | `12h` (or your preference) |
 | `ADMIN_EMAIL` | the owner's login email |

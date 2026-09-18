@@ -4,6 +4,11 @@
 # then start the API. Both steps are idempotent.
 set -e
 
+if [ -n "$DB_SCHEMA" ]; then
+  echo "Ensuring schema \"$DB_SCHEMA\" exists..."
+  node dist/scripts/ensure-schema.js
+fi
+
 echo "Running database migrations..."
 node ./node_modules/typeorm/cli.js migration:run -d dist/data-source.js
 
