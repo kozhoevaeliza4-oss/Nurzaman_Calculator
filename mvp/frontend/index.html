@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Асыл Аманат — Финансы (MVP)</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="login-screen" class="screen">
+    <form id="login-form" class="login-card">
+      <h1>Асыл Аманат</h1>
+      <p class="subtitle">Финансовый учёт детского сада</p>
+      <label>Email<input type="email" id="login-email" required /></label>
+      <label>Пароль<input type="password" id="login-password" required /></label>
+      <div id="login-error" class="error-text"></div>
+      <button type="submit">Войти</button>
+    </form>
+  </div>
+
+  <div id="app-screen" class="screen hidden">
+    <header class="app-header">
+      <div class="brand">Асыл Аманат — Финансы</div>
+      <nav id="tabs" class="tabs">
+        <button data-tab="dashboard" class="tab active">Dashboard</button>
+        <button data-tab="children" class="tab">Дети</button>
+        <button data-tab="payments" class="tab">Оплаты</button>
+        <button data-tab="bank" class="tab">Банковские операции</button>
+        <button data-tab="expenses" class="tab">Расходы</button>
+        <button data-tab="imports" class="tab">История загрузок</button>
+      </nav>
+      <div class="header-right">
+        <label class="period-picker">Период
+          <input type="month" id="period-select" />
+        </label>
+        <button id="logout-btn" class="btn-small secondary">Выйти</button>
+      </div>
+    </header>
+
+    <main id="content" class="content"></main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

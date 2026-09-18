@@ -1,17 +1,26 @@
+import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { ChildrenModule } from './children/children.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ExportsModule } from './exports/exports.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // The MVP's static single-page UI (mvp/frontend) - served straight off
+    // this API app, same approach as kms/frontend.
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'frontend'),
+      exclude: ['/auth*', '/children*', '/payments*', '/expenses*', '/dashboard*', '/exports*'],
+    }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -29,6 +38,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PaymentsModule,
     ExpensesModule,
     DashboardModule,
+    ExportsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
