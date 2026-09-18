@@ -34,7 +34,7 @@ export class PaymentMatch extends BaseEntity {
   @Column({ name: 'child_id', type: 'uuid', nullable: true })
   childId: string | null;
 
-  @Column({ name: 'period_year_month', nullable: true })
+  @Column({ name: 'period_year_month', type: 'varchar', nullable: true })
   periodYearMonth: string | null;
 
   @Column({ name: 'period_source', type: 'enum', enum: PeriodSource, default: PeriodSource.UNKNOWN })
@@ -54,7 +54,7 @@ export class PaymentMatch extends BaseEntity {
   @Column({ type: 'enum', enum: MatchStatus, default: MatchStatus.NEEDS_REVIEW })
   status: MatchStatus;
 
-  @Column({ name: 'confirmed_by', nullable: true })
+  @Column({ name: 'confirmed_by', type: 'varchar', nullable: true })
   confirmedBy: string | null;
 
   @Column({ name: 'confirmed_at', type: 'timestamptz', nullable: true })

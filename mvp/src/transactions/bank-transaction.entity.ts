@@ -17,7 +17,7 @@ export class BankTransaction extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   purpose: string | null;
 
-  @Column({ name: 'transaction_ref', nullable: true })
+  @Column({ name: 'transaction_ref', type: 'varchar', nullable: true })
   transactionRef: string | null;
 
   // Dedup key (раздел 19: не учитывать повторно ту же операцию при

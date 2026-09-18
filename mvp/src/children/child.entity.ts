@@ -14,7 +14,7 @@ export class Child extends BaseEntity {
   @Column({ name: 'full_name' })
   fullName: string;
 
-  @Column({ name: 'group_name', nullable: true })
+  @Column({ name: 'group_name', type: 'varchar', nullable: true })
   groupName: string | null;
 
   @Column({ name: 'monthly_fee', type: 'numeric', precision: 12, scale: 2 })
@@ -31,10 +31,10 @@ export class Child extends BaseEntity {
 
   // Parent phone/name - not a real Parent entity (out of scope for this
   // stage), just extra text the matching algorithm can use as a signal.
-  @Column({ name: 'parent_name', nullable: true })
+  @Column({ name: 'parent_name', type: 'varchar', nullable: true })
   parentName: string | null;
 
-  @Column({ name: 'parent_phone', nullable: true })
+  @Column({ name: 'parent_phone', type: 'varchar', nullable: true })
   parentPhone: string | null;
 
   @Column({ type: 'text', nullable: true })

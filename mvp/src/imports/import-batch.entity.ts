@@ -29,6 +29,6 @@ export class ImportBatch extends BaseEntity {
   @Column({ name: 'skipped_duplicate_rows', type: 'int', default: 0 })
   skippedDuplicateRows: number;
 
-  @Column({ name: 'uploaded_by', nullable: true })
+  @Column({ name: 'uploaded_by', type: 'varchar', nullable: true })
   uploadedBy: string | null;
 }
